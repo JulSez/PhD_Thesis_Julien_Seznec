@@ -12,65 +12,69 @@ Since the expected rewards $\mu_i$ change from one pull to another, the main dif
 
 \subsection{{\FEWA}: Filtering on expanding window average}%\label{Algorithm}
 
- In Alg.\,\ref{EWA} we introduce \myAlgorithm (or~$\EWA$) that at each round $t$, relies on estimates using windows of increasing length to filter out arms that are suboptimal with high probability and then pulls the least pulled arm among the remaining arms. 
+ In Alg.\,\ref{alg:FEWA} we introduce \FEWA (or~$\EWA$) that at each round $t$, relies on estimates using windows of increasing length to filter out arms that are suboptimal with high probability and then pulls the least pulled arm among the remaining arms. 
+ 
+ \begin{minipage}{\textwidth}
+\renewcommand*\footnoterule{}
+\begin{savenotes}
+\begin{algorithm}[H]
+\caption{\myAlgorithm}
+\label{alg:FEWA}
+\begin{algorithmic}[1]
+\Require $\arms$,  $\subgaussian$, $\delta_0$, $\alpha$
+\State Initialize $\history(i) \leftarrow []$ for all $i \in \possibleArms$
+\For{$t \gets 1, 2, \dots, K \do $}{\footnotesize \Comment{\emph{Pull each arm once}}}
+	\State \textsc{Pull}  $i_t \gets t$; \textsc{Receive} $o_{t}$
+	\State $\history(i) \gets \history(i)\text{.append}(o_{t})$
+	\State $N_{i_t} \gets 1$
+\EndFor
+\For{$t \gets K+1, K+2, \dots \do $}
+	\State $\delta_t \leftarrow \delta_0/(t^\alpha)$
+	\State $h\leftarrow 1$ 
+	{\footnotesize \Comment{\emph{initialize bandwidth}}}
+	\State $\arms_1 \leftarrow \arms$ 
+	{\footnotesize \Comment{\emph{initialize with all the arms}}}
+	\State $i_i \gets {\tt none}$
+	\While{$i_t$ is  ${\tt none}$}
+		\State $\arms_{h+1} \leftarrow {\textsc{Filter}}(\arms_{h} ,h, \delta_t)$
+		\State $h \leftarrow h + 1$ \label{algline:window}
+		\If{$\exists i \in \arms_{h}$ such that $N_{i_t}=h$}
+			\label{algline:condition}
+			\State \textsc{Pull}  $i_t \in \left\{ i \in \arms_h | N_{i_t} = h \right\}$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}; \textsc{Receive} $o_{t}$
+		\EndIf
+	\EndWhile
+	\State $\history(i) \gets \history(i)\text{.append}(o_{t})$
+	\State $N_{i_t} \leftarrow N_{i_t} +1$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{savenotes}
+\end{minipage}
 
 We first describe the subroutine {\small\textsc{Filter}} in Alg.\,\ref{filter}, which receives a set of active arms $\mathcal{K}_h$, a window~$h$, and a confidence parameter $\delta$ as input and returns an updated set of arms $\mathcal{K}_{h+1}$. For each arm~$i$ that has been pulled~$n$ times, the algorithm constructs an estimate $\estReward^\window_\arm(n)$ that averages the $h \leq n$ most recent rewards observed from~$i$. %The estimator is well defined only for  and the construction of the set $\mathcal{K}_h$ and the stopping condition at Line~\ref{algline:condition} in Alg.\,\ref{EWA} guarantee that $\estReward^\window_\arm(\armCount_{\arm,\currentTime})$ are always well defined for the arms in $\mathcal{K}_h$. 
 The subroutine {\small\textsc{Filter}} discards all the arms whose mean estimate (built with window~$h$) from $\mathcal{K}_h$  is lower than the empirically best arm by more than twice a threshold $c(\window, \delta_\currentTime)$ constructed by standard Hoeffding's concentration inequality (see Prop.\,\ref{prop:heoffding}). %TODO Update reference
 
 
-\begin{algorithm}[t]
-\caption{\myAlgorithm}
-\label{EWA}
-\begin{algorithmic}[1]
-\REQUIRE $\subgaussian$, $\possibleArms$, $\delta_0$, $\alpha$
-	\STATE pull each arm once, collect reward, and initialize $N_{\arm,K} \leftarrow 1$ 
-	\FOR{$\currentTime \gets K+1, K+2, \dots \do $}
-		\STATE $\delta_t \leftarrow \delta_0/(t^\alpha)$
-		\STATE $\window \leftarrow 1$ 
-		{\footnotesize \COMMENT{\emph{initialize bandwidth}}}
-		\STATE $\possibleArms_1 \leftarrow \possibleArms$ 
-		{\footnotesize \COMMENT{\emph{initialize with all the arms}}}
-		\STATE $\arm(t) \gets {\tt none}$
-		\WHILE{$\arm(t)$ is  ${\tt none}$}
-			\STATE $\possibleArms_{\window+1} \leftarrow {\textsc{Filter}}(\possibleArms_{\window} ,\window, \delta_\currentTime)$
-			\STATE $\window \leftarrow \window+1$ \label{algline:window}
-			\IF{$\exists \arm \in \possibleArms_{\window}$ such that $\armCount_{\arm, t}=h$}
-			\label{algline:condition}
-			\STATE $\arm(t) \leftarrow \arg\min_{i\in\possibleArms_{\window}} N_{i,t}$
-			\ENDIF
-		\ENDWHILE
-		\STATE  receive $\obs_\arm(\armCount_{\arm,\currentTime +1 }) \leftarrow \obs_{\arm(\currentTime),\currentTime}$
-		\STATE $\armCount_{\arm(\currentTime),\currentTime} \leftarrow \armCount_{\arm(\currentTime),\currentTime-1} +1$
-		\STATE $\armCount_{j,\currentTime} \leftarrow \armCount_{j, \currentTime-1}, \quad \forall j \neq \arm(\currentTime)$
-	\ENDFOR
-\end{algorithmic}
 
-\end{algorithm}
-
-%\end{minipage}
-%
-%\hfill
-%\begin{minipage}{0.5\textwidth}
 \begin{algorithm}[t]
 \caption{{\textsc{Filter}}}
 \label{filter}
 \begin{algorithmic}[1]
-\REQUIRE $\possibleArms_{\window}$, $\window$, $\delta_\currentTime$
-\STATE $c(\window, \subgaussian, \delta_\currentTime) \leftarrow \sqrt{(2\subgaussian^2/\window) \log{(1/\delta_\currentTime)}}$
-\FOR{$ \arm \in \possibleArms_{\window}$}
-\STATE $\estReward^\window_\arm(\armCount_{\arm,\currentTime}) \leftarrow \frac{1}{\window} \sum_{j=1}^\window \obs_\arm(\armCount_{\arm,\currentTime} -j)$
-\ENDFOR
-\STATE $\estReward^\window_{\max,\currentTime}  \leftarrow \max_{\arm \in \possibleArms_{\window}}\estReward^\window_\arm(\armCount_{\arm,\currentTime})$
-\FOR{$ \arm \in \possibleArms_{\window}$}
-	\STATE $\Delta_\arm \leftarrow  \estReward^\window_{\max,\currentTime}  - \estReward^\window_\arm(\armCount_{\arm,\currentTime})$
-	\IF{$\Delta_\arm \leq 2c(\window, \subgaussian, \delta_\currentTime) $}
-	\STATE add $\arm$ to $\possibleArms_{\window+1}$
-	\ENDIF
-\ENDFOR
-\ENSURE $\possibleArms_{\window+1}$
+\Require $\arms_{h}$, $h$, $\delta_t$, $\sigma$
+\State $c(h, \delta_t) \leftarrow \sqrt{(2\sigma^2/h) \log{(1/\delta_t)}}$
+\For{$ i \in \arms_{h}$}
+\State $\hmu_i^h \leftarrow \textsc{Mean}(\history(i_t)[-h:])$
+\EndFor
+\State $\hmu^h_{\max}  \leftarrow \max_{i \in \arms_{h}}\hmu_i^h$
+\For{$ i \in \arms_{h}$}
+	\State $\Delta_i \leftarrow  \hmu^h_{\max} - \hmu^h_{i} $
+	\If{$\Delta_\arm \leq 2c(\window,  \delta_\currentTime) $}
+	\State add $\arm$ to $\possibleArms_{\window+1}$
+	\EndIf
+\EndFor
+\Ensure $\possibleArms_{\window+1}$
 \end{algorithmic}
 \end{algorithm}
-%\end{minipage}
 
 
 
@@ -130,16 +134,16 @@ We set $\delta_{t} \triangleq \frac{1}{t^\alpha}$ and  call this algorithm Rotti
 \vspace{-10pt}
 \bookboxx{
 \begin{algorithmic}[1]
-\REQUIRE$(\delta_t)_{t\geq 1}$
-	\STATE pull each arm once
-	\STATE initialize $N_{\arm,K} \leftarrow 1$
-	\FOR{$\currentTime \gets K+1, K+2, \dots \do $}
-		\STATE $\arm_t \gets \argmax_i\operatorname{ind}(i,t, \delta_{t})$ 
-		{\footnotesize \COMMENT{\emph{cf.\,\eqref{eq:xindex}}}}
-		\STATE  receive reward $\obs_t$%$\obs_\arm(\armCount_{\arm,\currentTime +1 }) \leftarrow \obs_{\arm(\currentTime),\currentTime}$
-		\STATE $\armCount_{\arm_\currentTime,\currentTime} \leftarrow \armCount_{\arm_\currentTime,\currentTime-1} +1$
-		\STATE $\armCount_{j,\currentTime} \leftarrow \armCount_{j, \currentTime-1}, \quad \forall j \neq \arm_\currentTime$
-	\ENDFOR
+\Require$(\delta_t)_{t\geq 1}$
+	\State pull each arm once
+	\State initialize $N_{\arm,K} \leftarrow 1$
+	\For{$\currentTime \gets K+1, K+2, \dots \do $}
+		\State $\arm_t \gets \argmax_i\operatorname{ind}(i,t, \delta_{t})$ 
+		{\footnotesize \Comment{\emph{cf.\,\eqref{eq:xindex}}}}
+		\State  receive reward $\obs_t$%$\obs_\arm(\armCount_{\arm,\currentTime +1 }) \leftarrow \obs_{\arm(\currentTime),\currentTime}$
+		\State $\armCount_{\arm_\currentTime,\currentTime} \leftarrow \armCount_{\arm_\currentTime,\currentTime-1} +1$
+		 $\armCount_{j,\currentTime} \leftarrow \armCount_{j, \currentTime-1}, \quad \forall j \neq \arm_\currentTime$
+	\EndFor
 \end{algorithmic}
 \caption{The \EUCB algorithm} \label{algo:xucb}}
 \end{figure}

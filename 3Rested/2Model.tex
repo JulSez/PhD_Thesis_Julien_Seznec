@@ -101,7 +101,7 @@ We consider the greedy policy $\GO$ (Alg.~\ref{alg:greedy-oracle}) which at each
 \caption{Greedy Oracle $\GO$ (or $\Azero$, \citet{heidari2016tight})}
 \label{alg:greedy-oracle}
 \begin{algorithmic}[1]
-	\Require $\left\{\mu_i\right\}_{i \in \possibleArms}$
+	\Require $\arms$, $\left\{\mu_i\right\}_{i \in \possibleArms}$
 	\State Initialize $N_i \leftarrow 0$ for all $i \in \possibleArms$
 	\For{$t \gets 1, 2, \dots \do $}
 		\State \textsc{Pull}  $i_t \in \argmax_{i \in \possibleArms} \mu_i(N_{i})$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}
@@ -156,6 +156,7 @@ In the online problem, the learner does not have access to the current value of 
 \caption{Greedy Bandit $\GB$ (or $\Atwo$, \citet{heidari2016tight})}
 \label{alg:greedy-bandit}
 \begin{algorithmic}[1]
+\Require $\arms$
 \State Initialize $\hat{\mu}_{i}^1 \leftarrow + \infty$ for all $i \in \possibleArms$
 	\For{$t \gets 1, 2, \dots \do $}
 		\State \textsc{Pull} $i_t \in \argmax_{i \in \possibleArms} \hat{\mu}_{i}^1$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}; \textsc{Receive} $o_{t}$
@@ -252,14 +253,18 @@ When the feedback is noisy ($\sigma > 0$), selecting greedily on the last observ
 \caption{\SWA \citep{levine2017rotting} }
 \label{alg:SWA}
 \begin{algorithmic}[1]
-\Require $h$
+\Require $\arms$, $h$
 \State Initialize $\hat{\mu}_{i}^h \leftarrow + \infty$ for all $i \in \possibleArms$
-\State Initialize $\text{history}(i) \leftarrow []$ for all $i \in \possibleArms$
-	\For{$t \gets 1, 2, \dots \do $}
+\State Initialize $\history(i) \leftarrow []$ for all $i \in \possibleArms$
+	\For{$t \gets 1, 2, \dots, Kh \do $}
+	 	\State \textsc{Pull Round-Robin}  $i_t \gets t \% h $; \textsc{Receive} $o_{t}$
+	 	\State $\history(i_t) \leftarrow \history(i_t)\text{.append}(o_{t})$
+	\EndFor
+	\For{$t \gets Kh + 1, Kh + 2, \dots \do $}
 		\State \textsc{Pull}  $i_t \in \argmax_{i \in \possibleArms} \hat{\mu}_{i}^h$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}; \textsc{Receive} $o_{t}$
-		\State $\text{history}(i_t) \leftarrow \text{history}(i_t)\text{.append}(o_{t})$
-		\If{len(history($i_t$)) $\geq h$}
-		\State $\hat{\mu}_{i_t}^h \leftarrow \textsc{Mean}(\text{history}(i_t)[-h:])$
+		\State $\history(i_t) \leftarrow \history(i_t)\text{.append}(o_{t})$
+		\If{$\text{len}(\history(i_t)) \geq h$}
+		\State $\hat{\mu}_{i_t}^h \leftarrow \textsc{Mean}(\history(i_t)[-h:])$
 		\EndIf
 	\EndFor
 \end{algorithmic}
@@ -457,16 +462,13 @@ The theoretical window choice require the knowledge of the horizon $T$, the subg
 \end{savenotes}
 \end{minipage}
 
-We notice that the parameter $\alpha$ of \wSWA hide the dependency in $B$. Indeed, the best theoretical tuning corresponds to $\alpha := \pa{2B}^{-2/3}$. In their experimental section, \citet{levine2017rotting} select $\alpha:= 0.2$ by grid-search. Yet, the reader should not forget that the tuning of $\alpha$ is dependent on $B$. 
+We notice that the parameter $\alpha$ of \wSWA hide the dependency in $B$. Indeed, the best theoretical tuning corresponds to $\alpha := \pa{2B}^{-2/3}$. In their experimental section, \citet{levine2017rotting} select $\alpha:= 0.2$ by grid-search on one problem. Yet, the reader should not forget that the tuning of $\alpha$ is dependent on $B$, and more generally on which $\Bmu \in \BBSet$. 
 
 
 
-\subsubsection*{Numerical Simulation}
-%TODO Present figure 1
+%TODO figures
 
 \subsection{Open problems}
-
-The early work of \citet{levine2017rotting} leaves several open questions.
 
 \subsubsection{Minimax rate}
 We report existing regret bounds for two special cases. First, in Proposition~\ref{prop:lb-noisefree}, \citet{heidari2016tight} show that in the absence of noise, the regret is lower bounded by $\cO\pa{KL}$. Second, we recall  We start the minimax regret lower bound for stochastic stationary bandits.
