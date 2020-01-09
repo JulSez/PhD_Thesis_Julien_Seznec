@@ -1,0 +1,46 @@
+@article{Auer1995,
+abstract = {In the multi-armed bandit problem, a gambler must decide which arm of {\pounds} non-identical slot machines to play in a sequence of trials so as to maximize his reward. This classical problem has received much attention because of the simple model it provides of the trade-off between exploration (trying out each arm to find the best one) and exploitation (playing the arm believed to give the best payoff). Past solutions for the bandit problem have almost always relied on assumptions about the statistics of the slot machines. In this work, we make no statistical assumptions whatsoever about the nature of the process generating the payoffs of the slot machines. We give a solution to the bandit problem in which an adversary, rather than a well-behaved stochastic process, has complete control over the payoffs. In a sequence of ¤ plays, we prove that the per-round payoff of our algorithm approaches that of the best arm at the rate ¥ ¤ {\textcopyright} . We show by a matching lower bound that this is best possible. We also prove that our algorithm approaches the per-round payoff of any set of strategies at a similar rate: if the best strategy is chosen from a pool of strategies then our algorithm approaches the per-round payoff of the strategy at the rate},
+author = {Auer, Peter and Cesa-Bianchi, Nico{\`{i}} O and Freund, Yoav and Schapire, Robert E},
+file = {:Users/julien/Library/Application Support/Mendeley Desktop/Downloaded/Auer et al. - 1995 - The non-stochastic multi-armed bandit problem.pdf:pdf},
+keywords = {68Q32 68T05 91A20 ),adversarial bandit problem,unknown matrix games AMS subject classification},
+pages = {322--331},
+title = {{The non-stochastic multi-armed bandit problem}},
+url = {http://cseweb.ucsd.edu/{~}yfreund/papers/bandits.pdf},
+year = {1995}
+}
+@article{Auer2002,
+abstract = {Reinforcement learning policies face the exploration versus exploitation dilemma, i.e. the search for a balance between exploring the environment to find profitable actions while taking the empirically best action as often as possible. A popular measure of a policy's success in addressing this dilemma is the regret, that is the loss due to the fact that the globally optimal policy is not followed all the times. One of the simplest examples of the exploration/exploitation dilemma is the multi-armed bandit problem. Lai and Robbins were the first ones to show that the regret for this problem has to grow at least logarithmically in the number of plays. Since then, policies which asymptotically achieve this regret have been devised by Lai and Robbins and many others. In this work we show that the optimal logarithmic regret is also achievable uniformly over time, with simple and efficient policies, and for all reward distributions with bounded support.},
+author = {Auer, Peter and Fischer, Paul},
+file = {:Users/julien/Library/Application Support/Mendeley Desktop/Downloaded/Auer, Fischer - 2002 - Finite-time Analysis of the Multiarmed Bandit Problem(2).pdf:pdf},
+journal = {Machine Learning},
+keywords = {adaptive allocation rules,bandit problems,finite horizon regret},
+pages = {235--256},
+title = {{Finite-time Analysis of the Multiarmed Bandit Problem*}},
+url = {http://homes.di.unimi.it/{~}cesabian/Pubblicazioni/ml-02.pdf},
+volume = {47},
+year = {2002}
+}
+@article{Heidari,
+abstract = {We consider a variant of the well-studied multi-armed bandit problem in which the reward from each action evolves monotonically in the number of times the decision maker chooses to take that action. We are motivated by settings in which we must give a series of homogeneous tasks to a finite set of arms (workers) whose performance may improve (due to learning) or decay (due to loss of interest) with repeated trials. We assume that the arm-dependent rates at which the rewards change are unknown to the decision maker, and propose algorithms with provably optimal policy regret bounds, a much stronger notion than the often-studied external regret. For the case where the rewards are increasing and concave, we give an algorithm whose policy regret is sublinear and has a (provably necessary) dependence on the time re-quired to distinguish the optimal arm from the rest. We illustrate the behavior and performance of this algorithm via simulations. For the decreasing case, we present a simple greedy approach and show that the policy regret of this algorithm is constant and upper bounded by the number of arms.},
+annote = {Study the bandits problem with increasing and decreasing reward in finite time set up
+
+-Increasing reward: 
+- Offline policy should choose one arm and draw it till the horizon T.
+- Online policy (concave reward) should abandon arm when their optimistic scenario (reward keep growing as it used to grow) are worse than one pessimistic scenario: reward stop growing. Reward is reported to be optimal. (designing a policy is about doing safe choice, not about statistical estimation)
+
+
+-Decreasing reward: 
+evaluation of the greedy max policy. O(K) regret online.},
+author = {Heidari, Hoda and Kearns, Michael and Roth, Aaron},
+file = {:Users/julien/Library/Application Support/Mendeley Desktop/Downloaded/Heidari, Kearns, Roth - Unknown - Tight Policy Regret Bounds for Improving and Decaying Bandits.pdf:pdf},
+title = {{Tight Policy Regret Bounds for Improving and Decaying Bandits}},
+url = {https://www.cis.upenn.edu/{~}aaroth/Papers/decayingbandits.pdf},
+year = {2016}
+}
+@article{Levine,
+abstract = {The Multi-Armed Bandits (MAB) framework highlights the trade-off between acquiring new knowledge (Exploration) and leveraging available knowledge (Ex-ploitation). In the classical MAB problem, a decision maker must choose an arm at each time step, upon which she receives a reward. The decision maker's objective is to maximize her cumulative expected reward over the time horizon. The MAB problem has been studied extensively, specifically under the assumption of the arms' rewards distributions being stationary, or quasi-stationary, over time. We consider a variant of the MAB framework, which we termed Rotting Bandits, where each arm's expected reward decays as a function of the number of times it has been pulled. We are motivated by many real-world scenarios such as online advertis-ing, content recommendation, crowdsourcing, and more. We present algorithms, accompanied by simulations, and derive theoretical guarantees.},
+author = {Levine, Nir and Crammer, Koby and Mannor, Shie},
+file = {:Users/julien/Library/Application Support/Mendeley Desktop/Downloaded/Levine, Crammer, Mannor - Unknown - Rotting Bandits.pdf:pdf},
+title = {{Rotting Bandits}},
+url = {http://papers.nips.cc/paper/6900-rotting-bandits.pdf}
+}

@@ -1,0 +1,158 @@
+%!TEX root = ../main.tex 
+
+\section{{\FEWA} and {\RAW} : Two adaptive window algorithms}
+
+\subsection{}
+Since the expected rewards $\mu_i$ change from one pull to another, the main difficulty in the rested rotting bandits is that we cannot rely on all samples observed until time~$t$ to predict which arm is likely to return the highest reward in the future. In fact, the older a sample, the less representative it is for future rewards. This suggests constructing estimates using the more recent samples. Nonetheless, discarding older rewards reduces the number of samples used in the estimates, thus increasing their variance. 
+
+\SWA chooses a window which balances the cost due to variance and the cost due to bias. %TODO Comment figure 1 and explain why it is stupid.
+
+
+%TODO : A Favorable event 
+
+\subsection{{\FEWA}: Filtering on expanding window average}%\label{Algorithm}
+
+ In Alg.\,\ref{EWA} we introduce \myAlgorithm (or~$\EWA$) that at each round $t$, relies on estimates using windows of increasing length to filter out arms that are suboptimal with high probability and then pulls the least pulled arm among the remaining arms. 
+
+We first describe the subroutine {\small\textsc{Filter}} in Alg.\,\ref{filter}, which receives a set of active arms $\mathcal{K}_h$, a window~$h$, and a confidence parameter $\delta$ as input and returns an updated set of arms $\mathcal{K}_{h+1}$. For each arm~$i$ that has been pulled~$n$ times, the algorithm constructs an estimate $\estReward^\window_\arm(n)$ that averages the $h \leq n$ most recent rewards observed from~$i$. %The estimator is well defined only for  and the construction of the set $\mathcal{K}_h$ and the stopping condition at Line~\ref{algline:condition} in Alg.\,\ref{EWA} guarantee that $\estReward^\window_\arm(\armCount_{\arm,\currentTime})$ are always well defined for the arms in $\mathcal{K}_h$. 
+The subroutine {\small\textsc{Filter}} discards all the arms whose mean estimate (built with window~$h$) from $\mathcal{K}_h$  is lower than the empirically best arm by more than twice a threshold $c(\window, \delta_\currentTime)$ constructed by standard Hoeffding's concentration inequality (see Prop.\,\ref{prop:heoffding}). %TODO Update reference
+
+
+\begin{algorithm}[t]
+\caption{\myAlgorithm}
+\label{EWA}
+\begin{algorithmic}[1]
+\REQUIRE $\subgaussian$, $\possibleArms$, $\delta_0$, $\alpha$
+	\STATE pull each arm once, collect reward, and initialize $N_{\arm,K} \leftarrow 1$ 
+	\FOR{$\currentTime \gets K+1, K+2, \dots \do $}
+		\STATE $\delta_t \leftarrow \delta_0/(t^\alpha)$
+		\STATE $\window \leftarrow 1$ 
+		{\footnotesize \COMMENT{\emph{initialize bandwidth}}}
+		\STATE $\possibleArms_1 \leftarrow \possibleArms$ 
+		{\footnotesize \COMMENT{\emph{initialize with all the arms}}}
+		\STATE $\arm(t) \gets {\tt none}$
+		\WHILE{$\arm(t)$ is  ${\tt none}$}
+			\STATE $\possibleArms_{\window+1} \leftarrow {\textsc{Filter}}(\possibleArms_{\window} ,\window, \delta_\currentTime)$
+			\STATE $\window \leftarrow \window+1$ \label{algline:window}
+			\IF{$\exists \arm \in \possibleArms_{\window}$ such that $\armCount_{\arm, t}=h$}
+			\label{algline:condition}
+			\STATE $\arm(t) \leftarrow \arg\min_{i\in\possibleArms_{\window}} N_{i,t}$
+			\ENDIF
+		\ENDWHILE
+		\STATE  receive $\obs_\arm(\armCount_{\arm,\currentTime +1 }) \leftarrow \obs_{\arm(\currentTime),\currentTime}$
+		\STATE $\armCount_{\arm(\currentTime),\currentTime} \leftarrow \armCount_{\arm(\currentTime),\currentTime-1} +1$
+		\STATE $\armCount_{j,\currentTime} \leftarrow \armCount_{j, \currentTime-1}, \quad \forall j \neq \arm(\currentTime)$
+	\ENDFOR
+\end{algorithmic}
+
+\end{algorithm}
+
+%\end{minipage}
+%
+%\hfill
+%\begin{minipage}{0.5\textwidth}
+\begin{algorithm}[t]
+\caption{{\textsc{Filter}}}
+\label{filter}
+\begin{algorithmic}[1]
+\REQUIRE $\possibleArms_{\window}$, $\window$, $\delta_\currentTime$
+\STATE $c(\window, \subgaussian, \delta_\currentTime) \leftarrow \sqrt{(2\subgaussian^2/\window) \log{(1/\delta_\currentTime)}}$
+\FOR{$ \arm \in \possibleArms_{\window}$}
+\STATE $\estReward^\window_\arm(\armCount_{\arm,\currentTime}) \leftarrow \frac{1}{\window} \sum_{j=1}^\window \obs_\arm(\armCount_{\arm,\currentTime} -j)$
+\ENDFOR
+\STATE $\estReward^\window_{\max,\currentTime}  \leftarrow \max_{\arm \in \possibleArms_{\window}}\estReward^\window_\arm(\armCount_{\arm,\currentTime})$
+\FOR{$ \arm \in \possibleArms_{\window}$}
+	\STATE $\Delta_\arm \leftarrow  \estReward^\window_{\max,\currentTime}  - \estReward^\window_\arm(\armCount_{\arm,\currentTime})$
+	\IF{$\Delta_\arm \leq 2c(\window, \subgaussian, \delta_\currentTime) $}
+	\STATE add $\arm$ to $\possibleArms_{\window+1}$
+	\ENDIF
+\ENDFOR
+\ENSURE $\possibleArms_{\window+1}$
+\end{algorithmic}
+\end{algorithm}
+%\end{minipage}
+
+
+
+The {\small\textsc{Filter}} subroutine is used in \myAlgorithm to incrementally refine the set of active arms, starting with a window of size $1$, until the condition at Line~\ref{algline:condition} is met. As a result, $\mathcal{K}_{h+1}$ only contains arms that passed the filter for all windows from $1$ up to $h$. Notice that it is important to start filtering arms from a small window and to keep refining the previous set of active arms. % instead of completely recomputing them for every new window $h$. 
+In fact, the estimates constructed using a small window use recent rewards, which are closer to the future value of an arm. As a result, if there is enough evidence that an arm is suboptimal already at a small window $h$, it should be directly discarded. On the other hand, a suboptimal arm may pass the filter for small windows as the threshold $c(\window, \subgaussian, \delta_\currentTime)$ is large for small $h$ (i.e., as few samples are used in constructing $\estReward^\window_\arm(\armCount_{\arm,\currentTime})$, the estimation error may be high). Thus, \myAlgorithm keeps refining $\mathcal{K}_{h}$ for larger windows in the attempt of constructing more accurate estimates and discard more suboptimal arms. This process stops when we reach a window as large as the number of samples for at least one arm in the active set $\mathcal{K}_{h}$ (i.e., Line~\ref{algline:condition}). At this point, increasing $h$ would not bring any additional evidence that could refine $\mathcal{K}_{h}$ further (recall that $\estReward^\window_\arm(\armCount_{\arm,\currentTime})$ is not defined for $h > \armCount_{\arm,\currentTime}$). Finally,  \myAlgorithm selects the active arm $i(t)$ whose number of samples matches the current window, i.e., the least pulled arm in $\mathcal{K}_{h}$. The set of available rewards and the number of pulls are then updated accordingly. 
+
+\paragraph{Active set} We derive an important lemma that provides support for the arm selection process obtained by a series of refinements through the {\small \textsc{Filter}} subroutine. Recall that at any round $t$, after pulling arms $\{ \armCount^{\EWA}_{\arm,\currentTime} \}_i$ the greedy (oracle) policy would select an arm 
+%
+\begin{align*}
+\arm^\star_\currentTime \pa{\left\{ \armCount^{\EWA}_{\arm,\currentTime} \right\}_i}  \in  \argmax_{\arm \in \possibleArms} \reward_\arm \left( \armCount^{\EWA}_{\arm,\currentTime}\right).
+\end{align*}
+%
+We denote by $\reward^+_t(\EWA) \triangleq \max_{\arm \in \possibleArms} \reward_\arm ( \armCount^{\EWA}_{\arm,\currentTime}),$ the reward obtained by pulling~$\arm^\star_\currentTime.$ The dependence on $\EWA$ in the definition of $\reward^+_t(\EWA)$ stresses the fact that we consider what the oracle policy would do at the state reached by $\EWA$.
+%In the following, we drop the dependency on the number of pulls and we use $i^\star_t$ to denote the greedy arm at round $t$. 
+While \myAlgorithm cannot directly match the performance of the oracle arm, the following lemma shows that the reward averaged over the last $h$ pulls of any arm in the active set is close to the performance of the oracle arm up to four times $c(\window,  \delta_\currentTime)$.
+
+\begin{restatable}{lemma}{restafundamentallemma}
+\label{fundamental-lemma}
+On the favorable event $\HPevent_t$, if an arm~$\arm$ passes through a filter of window $\window$ at round $\currentTime$, i.e., $i\in\ \mathcal{K}_h$, then the average of its $\window$ last pulls satisfies
+%
+\begin{equation}\label{eq:fundamental.eq}
+\expestReward^{\window}_\arm(\armCount_{\arm,\currentTime}^{\EWA} ) \geq  \reward^+_t(\EWA) - 4 c(\window, \delta_\currentTime).
+\end{equation}
+%
+\end{restatable}
+This result  relies heavily on the non-increasing assumption of rotting bandits. In fact, for any arm $i$ and any window $h$, we have
+%
+\begin{equation*}
+\wb\mu_i^h(N_{i,t}^{\EWA}) \geq \wb\mu_i^1(N_{i,t}^{\EWA}) \geq \mu_i(N_{i,t}^{\EWA}).
+\end{equation*}
+%
+While the inequality above for $i_t^*$ trivially satisfies Eq.\,\ref{eq:fundamental.eq}, Lem.\,\ref{fundamental-lemma} is proved by integrating the possible errors introduced by the filter in selecting active arms due to the error of the empirical estimates.
+
+\begin{restatable}{corollary}{restafundamentalcorrelary}\label{fundamental-correlary}
+	%\begin{corollary}
+	Let $\arm \in \overpullSet$ be an arm overpulled by {\FEWA} at round $t$ and $\window_{\arm,t} \triangleq \armCount_{\arm, t}^{\EWA} - \armCount_{\arm, t}^{\policy^\star} \geq 1$ be the difference in the number of pulls w.r.t.\,the optimal policy $\pi^\star$ at round $t$. On the favorable event $\HPevent_t$,  we  have
+	\begin{align}
+	\reward^+_t(\EWA) - \expestReward^{\window_{\arm,t}}_i(\armCount_{\arm,t}) \leq  4 c(\window_{\arm,t}, \delta_t).
+	\end{align}
+\end{restatable}
+
+
+\subsection{The {\EUCB} algorithm}
+\label{sec:algo}
+
+
+\paragraph{A general index policy}
+We will study a single class of policies which select at each round $t$ the arm with the maximal index of the form
+\vspace{-4pt}
+\begin{align}
+\label{eq:xindex}
+\operatorname{ind}(i,t, \delta_{t}) \triangleq \min_{h\leq N_{i,t-1}} {\widehat{\mu}_i^h(t-1,\pi) + c(h,\delta_{t})}.
+\end{align}
+We set $\delta_{t} \triangleq \frac{1}{t^\alpha}$ and  call this algorithm Rotting Adaptive Window UCB (\EUCB). There is  a bias-variance trade-off for the window choice: more variance for smaller size of the window $h$ and more bias for larger $h$. The goal of \XUCB is to adaptively select the right window to compute the tightest UCB. \XUCB uses the indexes of \UCBone computed on all the slices of each arm's history which include the last pull. When the rewards are rotting, all these indexes are upper confidence bounds on the \textit{next value}.  Thus, \XUCB simply selects the tightest (minimum) one as index of the arm: it is a pure UCB-index algorithm. By contrast, when reward can increase, the learner can only derive upper-confidence bound on past values which are loosely related to the next value. Hence, all the UCB-index algorithms in the restless non-stationary literature need to add change-detection sub-routine, active random exploration or passive forgetting mechanism. 
+
+\begin{figure}
+\vspace{-10pt}
+\bookboxx{
+\begin{algorithmic}[1]
+\REQUIRE$(\delta_t)_{t\geq 1}$
+	\STATE pull each arm once
+	\STATE initialize $N_{\arm,K} \leftarrow 1$
+	\FOR{$\currentTime \gets K+1, K+2, \dots \do $}
+		\STATE $\arm_t \gets \argmax_i\operatorname{ind}(i,t, \delta_{t})$ 
+		{\footnotesize \COMMENT{\emph{cf.\,\eqref{eq:xindex}}}}
+		\STATE  receive reward $\obs_t$%$\obs_\arm(\armCount_{\arm,\currentTime +1 }) \leftarrow \obs_{\arm(\currentTime),\currentTime}$
+		\STATE $\armCount_{\arm_\currentTime,\currentTime} \leftarrow \armCount_{\arm_\currentTime,\currentTime-1} +1$
+		\STATE $\armCount_{j,\currentTime} \leftarrow \armCount_{j, \currentTime-1}, \quad \forall j \neq \arm_\currentTime$
+	\ENDFOR
+\end{algorithmic}
+\caption{The \EUCB algorithm} \label{algo:xucb}}
+\end{figure}
+
+\begin{restatable}{lemma}{restafundamentallemma}
+\label{fundamental-lemma}
+At round $t$ on favorable event $\HPevent_t$, if arm~$i_{t}$ is selected, for any $h \leq N_{i,t-1}$,  the average of its $\window$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+%
+\vspace{-4pt}
+\begin{equation*}
+\bar{\mu}^{h}_{i_{t}}(t-1,\pi) \geq \max_{i \in \possibleArms}\mu_i(t,N_{i,t-1}) - 2 c(h, \delta_{t}).
+\end{equation*}
+\end{restatable}
+
+This fundamental guarantee is comparable with Corollary~ %TODO corollary link
+about the algorithm \FEWA. \FEWA uses the same statistics than \XUCB but in a rather complex expanding filtering mechanism. \EUCB has tighter guarantees than \FEWA (2 versus 4 confidence bands), which is the benefit of upper confidence bounds index policies over confidence bound filtering policies. 

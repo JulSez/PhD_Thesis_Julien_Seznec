@@ -1,1 +1,35 @@
- 
+\documentclass[12pt,fleqn]{book} % Default font size and left-justified equations
+
+\input{structure}
+\chapterimage{chapter_head_1.pdf} 
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage{thm-restate}
+\AfterEndEnvironment{restatable}{\noindent\ignorespaces}
+\usepackage{bm}
+\usepackage{dsfont}
+\input{szsymbols}
+\usepackage{algorithmicx}
+\usepackage{algorithm,algpseudocode}
+\usepackage{footnote}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{wrapfig}
+\newcommand{\bookboxx}[1]{\small
+\par\medskip\noindent
+\framebox[0.46\textwidth]{
+\begin{minipage}{0.44\dimexpr\textwidth-\parindent\relax} {#1} \end{minipage} } \par\medskip }
+
+\usepackage{todonotes}
+\setlength\parindent{0pt}
+\setlength{\parskip}{1em}
+
+\newcommand{\citep}{\parencite}
+\newcommand{\citet}{\textcite}
+\hypersetup{pdftitle={These de Doctorat, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
+
+\begin{document}
+\input{3Rested/main}
+\end{document} 

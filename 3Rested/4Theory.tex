@@ -1,0 +1,85 @@
+%!TEX root = ../main.tex 
+\section{Regret Analysis}\label{sec:theory}
+
+We first give problem-independent regret bound for \FEWA and \RAWUCB and sketch its proof in Sect.\,\ref{sketch}. Then, we derive problem-dependent guarantees in Sect.\,\ref{ss:dep}.
+
+%TODO : we only use lemmas
+
+\subsection{Sketch of the proof}
+\label{sketch}
+%TODO 3 ingredients : 
+% 1) The regret upperbound  
+% 2) Proposition low probability event
+% 3) Lemmas
+
+%TODO General Lemma 
+
+
+\subsection{Problem-independent bound}
+\begin{restatable}{theorem}{restaalgoindepub}
+\label{independent_theorem}
+For any rotting bandit scenario with means $\{\mu_i(n)\}_{i,n}$ satisfying Asm.\,\ref{assum-Lipschitz} with bounded decay~$L$ and any time horizon $T$, {\myAlgorithm} run with $\alpha= 5$ and $\delta_\currentTime= 1/( t^5),$ suffers an expected regret\,\footnote{See Corollary~\ref{cor:HP-minimax} and~\ref{cor:HP-PD} for the high-probability result.} of
+\begin{equation*}
+\mathbb{E}[\regret(\EWA)] \leq 13\subgaussian(\sqrt{KT} + K)\sqrt{\log(T)}+ 2KL.
+\end{equation*}%
+\end{restatable}%
+\paragraph{Comparison to \citet{levine2017rotting}} The regret of \SWA is bounded by $\tcO(\mu_{\max}^{1/3}K^{1/3} T^{2/3})$ for rotting functions with range in $[0,\mu_{\max}]$. In our setting, we do not restrict rewards to stay positive but we bound the per-round decay by $L$, thus leading to rotting functions with range in $\left[-LT, L\right]$. As a result, when applying \SWA to our setting, we should set $\mu_{\max}=L(T+1)$, which leads to $\cO(T)$ regret, thus showing that according to its original analysis, \SWA may not be able to learn in our general setting. On the other hand, we could use \myAlgorithm in the setting of \citet{levine2017rotting} by setting $L = \mu_{\max}$ as the largest drop that could occur. In this case, \myAlgorithm suffers a regret of $\tcO(\sqrt{KT})$, thus significantly improving over \SWA. The improvement is mostly due to the fact that \myAlgorithm exploits filters using moving averages with increasing windows to discard arms that are suboptimal w.h.p. Since this process is done at each round, \myAlgorithm smoothly tracks changes in the value of each arm, so that if an arm becomes worse later on, other arms would be recovered and pulled again. On the other hand, \SWA relies on a fixed exploratory phase where all arms are pulled in a round-robin way and the tracking is performed using averages constructed with a fixed window. Moreover, \myAlgorithm is anytime, while the fixed exploratory phase of \SWA requires either to know $T$ or to resort to a doubling trick, which often performs poorly in practice. 
+%Algorithms (such as \myAlgorithm) with direct anytime guarantees show a practical advantage over the doubling-trick ones, that often give a suboptimal empirical performance.
+\paragraph{Comparison to deterministic rotting bandits}
+For $\sigma=0$, our upper bound reduces to $KL$, thus matching the prior (upper and lower) bound of~\citet{heidari2016tight} for deterministic rotting bandits. Moreover, the additive decomposition of regret shows that there is \emph{no coupling} between the stochastic problem and the rotting problem as terms depending on the noise level $\sigma$ are separated from the terms depending on the rotting level $L$, while in \SWA these are coupled by a $L^{1/3}\sigma^{2/3}$ factor in the leading term. 
+\paragraph{Comparison to stochastic bandits}
+The regret of \FEWA matches the worst-case optimal regret bound of the standard stochastic bandits (i.e., $\mu_i(n)$s are constant) up to a logarithmic factor. Whether an algorithm can achieve $\cO(\sqrt{KT})$ regret bound is an open question. On one hand, \FEWA needs confidence bounds to hold for different windows at the same time, which requires an additional union bound and thus larger confidence intervals w.r.t.\,\UCBone. On the other hand, our worst-case analysis shows that some of the difficult problems that reach the worst-case bound of Thm.\,\ref{independent_theorem} are realized with constant 
+functions, which is the standard stochastic bandits, for which \MOSS-like~\citep{audibert2009minimax} algorithms achieve regret guarantees without the $\log T$ factor. Thus, the necessity of the extra $\log T$ factor for the worst-case regret of rotting bandits remains an open problem.
+
+
+
+\subsection{Problem-dependent guarantees}
+\label{ss:dep}
+\vspace{-0.1in}
+
+Since our setting generalizes the standard stochastic bandit setting, a natural question is whether we pay any price for this generalization. While the result of~\citet{levine2017rotting} suggested that learning in rotting bandits could be more difficult, in Thm.\,\ref{independent_theorem} we actually proved that \myAlgorithm nearly matches the problem-independent regret $\tcO(\sqrt{\narms\timeEnd})$. We may wonder whether this is true for the \emph{problem-dependent} regret as well.
+% As illustrated in the next remark, we show that up to constants, \myAlgorithm performs as well as \UCB on any stochastic problem.
+
+\begin{remark}\label{remarkUCB}
+Consider a stationary stochastic bandit setting with expected rewards $\{\mu_i\}_i$ and $\reward_\star \triangleq \max_\arm \reward_\arm$. Corollary~\ref{fundamental-correlary} guarantees that for $\delta_\currentTime \geq 1/\timeEnd^\alpha,$ 
+\begin{align}
+\reward_\star - \reward_\arm \leq 4c\pa{\window_{\arm,T}-1,  \delta_\currentTime} = 4\sqrt{\frac{2\alpha\subgaussian^2 \log(\timeEnd)}{\window_{\arm,T} -1}}
+%\CommaBin
+\nonumber\\
+\text{\ or equivalently,\ }
+%\begin{equation}
+\label{eq:LaiRob}
+\window_{\arm,T} \leq 1+ \frac{32\alpha \subgaussian^2 \log(\timeEnd)}{(\reward_{\star} - \reward_\arm) ^2}\cdot
+\end{align}
+\end{remark}
+Therefore, our algorithm matches the lower bound of~\citet{lai1985asymptotically} up to a constant, thus showing that learning in the rotting bandits are never harder than in the stationary case. Moreover, this upper bound is at most $\alpha$ larger than the one for \UCBone~\citep{auer2002finite}.\footnote{To make the results comparable to the one of~\citet{auer2002finite}, we need to replace $2\subgaussian^2$ by $\nicefrac{1}{2}$ for sub-Gaussian noise.} The main source of suboptimality is the use of a confidence bound filtering instead of an upper-confidence index policy. Selecting the less pulled arm in the active set is conservative as it requires uniform exploration until elimination, resulting in a factor 4 in the confidence bound guarantee on the selected arm (vs.\,2 for \UCB), which implies 4 times more overpulls than \UCB (see Eq.\,\ref{eq:LaiRob}). We conjecture that this may not be necessarily needed and it is an open question whether it is possible to derive either an index policy or a better selection rule. The other source of suboptimality w.r.t.\,\UCB is the use of larger confidence bands because of the higher number of estimators computed at each round ($Kt^2$ instead of $Kt$ for \UCB).
+
+
+Remark~\ref{remarkUCB} also reveals that Corollary~\ref{fundamental-correlary} can be used to derive a general problem-dependent result in the rotting case.
+
+In particular, with Corollary~\ref{fundamental-correlary} we upper-bound 
+the maximum number of overpulls by a problem dependent quantity
+\begin{equation}
+\label{eq:hit+}
+\window_{\arm,T}^+ \triangleq \max \left\{ \window \leq 
+1 + \frac{32\alpha \subgaussian^2 \log(T)}{\Delta_{i,h-1}^2} \right\}\CommaBin
+\end{equation}
+\[
+\text{\qquad where \ } \Delta_{i,h} \triangleq \min_{j \in \possibleArms} \reward_j\pa{N_{j,T}^\star -1} - \bar{\reward}_i^h\left( N_{i,t}^\star+h \right).
+\]
+%If we reach this upperbound, we know with high probability that the arm is currently suboptimal. 
+We then use Corollary~\ref{fundamental-correlary} again to upper-bound the regret caused by $h_{\arm,T}^+$ overpulls for each arm, leading to Corollary~\ref{dependent_theorem} (see the full proof in App.\,\ref{sec:proofdep}). 
+
+\begin{restatable}{corollary}{restaalgoub}\label{dependent_theorem}
+For $\delta_\currentTime \triangleq 1/(\currentTime^5)$ and $C_\alpha\triangleq 32\alpha\subgaussian^2$, the regret of \FEWA is  bounded as
+\begin{align*}
+\mathbb{E}\left[R_T(\EWA)\right]  \leq \sum_{\arm\in \possibleArms} \pa{\frac{C_{5}\log(T)}{\Delta_{i,h_{i,T}^+-1}}+ \sqrt{C_{5}\log(T)} + 2L}.
+%\\ 
+%\text{\ with  and $h_{i,T}^+$ defined in Equation~\ref{eq:hit+}.}
+\end{align*}
+
+\end{restatable}
+
+
+
+

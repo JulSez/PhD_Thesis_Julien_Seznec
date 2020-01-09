@@ -1,0 +1,78 @@
+%!TEX root = ../main.tex 
+\section{Efficient algorithms}
+\label{app:efficient_alg}
+
+In this section, we refine the efficient trick of \cite{seznec2019rotting}. The core idea is to store and update only few statistics for each arm.
+Let $m$ be a parameter in $(1,2]$. We define $s_{i,j}^{c}$ and $s_{i,j}^p$ the $j$-th current and pending statistics of arm $i$. 
+
+
+
+Algorithm~\ref{EFFUPDATE} is quite technical. We give here a short description. At each pull, we replace $s_{i,1}^{c}$ and create $s_{i,2}^{p}$ if it is \texttt{None}.
+The incoming reward at time $t$ are added to the existing pending statistics. We define $h_j$ recursively : $h_{j+1} \triangleq \ceil{m*h_{j}}$. When the pending statistics contains $h_j$ sample, we set $s_{i,j}^{c} \leftarrow s_{i,j}^{p}$. If $s_{i,j+1}^{p}$ is \texttt{None}, we set $s_{i,j+1}^{p} \leftarrow s_{i,j}^{p}$. After that, we set $s_{i,j}^{p} \leftarrow \texttt{None}$.
+
+By doing that, we ensure that $s_{i,j}^{c}$ contains the empirical average of $h_j$ pulls among the $2h_j-1$ ones. 
+
+We define \EFFU the index policy which selects
+\[\argmax_{i \in \possibleArms} \left\{\min_{j}\left(s^c_{i,j} + c(h_j, \delta_t)\right)\right\}\cdot
+\]
+
+
+\begin{restatable}{lemma}{restafundamentallemmaefficient}
+\label{fundamental-lemma_efficient}
+At round $t$ on favorable event $\HPevent_t$, if arm~$i_{t}$ is selected by $\EFFU$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $\window$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+%
+\vspace{-4pt}
+\begin{equation*}
+\bar{\mu}^{h}_{i_{t}}(t-1,\pi) \geq \max_{i \in \possibleArms}\mu_i(t,N_{i,t-1}) - \frac{2\sqrt{2}}{\sqrt{2}-1} c(h, \delta_{t}).
+\end{equation*}
+\end{restatable}
+\begin{proof}
+We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h$ such that :
+$2^{j_h} -1 \leq  h < 2^{j_h+1}-1$.
+\begin{align*}
+\bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \bar{\mu}^{2^{j_h}-1}_{i_t}(t-1,\pi)\\ & = \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi)\\ & \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \left(s_{i_tj}^c - c(2^j, \delta_t)\right)\\
+& \geq \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \sum_{j=0}^{j_h-1} \frac{2^{j+1}}{2^{j_h}-1}c(2^j, \delta_t)\\
+& = \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1}\sum_{j=0}^{j_h-1} 2^{\frac{j}{2}}\\
+& = \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1} \frac{2^{\frac{j_h}{2}}-1}{\sqrt{2}-1}\\
+& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(2^{j_h+1}, \delta_t)}{\sqrt{2}-1}\\
+& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1}\\
+& \geq \max_{i\in\possibleArms}\mu_i(t,N_{i,t-1})  - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1} 
+\end{align*}
+
+The first inequality is due to the decreasing nature of the reward. The second inequality is because, on $\xi_t$, $s_{ij}^c$ concentrates near a value which is smaller than $\bar{\mu}^{2^{j}2^{j+1}}_i(t-1,\pi)$  because it is an average from a sequence of consecutive reward which is newer than $2h_j \leq 2^{j+1}$ (when $m \leq 2$). The third inequality holds by selecting the minimum. The fourth one is standard algebra. The fifth one hold because $c( \cdot, \delta_t)$ decreases with h and $h_j < 2^{j_h+1}$. For the last one, we use the concentration on $\xi_t$ and the decreasing assumption. 
+
+
+\end{proof}
+
+\begin{algorithm}
+
+\caption{{\small\sc EFF\_Update}}
+\begin{algorithmic}[H]
+\label{EFFUPDATE}
+\REQUIRE $i$, $r$, $t$, $m$
+\STATE $\left\{h_j\right\} \leftarrow  \left\{\, h_{j+1} = \ceil{mh_j}\, |\, h_0 =1 \,\right\}$
+\STATE $\armCount_{\arm(\currentTime),\currentTime} \leftarrow \armCount_{\arm(\currentTime),\currentTime-1} +1$
+\STATE $R^{\rm total}_i \leftarrow R^{\rm total}_i + r$ 
+{\footnotesize \COMMENT{\emph{keep track of total reward}}}
+\IF{$\exists j$ such that $N_{i,t} = h_j$}
+\STATE $s_{i,j}^{\,c} \leftarrow R_i^{\rm total}/N_{i,t}$ 
+{\footnotesize \COMMENT{\emph{initialize new statistics}}}
+\STATE $s_{i,j}^{\,p} \leftarrow 0$
+\STATE $n_{i,j}\leftarrow 0$
+\ENDIF
+\FOR{$j \in  \{ j\ |\  s_{i,j}^{\,p} \neq \texttt{None}\}$}
+\STATE $n_{i,j} \leftarrow n_i +1$
+\STATE $s_{i,j}^{\,p} \leftarrow s_{i,j}^{\,p} + r$
+\IF{$ n_{i,j} = h^j $}
+\IF{$s_{i,j+1}^p =\texttt{None}$}
+\STATE $s_{i,j+1}^{\,p} \leftarrow s_{i,j}^{\,p}$
+\STATE $n_{i,j+1} \leftarrow n_{i,j}$
+\ENDIF
+\STATE $s_{i,j}^{\,c} \leftarrow s_{i,j}^{\,p}/h_j$
+\STATE $n_{i,j} \leftarrow 0$
+\STATE $s_{i,j}^{\,p} \leftarrow \texttt{None}$
+\ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+\newpage

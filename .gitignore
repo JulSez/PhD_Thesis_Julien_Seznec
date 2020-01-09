@@ -1,0 +1,14 @@
+**.aux
+**.bak
+**.bbl
+**.bcf
+**.blg
+**.dvi
+**.idx
+**.log
+**.out.ps
+**.ptc
+**.run.xml
+**.synctex.gz
+.DS_STORE
+MichalHDR/
