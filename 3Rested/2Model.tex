@@ -9,10 +9,11 @@ At each round $t$, an agent chooses an arm $i_t \in \possibleArms \triangleq \le
 We use $\mu_i(n)$ for the expected value of arm~$i$ \textit{after $n$ pulls} instead of when it is pulled \textit{for the $n$-th time}. 
 Let $\historyt \triangleq \left\{ \left\{ i_s, o_s \right\}, \forall s < t \right\}$ be the sequence of arms pulled and rewards observed until round $t$, then 
 %
-\begin{align*}
+\begin{equation}
+\label{eq:rested-feedback}
 o_{t} \triangleq \mu_{i_t}(N_{i_t,t-1}) + \noise_t
  \;\; \text{with}\; \EE{ \noise_t | \historyt }= 0 \;\; \text{and} \; \forall \lambda \in \R, \; \EE{ e^{\lambda\noise_t}} \leq e^{\frac{\subgaussian\lambda^2}{2}},
-\end{align*}
+\end{equation}
 %
 where $N_{i,t}\triangleq \sum_{s=1}^{t} \mathbb{I}\{i_s = i\}$ is the number of times arm $i$ is pulled after round $t$. %We use $r_i(n)$ to denote the random reward of arm $i$ when pulled for the $n+1$-th time, i.e., $r_{i_t,t} = \obs_{i_t}(N_{i_t,t})$. 
 %
@@ -287,14 +288,21 @@ Let $\BBxSet$, the set of non-increasing reward functions with bounded amplitude
 The choice of origin $x$ is not important. Without loss of generality, we will carry the analysis on $\BBSet \triangleq \BSet_{B,0}$. 
 \end{definition}
 \begin{remark}
+\label{rem:BBvsLL}
 We have that $\BSet_L \subset \rewardSet$. Hence, any guarantee of any algorithm on $\rewardSet$ applies on $\BBSet$ by setting $L := B$. We also have that $\rewardSet \subset \BSet_{LT, -L\pa{T-1}}$. Hence, any guarantee of any algorithm on $\BBxSet$ applies on $\rewardSet$ by setting $B := LT$.
 \end{remark}
 
 \paragraph{Estimators}  
 For policy $\pi$, we define the average of the last $h$ observations of arm $i$ at time $t$ as
-\[\widehat{\mu}_i^h(t,\pi) \triangleq \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,s}^\pi\!>\! N_{i,t-1}^\pi\! -\! h } o_{s}\]
+\begin{equation}
+\label{eq:def-hmu}
+\widehat{\mu}_i^h(t,\pi) \triangleq \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,s}^\pi\!>\! N_{i,t-1}^\pi\! -\! h } o_{s}
+\end{equation}
 and the average of the associated means as
-\[\bar{\mu}_i^h(t,\pi) \!\triangleq\! \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,\,s}^\pi\!>\! N_{i,\,t-1}^\pi\! -\! h } \mu_{i}(N_{i,s-1}^\pi)\,.\] 
+\begin{equation}
+\label{eq:def-bmu}
+\bar{\mu}_i^h(t,\pi) \!\triangleq\! \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,\,s}^\pi\!>\! N_{i,\,t-1}^\pi\! -\! h } \mu_{i}(N_{i,s-1}^\pi)\,.
+\end{equation}
 
 We notice that $\bar{\mu}_i^h(t,\pi) = \frac{1}{h}\sum_{h'=1}^{h} \mu_i(N_{i,\,t-1}^\pi-h') = \bar{\mu}_i^h(N_{i,\,t-1}^\pi)$ . With a slight abuse of notation, we will also use $\hat{\mu}_i^h(\Nit^\pi) \triangleq \hat{\mu}_i^h(t,\pi)$. Indeed, the average of the observations depends on the realization of the noise $\epsilon_t$ at time $t$. Yet, these $h$ samples of noise are i.i.d.\,and thus do not perturb the analysis. 
 
@@ -303,24 +311,24 @@ We notice that $\bar{\mu}_i^h(t,\pi) = \frac{1}{h}\sum_{h'=1}^{h} \mu_i(N_{i,\,t
 
 \paragraph{A favorable event}
 
-\begin{restatable}{proposition}{restachernoff}
+\begin{proposition}
 \label{prop:prb_favorable_event_SWA}
 For a confidence level $\delta_{T} \triangleq 2T^{-3}$
 , let
 \begin{equation}
-\!\HPevent_{\rm SWA} \! \triangleq\! \Big\{\forall t\!\in\!\left\{Kh +1, \dots, T\right\}, \forall i\!\in\!\mathcal{K},\ \forall n\in \left\{h, \dots, t-1\right\}, \ \big| \ \hmu_i^h(n) - \bmu_i^h(n) \big| \!\leq\! c(\window, \delta_{T}) \!\Big\}
+\!\HPSWA \! \triangleq\! \Big\{\forall t\!\in\!\left\{Kh +1, \dots, T\right\}, \forall i\!\in\!\mathcal{K},\ \forall n\in \left\{h, \dots, t-1\right\}, \ \big| \ \hmu_i^h(n) - \bmu_i^h(n) \big| \!\leq\! c(\window, \delta_{T}) \!\Big\}
 \label{eq:def_favorable_event_SWA}
 \end{equation}
 be the event under which all the possible estimates constructed at round $t$ are all accurate up to $c(h,\delta_{T}) \triangleq \sqrt{2 \subgaussian^2\log(2/\delta_T)/h}$. Then, for a policy which pulls every arm $h$ times at the beginning (like \SWA),
 \[
-\PPempty\Big[\bar{\HPevent}_{\rm SWA}\Big] \leq\frac{K}{T}\,\cdot
+\PPempty\Big[\bar{\HPSWA}\Big] \leq\frac{K}{T}\,\cdot
 \]
-\end{restatable} 
+\end{proposition} 
 
 \begin{proof}
 We want to upper bound the probability
 \[
-\PP{\bar{\HPevent}_{\rm SWA}} = \PP{\exists t \in \left\{Kh +1, \dots, T\right\},\exists i \in \arms,\,\exists n\in \left\{h, \dots, t-1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }\,.
+\PP{\bar{\HPSWA}} = \PP{\exists t \in \left\{Kh +1, \dots, T\right\},\exists i \in \arms,\,\exists n\in \left\{h, \dots, t-1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }\,.
 \]
 For $N_{i,\,t-1}^{\piSWA} = n$, we have that, 
 \[
@@ -341,6 +349,7 @@ Hence,
 where we used the Chernoff inequality at the before last line and $\delta_{T} = 2T^{-3}$ at the last one. 
 \end{proof}
 
+
 \begin{remark}
 \label{rem:uncorrect-levine}
 Notice that \citet{levine2017rotting} suggests to use $\delta_T = \frac{1}{T^2}$ to recover the same probability $\frac{K}{T}$. They argue that \SWA only uses less than $KT$ statistics along a trajectory. Yet, this argument is wrong. Indeed, $\Nit^{\piSWA}$ is a random variable which depends on the past observations. When an arm  %TODO
@@ -351,6 +360,7 @@ Notice that \citet{levine2017rotting} suggests to use $\delta_T = \frac{1}{T^2}$
 \paragraph{Regret upper-bound}
 
 \begin{proposition}[\citet{levine2017rotting}]
+\label{prop:SWA}
  For a problem $\Bmu \in \BBSet^K$, the expected regret of \SWA tuned with $h$ is bounded as
  \[
 \EE{ \regret(\piSWA)} \leq 2\sigma T\cdot\sqrt{\frac{6\log\pa{T}}{h}} + K\pa{h+1}B
@@ -358,31 +368,31 @@ Notice that \citet{levine2017rotting} suggests to use $\delta_T = \frac{1}{T^2}$
 \end{proposition}
 
 \begin{proof}
-We split the regret on the events $\HPevent_{\rm SWA}$ and $\bar{\HPevent}_{\rm SWA}$, 
+We split the regret on the events $\HPSWA$ and $\bar{\HPSWA}$, 
 \[
-\EE{\regret(\piSWA)} \leq \EE{\mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \regret(\piSWA)} + \EE{\mathbbm{1} \left[\bar{\HPevent}_{\rm SWA}\right] \regret(\piSWA)}.
+\EE{\regret(\piSWA)} \leq \EE{\mathbbm{1} \Big[\HPSWA\Big] \regret(\piSWA)} + \EE{\mathbbm{1} \left[\bar{\HPSWA}\right] \regret(\piSWA)}.
 \]
-The regret on the unfavorable event $\mathbbm{1} \left[\bar{\HPevent}_{\rm SWA}\right]$ can be bounded by the maximal regret $LT$ (since $\mu \in \BBSet^K$), 
+The regret on the unfavorable event $\mathbbm{1} \left[\bar{\HPSWA}\right]$ can be bounded by the maximal regret $LT$ (since $\mu \in \BBSet^K$), 
 \[
-\EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \regret(\piSWA)} + \PP{\bar{\HPevent}_{\rm SWA}} BT.
+\EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPSWA\Big] \regret(\piSWA)} + \PP{\bar{\HPSWA}} BT.
 \]
 
 Using Proposition~\ref{prop:prb_favorable_event_SWA}, we get,
 \begin{equation}
 \label{eq:regret-unfav-event-SWA}
-\EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPevent_{\rm SWA}\Big]  \regret(\piSWA)} + KB.
+\EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPSWA\Big]  \regret(\piSWA)} + KB.
 \end{equation}
 
 
 We will now bound the regret on the favorable event,
 \[
-\regret(\piSWA | \HPevent_{\rm SWA}) \triangleq \mathbbm{1} \Big[\HPevent_{\rm SWA}\Big]  \regret(\piSWA)
+\regret(\piSWA | \HPSWA) \triangleq \mathbbm{1} \Big[\HPSWA\Big]  \regret(\piSWA)
 \]
 
 We start from Equation~\ref{eq:regret-first-bound} applied to policy $\SWA$,
 \begin{equation}
 \label{eq:regret-first-bound-SWA}
-\regret(\piSWA| \HPevent_{\rm SWA}) \leq  \mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}.
+\regret(\piSWA| \HPSWA) \leq  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}.
 \end{equation}
 %
 The remaining of the proof is similar to the proof of Proposition~\ref{prop:GB-ub} about algorithm $\GB$. Instead of showing that the before last terms in the sums are equals to zeros, we will show that the terms before $h$ last one are less than $2c(h, \delta_T)$. Let $i \in \arms$ an arm which is pulled at least $h+1$ times at the end of the game $\NiT^{\piSWA} \geq h+1$. We call $t_i \triangleq \min\left\{t\leq T\; |\; \Nit^{\piSWA} = \NiT^{\piSWA}\right\}$ the last round at which $i$ is pulled. For any arm $j \in \arms$ pulled at least $h$ at the end of the game $\NjT^{\piSWA} \geq h$, and for all $n_i \leq \NiT^{\piSWA} -(h+1)$, 
@@ -394,7 +404,7 @@ The remaining of the proof is similar to the proof of Proposition~\ref{prop:GB-u
 & \geq \hmu_j^h(N_{j,\,t_i -1}^{\piSWA}) - c(h, \delta_T)  \nonumber\\
 & \geq \bmu_j^h(N_{j,\,t_i -1}^{\piSWA}) - 2c(h, \delta_T). 
 \end{align}
-The first inequality follows by the non-increasing hypothesis on the reward function. The second inequality is because $\bmu_i^h(N_{i,\,t_i -1}^{\piSWA})$ is the average of $h$ reward sample of arm $i$ after the $\NiT^{\piSWA} - (h+1)$-th. The third and fifth one use the concentration of all the possible estimates on the event $\HPevent_{\rm SWA}$.  The fourth  inequality follows by definition of the policy : at time $t_i$, $\piSWA$ selects $i \in \argmax_{j \in \arms} \hmu_j^h(N_{j,\,t_i -1}^{\piSWA})$, the largest last observed sample. 
+The first inequality follows by the non-increasing hypothesis on the reward function. The second inequality is because $\bmu_i^h(N_{i,\,t_i -1}^{\piSWA})$ is the average of $h$ reward sample of arm $i$ after the $\NiT^{\piSWA} - (h+1)$-th. The third and fifth one use the concentration of all the possible estimates on the event $\HPSWA$.  The fourth  inequality follows by definition of the policy : at time $t_i$, $\piSWA$ selects $i \in \argmax_{j \in \arms} \hmu_j^h(N_{j,\,t_i -1}^{\piSWA})$, the largest last observed sample. 
 
 We choose $j$ such that $ \mu_j(\NjT^{\piSWA}) = \mu^+_T(\piSWA) \pa{\triangleq \max_{j'\in \possibleArms} \mu_{j'}(N_{j',\,T}^{\piSWA})}$. \\Since $t_i \leq T$, by the rotting assumption, 
 \begin{equation}
@@ -410,9 +420,9 @@ Gathering Equations~\ref{eq:overpull-SWA1} and~\ref{eq:overpull-SWA2}, we have t
 Therefore,  in Equation~\ref{eq:regret-first-bound-SWA}, we can split the sum on $\NiT^{\piSWA} \!-\! h$. Hence, 
 
 \begin{align}
-\regret(\piSWA| \HPevent_{\rm SWA}) \leq&  \mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}\nonumber\\
-=&  \mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-\pa{h+1}} \pa{\mu^+_T(\piSWA) - \mu_i(n)} \nonumber\\ 
-&+ \mathbbm{1} \Big[\HPevent_{\rm SWA}\Big] \sum_{i\in \overpullSet} \sum_{n=\NiT^{\piSWA} - h }^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}\nonumber\\
+\regret(\piSWA| \HPSWA) \leq&  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}\nonumber\\
+=&  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-\pa{h+1}} \pa{\mu^+_T(\piSWA) - \mu_i(n)} \nonumber\\ 
+&+ \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet} \sum_{n=\NiT^{\piSWA} - h }^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}\nonumber\\
 \leq& 2Tc\pa{h,\delta_T} + KhB.
 \label{eq:regret-fav-event-SWA}
 \end{align}
@@ -422,6 +432,7 @@ In the last inequality, we used Equation~\ref{eq:overpull-SWA3} and that there i
 \]
 \end{proof}
 \begin{corollary}[\citet{levine2017rotting}]
+\label{cor:SWA}
 For $C$ such that $h:= \ceil{C \pa{\frac{\sigma T}{KB}}^{2/3}\pa{6\log\pa{T}}^{1/3}}$, 
 \[
 \regret(\piSWA) \leq \pa{\frac{2}{C^{1/2}} + C} \pa{6 \sigma^2 B K T^2 \log\pa{T}}^{1/3} + 2KB. 
@@ -471,7 +482,7 @@ We notice that the parameter $\alpha$ of \wSWA hide the dependency in $B$. Indee
 \subsection{Open problems}
 
 \subsubsection{Minimax rate}
-We report existing regret bounds for two special cases. First, in Proposition~\ref{prop:lb-noisefree}, \citet{heidari2016tight} show that in the absence of noise, the regret is lower bounded by $\cO\pa{KL}$. Second, we recall  We start the minimax regret lower bound for stochastic stationary bandits.
+We report existing regret bounds for two special cases. First, in Proposition~\ref{prop:lb-noisefree}, \citet{heidari2016tight} show that in the absence of noise, the regret is lower bounded by $\cO\pa{KL}$. Second, we recall the minimax regret lower bound for stochastic stationary bandits.
 
 \begin{proposition}{\cite[Thm.\,5.1]{auer2002nonstochastic}}
 \label{stochastic-LB}

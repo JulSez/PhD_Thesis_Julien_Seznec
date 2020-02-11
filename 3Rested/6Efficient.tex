@@ -1,26 +1,173 @@
 %!TEX root = ../main.tex 
 \section{Efficient algorithms}
 \label{app:efficient_alg}
+\subsection{The numerical cost of adaptive windows}
 
-In this section, we refine the efficient trick of \cite{seznec2019rotting}. The core idea is to store and update only few statistics for each arm.
-Let $m$ be a parameter in $(1,2]$. We define $s_{i,j}^{c}$ and $s_{i,j}^p$ the $j$-th current and pending statistics of arm $i$. 
+In the three last sections, we presented two adaptive windows algorithms whose significantly improved over state-of-the-art algorithms, both theoretically and experimentally. Yet, we highlight that these improvements are computationally expensive. Indeed, at each round $t$, we store, update and compare $\cO\pa{t}$ statistics. 
+
+The full update of the statistics can be done at a worst case cost of $\cO\pa{t}$. Indeed, each statistics $\hmu_i^h$ can be refreshed with a $\cO\pa{1}$ operation : 
+\[\hmu_i^{h+1}(n+1) = \frac{h}{h+1}\hmu_i^{h}(n) + \frac{1}{h+1}o_t \,. \]
+
+The comparison part in both \FEWA and \RUCB is also a $\cO\pa{t}$ operations. In \FEWA , we do a scan based on $\hmu_i^{h}$ for all $i \in \arms_h$ with increasing $h$. Hence, the total number of unitary operation is in $\cO\pa{t}$ in the worst case, as it scales with the number of statistics. \RUCB computes one UCB for each of the $\cO\pa{t}$ statistics. For each arm, it selects the minimum UCB as index, which can be done with complexity $\cO\pa{t}$. Finally, finding the largest index is an $\cO\pa{K}$ operations. Therefore, we can conclude,
+
+\begin{proposition}
+\FEWA and \RUCB have a $\cO\pa{t}$ worst-case complexity per round $t$ in time and memory.
+\end{proposition}
+
+\begin{remark}
+\SWA($h$) has a $\cO\pa{h}$ worst-case complexity in time and memory because the sliding-window mechanism need to store and update $\cO\pa{h}$ statistics to always have the average of the $h$ last sample ready. Hence, when it is optimally tuned for the minimax bound, $\SWA$ has a $\cO\pa{T^{2/3}}$ per round complexity. As often in non-stationary bandits, it may be possible to replace sliding window statistics by discounted statistics. Such modification often leads to slightly worse theoretical regret rate but to a much better $\cO\pa{K}$ complexity. 
+\end{remark}
+
+Hence, handling a large number of windows, which is the main strength of our algorithms to achieve a lower regret, is a significant drawback when it comes to design fast algorithm. Therefore, it is an open question whether one can enjoy the benefits of adaptive windows without suffering large time and space complexity. 
+
+\subsection{The efficient update trick}
+We detail \EFF, an update scheme to handle efficiently statistics of different windows. A similar yet different approach has appeared independently in the context of streaming mining~\citep{bifet2007learning}. \EFF is built around two main ideas.
+
+First, at any time $t$ we can avoid using $\left\{\hmu_i^h\right\}_{h}$ for all possible windows $h$ starting from 1 with an increment of 1. In fact, both statistics $\hmu_i^h$ and constructed confidence levels $c(h, \delta_t)$  have very close value for successive $h$ as $h$ becomes large : 
+\begin{align*}
+& \hmu_i^{h+1}(n) = \hmu_i^{h}(n) + \cO\pa{\frac{\sigma + L}{h}}\,,\\
+& c(h+1, \delta_t) = c(h, \delta_t) + \cO\pa{\frac{\sigma }{h^{3/2}}} \,.
+\end{align*}
+Hence, in both \FEWA and \RUCB, we compute a lot of very similar quantities. Instead, we could use fewer statistics which are significantly different : $\left\{\hmu_i^h(\Nitmonepi)\right\}_{h\in \Him}$, where the window $h$ is dispatched on a geometric grid, 
+ \[\Him\pa{\Nitmonepi} \triangleq \left\{ h_j \in  \left\{1, \dots , \Nitmonepi \right\} \;|\; h_{j+1} = \ceil{m \cdot h_j} \text{ and } h_1 = 1\right\}\quad \text{with } m > 1.\]
+
+When there is no confusion, we drop the dependency in $\Nitmonepi$.  This modification alone is not enough to reduce both the time and space complexity. Indeed, updating $\hmu^h_{i}$ requires to replace the $h$-th last sample by the new one $o_t$. Hence, we need to store all the collected statistics to be able to update all the $\hmu^h_{i}$ for all $h$ with $\cO\pa{1}$ complexity. Therefore, in \EFF, we will use $\cO\pa{K\log\pa{t}}$ \emph{delayed} statistics that we can update with $\cO\pa{K\log\pa{t}}$ space and time complexity.
+
+\EFF (Alg.~\ref{alg:effupdate}) takes as input the new observation $o_t$ that the learner gets at the $N_i$-th pull of arm $i$; the geometric window grid $\Him$ tuned with an hyperparameter $m>1$, and for each window $h_j$ in this grid, three different numbers $\hmueff,\; \peff, \; \neff$. $\left\{\hmueff\right\}_{i,h_j}$ represents the set of \emph{current} statistics of window size $h_j$ that will be used instead of $\left\{\hmu_i^h\right\}_{i,h}$ in our efficient algorithms. We also store a pending statistic $\peff$ and a count $\neff$  which are used in the sparse update procedure of $\hmueff$. \EFF outputs an updated set of statistics.  
+
+\begin{minipage}{\textwidth}
+\renewcommand*\footnoterule{}
+\begin{savenotes}
+\begin{algorithm}[H]
+\caption{{\small\sc Eff\_Update}}
+\begin{algorithmic}[1]
+\label{alg:effupdate}
+\Require $o_t$, \small $\Him \gets \left\{h_j \! <\! \ceil{m \cdot N_i} \; | \;  h_{j+1} \!=\! \ceil{m \cdot h_j}  \text{with } h_1 \!=\! 1\right\} $\normalsize, $\left\{ \{ \hmueff,\, \peff, \, \neff \}\right\}_{h_j \in \Him}$
+\If{$N_i = \max\pa{\Him}$}\label{algline:effu-new-condition} \Comment{Create a new triplet with window $h_j = \ceil{m \cdot N_i}$}  
+\State $\Him \gets \Him \cup \left\{ \ceil{m \cdot N_i} \right\}$\label{algline:effu-new-h}
+\State $p_i^{\ceil{m \cdot N_i} } = p_i^{N_i} $\label{algline:effu-new-p}
+\State $n_i^{\ceil{m \cdot N_i} } \gets n_i^{N_i} $\label{algline:effu-new-n}
+\State $\hmu_{i, \, \texttt{eff}}^{\ceil{m \cdot N_i} }\leftarrow \texttt{None}$\label{algline:effu-new-mu}
+\EndIf\label{algline:effu-new-end} 
+\State $p_i^{1} \gets o_t$ \label{algline:effu-update-first-p} \Comment{Update the first triplet with $o_t$}
+\State $n_i^{1} \gets 1$\label{algline:effu-update-first-n}
+\State $\hmu_{i, \, \texttt{eff}}^{1}\leftarrow o_t$ \label{algline:effu-update-first-hmu}
+\For{$h_j \in  \Him \smallsetminus \left\{ 1\right\} $}\label{algline:effu-update-start} \Comment{Update the other pending statistics $\peff$ and $\neff$}
+\State $p_i^{h_j} \gets p_i^{h_j}  +o_t$\label{algline:effu-update-p}
+\State $n_i^{h_j} \gets n_i^{h_j} + 1$\label{algline:effu-update-n}
+\EndFor\label{algline:effu-update-end} 
+\For{$h_j \in  $ \textsc{Sort\_Desc}$\pa{\Him \smallsetminus \left\{ 1\right\} }$}\label{algline:effu-refresh-start}
+\If{$n_i^{h_j} = h_j$} \label{algline:effu-refresh-condition}
+\State $\hmueff \leftarrow p_i^{h_j}/h_j$ \Comment{Replace the current statistic $\hmueff$}\label{algline:effu-refresh-hmu}
+\State{$p_i^{h_{j}} = p_i^{h_{j-1}} $} \label{algline:effu-refresh-p}\Comment{Refresh the pending statistics}
+\State $n_i^{h_{j}} \gets n_i^{h_{j-1}} $\label{algline:effu-refresh-n}
+\EndIf
+\EndFor \label{algline:effu-refresh-end}
+\Ensure $\left\{\left\{  \hmueff,\; p_i^{h_j}, \; n_i^{h_j} \right\}\right\}_{h_j \in \Him}$
+\end{algorithmic}
+\end{algorithm}
+\end{savenotes}
+\end{minipage}
 
 
 
-Algorithm~\ref{EFFUPDATE} is quite technical. We give here a short description. At each pull, we replace $s_{i,1}^{c}$ and create $s_{i,2}^{p}$ if it is \texttt{None}.
-The incoming reward at time $t$ are added to the existing pending statistics. We define $h_j$ recursively : $h_{j+1} \triangleq \ceil{m*h_{j}}$. When the pending statistics contains $h_j$ sample, we set $s_{i,j}^{c} \leftarrow s_{i,j}^{p}$. If $s_{i,j+1}^{p}$ is \texttt{None}, we set $s_{i,j+1}^{p} \leftarrow s_{i,j}^{p}$. After that, we set $s_{i,j}^{p} \leftarrow \texttt{None}$.
 
-By doing that, we ensure that $s_{i,j}^{c}$ contains the empirical average of $h_j$ pulls among the $2h_j-1$ ones. 
+The core of \EFF is divided in four parts: 1) From Lines~\ref{algline:effu-new-condition} to~\ref{algline:effu-new-end}, we create new statistics at a logarithmic rate with respect to the growth of $N_i$; 2) From Lines~\ref{algline:effu-update-first-p} to~\ref{algline:effu-update-first-hmu}, we update the statistics of window $h_1=1$;
+3) From Lines~\ref{algline:effu-update-start} to~\ref{algline:effu-update-end}, we update the other pending statistics and count;
+4) From Lines~\ref{algline:effu-refresh-start} to~\ref{algline:effu-refresh-end}, we eventually update $\hmueff$ and refresh the correspounding pending statistic and count. The remaining details are quite technical. Thus, we first give the high-level properties that are ensured by the recursive usage of \EFF. Then, we prove them by going through the algorithm line by line.
 
-We define \EFFU the index policy which selects
-\[\argmax_{i \in \possibleArms} \left\{\min_{j}\left(s^c_{i,j} + c(h_j, \delta_t)\right)\right\}\cdot
+\begin{proposition}
+\label{prop:effu}
+ $\left\{\left\{  \hmueff,\; p_i^{h_j}, \; n_i^{h_j} \right\}\right\}_{h_j \in \Him}$, constructed recursively with \EFF with initial value $\left\{\left\{  \hmu_{i,\,\texttt{eff}}^1 : \texttt{None},\; p_i^{1} :0 , \; n_i^{1}:0 \right\}\right\}$ have the following properties :
+ \begin{enumerate}[topsep=0pt]
+  \item $\hmueff$ is the average of exactly $h_j$ consecutive samples among the $2h_j -1$ last ones. \label{list:effu-hmu}
+  \item The delay between two updates of $\hmueff$ is in $\left\{\ceil{\frac{m-1}{m} h_j}, \dots, h_j -1\right\}$.\label{list:effu-delay}
+  \item When $m = 2$, $h_j = 2^{j-1}$. Moreover, for $j\geq2$, $\hmueff(n)$ is updated every $2^{j-2}$ rounds (and every rounds for $j=1$).\label{list:effu-m2}
+  \item $\peff$ is the sum of the $\neff$ last samples. \label{list:effu-p}
+  \item $\neff < h_j$ for $j>2$. Also, $n_i^1 \leq 1$.\label{list:effu-n1}
+  \item $\left\{ \neff \right\}_{h_j}$ is an non-decreasing sequence with respect to $h_j$ (or $j$).\label{list:effu-n2}
+ \end{enumerate}
+\end{proposition}
+\begin{proof}
+The three last properties are trivially true at the initialization. Thus, we show by induction that they remain true after updates.
+\paragraph{Proof of \ref{list:effu-p}. } At Lines~\ref{algline:effu-new-p} and~\ref{algline:effu-new-n}, we create a new pending statistics and count by intializing them with other statistics and count. Hence, because of the recursion hypothesis, all the pending statistics $\peff$ (including the created one) contains the sum of the $\neff$ \emph{before last} pulls. At Lines~\ref{algline:effu-update-first-p} and~\ref{algline:effu-update-first-n}, we update $p_i^1$ with the last sample and set $n_i^1$ to $1$. At Lines~\ref{algline:effu-update-p} and~\ref{algline:effu-update-n}, we add the last sample to $\peff$ (which was containing the before last samples) and increase the count by $1$. Hence, at the end of Line~\ref{algline:effu-update-n}, all the $\peff$ contains the sum of the last $\neff$ samples. Thus, refreshing $\peff$ and $\neff$ with $ p_i^{h_{j-1}}$ and $n_i^{h_{j-1}}$ keeps this property true (Lines~\ref{algline:effu-refresh-p} and~\ref{algline:effu-refresh-n}). 
+
+\paragraph{Proof of \ref{list:effu-n1}.}
+
+For $j\geq2$, $\neff$ is created at Line~\ref{algline:effu-new-n} with $n_i^{N_i} = N_i -1 < \ceil{m \cdot N_i} = h_j$ ($m>1$). Indeed, at the beginning of $N_i$-th update $\hmu_{i,\, \texttt{eff}}^{N_i}$ is not created yet and $\peff$ contains the $\neff = N_i-1$ before last pulls. Then, $\neff$ ($j\geq2$) is increased by one at each update at Line~\ref{algline:effu-update-n}. When it reaches $\neff = h_j$ (Line~\ref{algline:effu-refresh-condition}), it is replaced by the precedent count $n_i^{h_{j-1}}<h_j$ (Line~\ref{algline:effu-update-n}). Indeed, for $j>3$, $n_i^{h_{j-1}} < h_{j-1} < h_j$ before the updating scheme (recursion hypothesis). After the increment by one at Line~\ref{algline:effu-update-n}, we still have $n_i^{h_{j-1}} \leq h_{j-1} < h_j$. For $j=2$, $n_i^{h_{j-1}} = n_i^1 \leq 1 < h_2$.
+
+\paragraph{Proof of \ref{list:effu-n2}.}
+At Line~\ref{algline:effu-new-n}, we create a new pending count corresponding to the largest $h_j$ and we initialize it with the precedent largest count. At Lines~\ref{algline:effu-update-first-n} and~\ref{algline:effu-update-n}, we set $n_i^1 =1$ and increase all the other $\neff$ by one. This operation preserves the non-decreasing property of the ordered set. Last, at Line~\ref{algline:effu-refresh-n}, we set few counts $\neff$ to the precedent value $n_i^{h_{j-1}}$- which also preserves the non-decreasing property of the ordered set. 
+
+\paragraph{Proof of \ref{list:effu-hmu} and \ref{list:effu-delay}.}
+Thanks to Property~\ref{list:effu-p}, we know that $\peff$ is the sum of the $\neff$ last sample. It is still true at the end of Line~\ref{algline:effu-update-n} (see the proof). Then, at Line~\ref{algline:effu-refresh-hmu}, and given the condition in Line~\ref{algline:effu-refresh-condition}, we set $\hmueff$ with the average of the last $h_j$ sample. Then, $\hmueff$ is not updated untill the condition at Line~\ref{algline:effu-refresh-condition} is fulfilled again. Given that $\neff$ is refreshed with a quantity larger or equal to $1$ and smaller or equal to $h_{j-1}$ at Line~\ref{algline:effu-refresh-n}. Then, it is increased by one at each update. we know that $\hmueff$ will be updated at least every $h_j-1$, and at most every $h_j -h_{j-1}$ round. Hence, considering the worst possible delay we can conclude : $\hmueff$ is the average of exactly $h_j$ consecutive samples among the $2h_j -1$ last ones. Last, considering that $h_{j-1}\leq h_j /m$, we conclude that the minimal delay is larger or equal to $\frac{m-1}{m}h_j$.
+
+\paragraph{Proof of \ref{list:effu-m2}.}
+When $m=2$, it is easy to find by induction that,
+ \[
+ h_{j+1} = \ceil{m\cdot h_j} = 2h_j = 2^j.
+ \]
+For $j=1$, $\hmu_{i,\,\texttt{eff}}^1$ is updated at every update at Line~\ref{algline:effu-update-first-hmu}.
+By induction on $j\geq 2$, $\hmueff$ is updated (Line~\ref{algline:effu-refresh-hmu}) for the first time after $h_j= 2^{j-1} = 4 \cdot 2^{j-3}$ pulls. Therefore, it is also an updating pull for $\hmu_{i,\,\texttt{eff}}^{h_{j-1}}$ (by the induction hypothesis) and $n_j$ is set with $n_{j-1} = 2^{j-2}$ at Line~\ref{algline:effu-refresh-n}. Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start}, hence $n_j$ is updated with $n_{j-1}$ before it is itself updated with $n_{j-2}$.  Hence, $\hmueff$ is updated again in $h_j - 2^{j-2} = 2^{j-2}$ pulls, \ie after $6 \cdot 2^{j-3}$ pulls of arm $i$. Again, $n_j$ is set with $n_{j-1} = 2^{j-2}$ (because it is an updating pull for $\hmu_{i,\,\texttt{eff}}^{h_{j-1}}$). By induction, we see that the $k$-th update happen at pull $ \pa{k+1} \cdot 2^{j-2}$, \ie every $2^{j-2}$ pulls.
+\end{proof}
+
+\begin{remark}
+At Line~\ref{algline:effu-refresh-n}, we refresh $\neff$ with $n_i^{h_{j-1}}$ which is often larger than $1$. Indeed, we could refresh $\peff$ and $\neff$ at $0$. Yet, in order to reduce the delay in the update, we use the variable available in the memory which contains the sums of $h$ last sample, with the largest $h< h_j$. According to Properties~\ref{list:effu-p},~\ref{list:effu-n1} and~\ref{list:effu-n2}, this quantity is $p_i^{h_{j-1}}$. Therefore, while we were not able to prove that it reduces %TODO
+
+Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start} to minimize the delay: if there is two consecutive updates of $\hmueff$ and $\hmu_{i,\, \texttt{eff}}^{h_{j+1}}$ at the same run of \EFF, doing a backward loop guarantees to refresh $n_i^{h_{j+1}}$ with a larger value than with a forward loop. 
+\end{remark}
+%Property~\ref{list:effu-delay} in Proposition~\ref{prop:effu} states that the delay in the update is at most $h_j-1$ in the worst case. Yet, notice that it is often much less: 
+
+
+\subsection{{\EFFFEWA} and {\EFFRAW}}
+{\EFFFEWA} and {\EFFRAW} are the two efficient versions of our initial algorithms. With an hyperparameter $m>1$, they use \EFF instead of \UPDATE (Lines~\ref{algline:fewa-update1} and~\ref{algline:fewa-update2} in \FEWA and Lines~\ref{algline:raw-update1} and~\ref{algline:raw-update2} in \RUCB). Therefore, they use $\left\{\hmueff\right\}_{i,h_j\in \Him}$ instead of $\left\{\hmu_i^h\right\}_{i,h \leq \Nitmone}$. 
+
+More precisely, in \FEWA, we replace the increment $h\gets h+1$ by $h\gets\ceil{m\cdot h}$ at Line~\ref{algline:fewa-window}. Hence, the next set is not called $\arms_{h+1}$ but $\arms_{\ceil{m\cdot h}}$ (Line~\ref{algline:fewa-filter} in \FEWA and Line~\ref{algline:filter-add} in \FILTER). Finally, at Lines~\ref{algline:fewa-condition} and~\ref{algline:fewa-pull}, the condition is not $N_{i_t}=h$ but $N_{i_t} \leq h$. In the \FILTER procedure, we also change $\hmu_i^h$ by $\hmu_{i,\,\texttt{eff}}^h$ at Lines~\ref{algline:filter-max} and~\ref{algline:filter-delta}. In \RUCB, we only change the $h\leq N_i$ by $h_j \in \Him$ and $\hmu_i^h$ by $\hmu_{i,\,\texttt{eff}}^h$ in the index computation at Line~\ref{algline:raw-pull}.
+
+\begin{proposition}
+\EFFFEWA and \EFFRAW tuned with hyperparmaeter $m$ have a $\cO\pa{K\log_m\pa{t}}$ worst-case time and space complexity at round $t$.
+\end{proposition}
+\begin{proof}
+The total number of statistics for each arm $i$ at round $t$ is bounded by $\cO\pa{\log_m\pa{t}}$. Indeed, 
+\[t \geq \Nitmone \geq h_j \geq m^{j-1} \implies j \leq 1 + \log_m\pa{t}.\]
+Moreover, in \EFF we use 3 numbers for each $\left\{\hmueff\right\}_j$. Hence, the space complexity scales with \[ \sum_{i\in \arms} | \Him| = \sum_{i\in \arms} \cO\pa{\log_m\pa{t}} = \cO\pa{K\log_m\pa{t}}.\]
+The time complexity of $\EFF$ scales with the number of statistics in arm $i_t$, \ie at most $\cO\pa{\log_m\pa{t}}$. The indexes computation of \EFFRAW  find the minimum of $K$ sets with cardinality $\cO\pa{\log_m\pa{t}}$, while finding the maximum among these indexes is a $\cO\pa{K}$ operation.  Thus, the worst-case time complexity is $\cO\pa{K\log_m\pa{t}}$. \EFFFEWA uses at most $\cO\pa{\log_m\pa{t}}$ times the procedure \FILTER  whose inner complexity scales with $|\arms_h| \leq K$. Therefore, in the worst case, the time complexity of \EFFFEWA at round $t$ is bounded by $\cO\pa{K\log_m\pa{t}}$.
+\end{proof}
+
+
+
+\subsection{Analysis}
+
+
+The analysis of \RUCB (respectively \FEWA) only uses Proposition~\ref{prop:prb_favorable_event} and Lemma~\ref{lem:core-RAWUCB} (respectively~\ref{lem:core-FEWA}). We will derive analoguous results for \EFFRAW and \EFFFEWA, which allows us to reproduce very similar upper-bounds on the regret. 
+\paragraph{A favorable event for efficiently updated adaptive windows}
+\begin{proposition}
+\label{prop:prb_favorable_event_eff}
+For any round $t$ and confidence $\delta_{t} \triangleq 2t^{-\alpha}$, let 
+%
+\begin{equation*}
+\!\HPeff\! \triangleq\! \Big\{ \forall i\!\in\!\arms,\ \forall n \!\leq\! t\!-\!1 ,\ \forall h_j \in \Him(n), \big| \hmueff(n) - \bmueff(n) \big| \!\leq\! c(h_j, \delta_{t}) \!\Big\}
+\end{equation*}
+ be the event under which the estimates at round $t$  are all accurate up to $c(h,\delta_{t}) \triangleq \sqrt{2 \subgaussian^2\log(2/\delta_t)/h}$. Then, for a policy $\pi$ which pulls each arms once at the beginning, and for all $t>K$,
+\[
+\PPempty\Big[\bar{\HPeff}\Big] \leq 3Kt\delta_t= 6Kt^{1-\alpha}\,\cdot
 \]
+\end{proposition} 
 
+\begin{proof}
+As in Propositions~\ref{prop:prb_favorable_event_SWA} and~\ref{prop:prb_favorable_event}, we have to count the number of statistics that are required to hold in the confidence region. Calling $u_j(t)$ the number of update of statistics $\hmueff$ after $t$ pulls, we have
+\begin{align*}
+    \PPempty\Big[\bar{\HPeff}\Big] &\leq \sum_{i \in \arms} \sum_{j=1}^{\floor{\log_2\pa{t}}} u_j(t) \delta_t \\
+    &\leq \sum_{i \in \arms} \pa{t - 1  + \sum_{j=2}^{\floor{\log_2\pa{t}}} \frac{t-1}{2^{j-2}}} \delta_t \\
+    &\leq 3Kt\delta_t
+\end{align*}
+In the second inequality, we use Property~\ref{list:effu-m2} in Proposition~\ref{prop:effu}: statistics $\hmueff(n)$ is only updated every $2^{j-2}$ pulls for $j\geq 2$ (and every pull for $j=1$).
+\end{proof}
 
 \begin{restatable}{lemma}{restafundamentallemmaefficient}
 \label{fundamental-lemma_efficient}
-At round $t$ on favorable event $\HPevent_t$, if arm~$i_{t}$ is selected by $\EFFU$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $\window$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
-%
+At round $t$ on favorable event $\HPevent$, if arm~$i_{t}$ is selected by $\EFFU$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $\window$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+
 \vspace{-4pt}
 \begin{equation*}
 \bar{\mu}^{h}_{i_{t}}(t-1,\pi) \geq \max_{i \in \possibleArms}\mu_i(t,N_{i,t-1}) - \frac{2\sqrt{2}}{\sqrt{2}-1} c(h, \delta_{t}).
@@ -30,7 +177,7 @@ At round $t$ on favorable event $\HPevent_t$, if arm~$i_{t}$ is selected by $\EF
 We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h$ such that :
 $2^{j_h} -1 \leq  h < 2^{j_h+1}-1$.
 \begin{align*}
-\bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \bar{\mu}^{2^{j_h}-1}_{i_t}(t-1,\pi)\\ & = \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi)\\ & \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \left(s_{i_tj}^c - c(2^j, \delta_t)\right)\\
+\bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \bar{\mu}^{2^{j_h}-1}_{i_t}(t-1,\pi)\\ & = \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi)\\ & \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \left(\hmueff - c(2^j, \delta_t)\right)\\
 & \geq \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \sum_{j=0}^{j_h-1} \frac{2^{j+1}}{2^{j_h}-1}c(2^j, \delta_t)\\
 & = \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1}\sum_{j=0}^{j_h-1} 2^{\frac{j}{2}}\\
 & = \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1} \frac{2^{\frac{j_h}{2}}-1}{\sqrt{2}-1}\\
@@ -41,38 +188,9 @@ $2^{j_h} -1 \leq  h < 2^{j_h+1}-1$.
 
 The first inequality is due to the decreasing nature of the reward. The second inequality is because, on $\xi_t$, $s_{ij}^c$ concentrates near a value which is smaller than $\bar{\mu}^{2^{j}2^{j+1}}_i(t-1,\pi)$  because it is an average from a sequence of consecutive reward which is newer than $2h_j \leq 2^{j+1}$ (when $m \leq 2$). The third inequality holds by selecting the minimum. The fourth one is standard algebra. The fifth one hold because $c( \cdot, \delta_t)$ decreases with h and $h_j < 2^{j_h+1}$. For the last one, we use the concentration on $\xi_t$ and the decreasing assumption. 
 
+\subsection{Experimental Result}
+
+
+
 
 \end{proof}
-
-\begin{algorithm}
-
-\caption{{\small\sc EFF\_Update}}
-\begin{algorithmic}[H]
-\label{EFFUPDATE}
-\REQUIRE $i$, $r$, $t$, $m$
-\STATE $\left\{h_j\right\} \leftarrow  \left\{\, h_{j+1} = \ceil{mh_j}\, |\, h_0 =1 \,\right\}$
-\STATE $\armCount_{\arm(\currentTime),\currentTime} \leftarrow \armCount_{\arm(\currentTime),\currentTime-1} +1$
-\STATE $R^{\rm total}_i \leftarrow R^{\rm total}_i + r$ 
-{\footnotesize \COMMENT{\emph{keep track of total reward}}}
-\IF{$\exists j$ such that $N_{i,t} = h_j$}
-\STATE $s_{i,j}^{\,c} \leftarrow R_i^{\rm total}/N_{i,t}$ 
-{\footnotesize \COMMENT{\emph{initialize new statistics}}}
-\STATE $s_{i,j}^{\,p} \leftarrow 0$
-\STATE $n_{i,j}\leftarrow 0$
-\ENDIF
-\FOR{$j \in  \{ j\ |\  s_{i,j}^{\,p} \neq \texttt{None}\}$}
-\STATE $n_{i,j} \leftarrow n_i +1$
-\STATE $s_{i,j}^{\,p} \leftarrow s_{i,j}^{\,p} + r$
-\IF{$ n_{i,j} = h^j $}
-\IF{$s_{i,j+1}^p =\texttt{None}$}
-\STATE $s_{i,j+1}^{\,p} \leftarrow s_{i,j}^{\,p}$
-\STATE $n_{i,j+1} \leftarrow n_{i,j}$
-\ENDIF
-\STATE $s_{i,j}^{\,c} \leftarrow s_{i,j}^{\,p}/h_j$
-\STATE $n_{i,j} \leftarrow 0$
-\STATE $s_{i,j}^{\,p} \leftarrow \texttt{None}$
-\ENDIF
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
-\newpage

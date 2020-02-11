@@ -1,8 +1,4 @@
 % !TEX root = main.tex
-% !TEX root = main.tex
-
-
-
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -353,7 +349,7 @@
 \newcommand{\loss}{\ell}
 \newcommand{\hLoss}{\hat{L}}
 \newcommand{\hL}{\wh{L}}
-\newcommand{\noise}{\xi}
+\newcommand{\noise}{\epsilon}
 %spectral
 \newcommand{\dold}{\effd_{\scriptsize\mbox{old}}}
 \newcommand{\dnew}{\effd_{\scriptsize\mbox{new}}}
@@ -373,6 +369,7 @@
 %continuous bandit notation
 %\newcommand{\node}[2]{\circ[#1,#2]}
 \newcommand{\node}[2]{(#1,#2)}
+\newcommand{\CommaBin}{\mathbin{\raisebox{0.5ex}{,}}}
 
 
 %%% todos
@@ -410,16 +407,17 @@
 \newcommand{\historyt}{\mathcal{H}_\currentTime}
 \newcommand{\history}{\mathbf{H}}
 \newcommand{\historyn}{\mathcal{H}_\timeEnd}
-\newcommand{\EWA}{\policy_{\rm F}}
 \newcommand{\underpullSet}{\textsc{up}}
 \newcommand{\overpullSet}{\textsc{op}}
-\newcommand{\HPevent}{\xi}
+\newcommand{\HPevent}{\xi^\alpha_t}
+\newcommand{\HPeff}{\xi^\alpha_{t,\, \texttt{eff}}}
+\newcommand{\HPSWA}{\xi_{\rm SWA}}
 \newcommand{\policySet}{\Pi}
-\newcommand{\rewardSet}{\mathcal{L}_\lipschitz}
+\newcommand{\rewardSet}{\mathcal{L}_L}
 \newcommand{\BBxSet}{\mathcal{B}_{B,x}}
 \newcommand{\BBSet}{\mathcal{B}_{B}}
 \newcommand{\BSet}{\mathcal{B}}
-\newcommand{\stationarySet}{\mathcal{S}_{\lipschitz}}
+\newcommand{\stationarySet}{\mathcal{S}_L}
 \newcommand{\myAlgorithm}{\normalfont \texttt{FEWA}\xspace}
 
 \newcommand{\GO}{\pi_{\rm O}}
@@ -427,6 +425,8 @@
 \newcommand{\Atwo}{\mathcal{A}_{\rm 2}}
 \newcommand{\GB}{\pi_{\rm G}}
 \newcommand{\FEWA}{\normalfont \texttt{FEWA}\xspace}
+\newcommand{\EWA}{\policy_{\rm F}}
+\newcommand{\piF}{\policy_{\rm F}}
 \newcommand{\wSWA}{\normalfont \texttt{wSWA}\xspace}
 \newcommand{\SWA}{\normalfont \texttt{SWA}\xspace}
 \newcommand{\piSWA}{\pi_{\rm SWA}}
@@ -434,8 +434,11 @@
 \newcommand{\DUCB}{\normalfont \texttt{D-UCB}\xspace}
 \newcommand{\SWUCB}{\normalfont \texttt{SW-UCB}\xspace}
 \newcommand{\UCBone}{\normalfont \texttt{UCB1}\xspace}
-\newcommand{\EFF}{\normalfont {\texttt{EFF-FEWA}}\xspace}
+\newcommand{\EFF}{\normalfont {\texttt{EFF\_UPDATE}}\xspace}
 \newcommand{\EFFP}{\policy_{\rm EFF-FEWA}}
+\newcommand{\FILTER}{\normalfont \texttt{FILTER}\xspace}
+\newcommand{\UPDATE}{\normalfont \texttt{UPDATE}\xspace}
+\newcommand{\EFFFEWA}{\normalfont \texttt{EFF-FEWA}\xspace}
 \newcommand{\EUCB}{\normalfont \texttt{RAW-UCB}\xspace}
 \newcommand{\XUCB}{\normalfont \texttt{RAW-UCB}\xspace}
 \newcommand{\RUCB}{\normalfont \texttt{RAW-UCB}\xspace}
@@ -461,13 +464,34 @@
 \newcommand{\PiO}{\Pi_{\rm O}}
 \newcommand{\PiL}{\Pi_{\rm L}}
 \newcommand{\Nit}{N_{i,\,t}}
+\newcommand{\Nitmone}{N_{i,\,t-1}}
 \newcommand{\NiT}{N_{i,\,T}}
 \newcommand{\Njt}{N_{j,\,t}}
+\newcommand{\Njtmone}{N_{j,\,t-1}}
 \newcommand{\NjT}{N_{j,\,T}}
 \newcommand{\Nitpi}{N_{i,\,t}^\pi}
+\newcommand{\Nitmonepi}{N_{i,\,t-1}^\pi}
 \newcommand{\NiTpi}{N_{i,\,T}^\pi}
 \newcommand{\Njtpi}{N_{j,\,t}^\pi}
+\newcommand{\Njtmonepi}{N_{j,\,t-1}^\pi}
 \newcommand{\NjTpi}{N_{j,\,T}^\pi}
+\newcommand{\hit}{h_{i,\,t}}
+\newcommand{\hitmone}{h_{i,\,t-1}}
+\newcommand{\hiT}{h_{i,\,T}}
+\newcommand{\hjt}{h_{j,\,t}}
+\newcommand{\hjtmone}{h_{j,\,t-1}}
+\newcommand{\hjT}{h_{j,\,T}}
+\newcommand{\hitpi}{h_{i,\,t}^\pi}
+\newcommand{\hiTpi}{h_{i,\,T}^\pi}
+\newcommand{\hjtpi}{h_{j,\,t}^\pi}
+\newcommand{\hjTpi}{h_{j,\,T}^\pi}
 \newcommand{\PPv}{\mathbb{P}}
+\newcommand{\ie}{\emph{i.e.}\xspace} 
+\newcommand{\piFRSet}{\left\{\piF, \piR\right\}}
+\newcommand{\Him}{H_{i,\,m}}
+\newcommand{\hmueff}{\hmu_{i,\texttt{eff}}^{h_j}}
+\newcommand{\bmueff}{\bmu_{i,\texttt{eff}}^{h_j}}
+\newcommand{\neff}{n_i^{h_j}}
+\newcommand{\peff}{p_i^{h_j}}
 
 
