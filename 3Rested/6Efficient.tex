@@ -153,6 +153,9 @@ For any round $t$ and confidence $\delta_{t} \triangleq 2t^{-\alpha}$, let
 \PPempty\Big[\bar{\HPeff}\Big] \leq 3Kt\delta_t= 6Kt^{1-\alpha}\,\cdot
 \]
 \end{proposition} 
+\begin{remark}
+The probability of the unfavorable event $\bar{\HPeff}$ scales with $\cO\pa{t^{1-\alpha}}$ compared to $\cO\pa{t^{2-\alpha}}$ for $\bar{\HPevent}$ because the efficient algorithms construct less statistics. It means that our theory will hold for a wider range of $\alpha$. Yet, this benefits is only theoretical : in practice, we know that the union bound technique leads to conservative tuning of the confidence bounds. 
+\end{remark}
 
 \begin{proof}
 As in Propositions~\ref{prop:prb_favorable_event_SWA} and~\ref{prop:prb_favorable_event}, we have to count the number of statistics that are required to hold in the confidence region. Calling $u_j(t)$ the number of update of statistics $\hmueff$ after $t$ pulls, we have
@@ -166,7 +169,7 @@ In the second inequality, we use Property~\ref{list:effu-m2} in Proposition~\ref
 
 \begin{restatable}{lemma}{restafundamentallemmaefficient}
 \label{fundamental-lemma_efficient}
-At round $t$ on favorable event $\HPevent$, if arm~$i_{t}$ is selected by $\EFFU$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $\window$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+At round $t$ on favorable event $\HPeff$, if arm~$i_{t}$ is selected by $\EFFRAW$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $h$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
 
 \vspace{-4pt}
 \begin{equation*}
@@ -174,17 +177,59 @@ At round $t$ on favorable event $\HPevent$, if arm~$i_{t}$ is selected by $\EFFU
 \end{equation*}
 \end{restatable}
 \begin{proof}
-We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h$ such that :
-$2^{j_h} -1 \leq  h < 2^{j_h+1}-1$.
+Like for Lemma~\ref{lem:core-FEWA} (see its proof), our proof is done in a more general rotting framework that can be used in the next chapter. We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h \in \NN$ such that :
+$2^{j_h} -1 \leq  h < 2^{j_h+1}$.
+\begin{equation}
+\label{eq:eff-decompo}
+\bar{\mu}^{h}_{i_t}(t-1,\pi) \geq \bar{\mu}^{2^{j_h}-1}_{i_t}(t-1,\pi) = \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi).
+\end{equation}
+The inequality follows because the reward is decreasing and $h\geq 2^{j_h}-1$. Then, we decompose the average in a weighted sum of averages of geometricly expanding windows. Since the reward is decreasing we have that 
+\begin{equation*}
+\forall k \leq 2^j, \quad \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi) \geq \bar{\mu}^{k : k+2^{j}}_{i_t}(t-1,\pi).
+\end{equation*}
+
+$\hmuiteff$ contains $2^j$ samples among the $2^{j+1}$ last ones (see Proposition~\ref{prop:effu}). Because we are on $\HPeff$,  we can write
+\begin{equation}
+\label{eq:hmueff-link}
+\bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi) \geq \hmuiteff = \bar{\mu}^{k : k+2^{j}}_{i_t}(t-1,\pi)\geq  \hmuiteff - c(2^j, \delta_t),
+\end{equation}
+with $k\leq 2^j$ the current delay of the statistics $\hmuiteff$. Therefore, putting Equations~\ref{eq:eff-decompo} and~\ref{eq:hmueff-link}, 
+\begin{equation*}
+\bar{\mu}^{h}_{i_t}(t-1,\pi) \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff - c(2^j, \delta_t)}.
+\end{equation*}
+Now, we will use the mechanics of the two algorithms. For $\EFFRAW$, we make the index appear in the inequality,
 \begin{align*}
-\bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \bar{\mu}^{2^{j_h}-1}_{i_t}(t-1,\pi)\\ & = \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi)\\ & \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \left(\hmueff - c(2^j, \delta_t)\right)\\
-& \geq \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \sum_{j=0}^{j_h-1} \frac{2^{j+1}}{2^{j_h}-1}c(2^j, \delta_t)\\
-& = \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1}\sum_{j=0}^{j_h-1} 2^{\frac{j}{2}}\\
-& = \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1} \frac{2^{\frac{j_h}{2}}-1}{\sqrt{2}-1}\\
-& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(2^{j_h+1}, \delta_t)}{\sqrt{2}-1}\\
-& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1}\\
-& \geq \max_{i\in\possibleArms}\mu_i(t,N_{i,t-1})  - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1} 
+ \bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff - c(2^j, \delta_t)}\\
+ &=\sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff + c(2^j, \delta_t) - 2c(2^j, \delta_t)}\\
+ &\geq \min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} + 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
+ \end{align*}
+ 
+ On the first hand, we can relate the left part of the sum to the best arm current value :
+ \begin{equation*}
+\min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} \geq \min_{j \in \Him} \pa{\hmueff + c(2^j, \delta_t)}\geq \min_{j \in \Him} \bmueff \geq \mu_i(t,\Nitmone).
+ \end{equation*}
+The first inequality holds for any $i \in \arms$ by definition of the policy which selects the largest index. The second inequality holds on $\HPeff$. The third inequality uses the decreasing of the reward. 
+
+On the second hand, we can reduce the sum with algebra : 
+\begin{align*}
+\sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t) &= \sum_{j=0}^{j_h-1} \frac{\sqrt{2}^{j}}{2^{j_h}-1} c(1, \delta_t) \\
+& = \frac{\sqrt{2}^{j_h} -1 }{\pa{\sqrt{2}-1}\pa{2^{j_h}-1}}c(1, \delta_t) \\
+& = \frac{1}{\pa{\sqrt{2}-1}\pa{\sqrt{2}^{j_h} +1}} c(1, \delta_t)\\
+& \geq  \frac{1}{\pa{\sqrt{2}-1}\sqrt{2^{j_h}-1}} c(1, \delta_t) \\
+& = \frac{1}{\sqrt{2}-1} c(2^{j_h}-1, \delta_t) \\
+& \geq \frac{1}{\sqrt{2}-1} c(h, \delta_t)
 \end{align*}
+
+
+
+
+% \left(\hmuiteff - c(2^j, \delta_t)\right)
+%& \geq \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \sum_{j=0}^{j_h-1} \frac{2^{j+1}}{2^{j_h}-1}c(2^j, \delta_t)\\
+%& = \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1}\sum_{j=0}^{j_h-1} 2^{\frac{j}{2}}\\
+%& = \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1} \frac{2^{\frac{j_h}{2}}-1}{\sqrt{2}-1}\\
+%& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(2^{j_h+1}, \delta_t)}{\sqrt{2}-1}\\
+%& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1}\\
+%& \geq \max_{i\in\possibleArms}\mu_i(t,N_{i,t-1})  - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1} 
 
 The first inequality is due to the decreasing nature of the reward. The second inequality is because, on $\xi_t$, $s_{ij}^c$ concentrates near a value which is smaller than $\bar{\mu}^{2^{j}2^{j+1}}_i(t-1,\pi)$  because it is an average from a sequence of consecutive reward which is newer than $2h_j \leq 2^{j+1}$ (when $m \leq 2$). The third inequality holds by selecting the minimum. The fourth one is standard algebra. The fifth one hold because $c( \cdot, \delta_t)$ decreases with h and $h_j < 2^{j_h+1}$. For the last one, we use the concentration on $\xi_t$ and the decreasing assumption. 
 
