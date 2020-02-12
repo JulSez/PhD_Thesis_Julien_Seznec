@@ -42,16 +42,16 @@ When there is no confusion, we drop the dependency in $\Nitmonepi$.  This modifi
 \caption{{\small\sc Eff\_Update}}
 \begin{algorithmic}[1]
 \label{alg:effupdate}
-\Require $o_t$, \small $\Him \gets \left\{h_j \! <\! \ceil{m \cdot N_i} \; | \;  h_{j+1} \!=\! \ceil{m \cdot h_j}  \text{with } h_1 \!=\! 1\right\} $\normalsize, $\left\{ \{ \hmueff,\, \peff, \, \neff \}\right\}_{h_j \in \Him}$
+\Require $o_t$, \small $\Him \gets \left\{h_j \! <\! \ceil{m \cdot N_i} \; | \;  h_{j+1} \!=\! \ceil{m \cdot h_j}  \text{with } h_0 \!=\! 1\right\} $\normalsize, $\left\{ \{ \hmueff,\, \peff, \, \neff \}\right\}_{h_j \in \Him}$
 \If{$N_i = \max\pa{\Him}$}\label{algline:effu-new-condition} \Comment{Create a new triplet with window $h_j = \ceil{m \cdot N_i}$}  
 \State $\Him \gets \Him \cup \left\{ \ceil{m \cdot N_i} \right\}$\label{algline:effu-new-h}
 \State $p_i^{\ceil{m \cdot N_i} } = p_i^{N_i} $\label{algline:effu-new-p}
 \State $n_i^{\ceil{m \cdot N_i} } \gets n_i^{N_i} $\label{algline:effu-new-n}
-\State $\hmu_{i, \, \texttt{eff}}^{\ceil{m \cdot N_i} }\leftarrow \texttt{None}$\label{algline:effu-new-mu}
+\State $\hmu_{i, \, \tteff}^{\ceil{m \cdot N_i} }\leftarrow \texttt{None}$\label{algline:effu-new-mu}
 \EndIf\label{algline:effu-new-end} 
 \State $p_i^{1} \gets o_t$ \label{algline:effu-update-first-p} \Comment{Update the first triplet with $o_t$}
 \State $n_i^{1} \gets 1$\label{algline:effu-update-first-n}
-\State $\hmu_{i, \, \texttt{eff}}^{1}\leftarrow o_t$ \label{algline:effu-update-first-hmu}
+\State $\hmu_{i, \, \tteff}^{1}\leftarrow o_t$ \label{algline:effu-update-first-hmu}
 \For{$h_j \in  \Him \smallsetminus \left\{ 1\right\} $}\label{algline:effu-update-start} \Comment{Update the other pending statistics $\peff$ and $\neff$}
 \State $p_i^{h_j} \gets p_i^{h_j}  +o_t$\label{algline:effu-update-p}
 \State $n_i^{h_j} \gets n_i^{h_j} + 1$\label{algline:effu-update-n}
@@ -78,43 +78,47 @@ The core of \EFF is divided in four parts: 1) From Lines~\ref{algline:effu-new-c
 
 \begin{proposition}
 \label{prop:effu}
- $\left\{\left\{  \hmueff,\; p_i^{h_j}, \; n_i^{h_j} \right\}\right\}_{h_j \in \Him}$, constructed recursively with \EFF with initial value $\left\{\left\{  \hmu_{i,\,\texttt{eff}}^1 : \texttt{None},\; p_i^{1} :0 , \; n_i^{1}:0 \right\}\right\}$ have the following properties :
+ $\left\{\left\{  \hmueff,\; p_i^{h_j}, \; n_i^{h_j} \right\}\right\}_{h_j \in \Him}$, constructed recursively with \EFF with initial value $\left\{\left\{  \hmu_{i,\,\tteff}^1 : \texttt{None},\; p_i^{1} :0 , \; n_i^{1}:0 \right\}\right\}$ have the following properties :
  \begin{enumerate}[topsep=0pt]
   \item $\hmueff$ is the average of exactly $h_j$ consecutive samples among the $2h_j -1$ last ones. \label{list:effu-hmu}
   \item The delay between two updates of $\hmueff$ is in $\left\{\ceil{\frac{m-1}{m} h_j}, \dots, h_j -1\right\}$.\label{list:effu-delay}
-  \item When $m = 2$, $h_j = 2^{j-1}$. Moreover, for $j\geq2$, $\hmueff(n)$ is updated every $2^{j-2}$ rounds (and every rounds for $j=1$).\label{list:effu-m2}
+  \item When $m = 2$, $h_j = 2^{j}$. Moreover, for $j\geq1$,  the $k$-th update $\hmueff$ happens at pull $ \pa{k+1} \cdot 2^{j-1}$, \ie every $2^{j-1}$ pulls (and at every rounds for $j=0$).\label{list:effu-m2}
   \item $\peff$ is the sum of the $\neff$ last samples. \label{list:effu-p}
-  \item $\neff < h_j$ for $j>2$. Also, $n_i^1 \leq 1$.\label{list:effu-n1}
+  \item $\neff < h_j$ for $j\geq 1$. Also, $n_i^1 \leq 1$.\label{list:effu-n1}
   \item $\left\{ \neff \right\}_{h_j}$ is an non-decreasing sequence with respect to $h_j$ (or $j$).\label{list:effu-n2}
  \end{enumerate}
 \end{proposition}
 \begin{proof}
 The three last properties are trivially true at the initialization. Thus, we show by induction that they remain true after updates.
-\paragraph{Proof of \ref{list:effu-p}. } At Lines~\ref{algline:effu-new-p} and~\ref{algline:effu-new-n}, we create a new pending statistics and count by intializing them with other statistics and count. Hence, because of the recursion hypothesis, all the pending statistics $\peff$ (including the created one) contains the sum of the $\neff$ \emph{before last} pulls. At Lines~\ref{algline:effu-update-first-p} and~\ref{algline:effu-update-first-n}, we update $p_i^1$ with the last sample and set $n_i^1$ to $1$. At Lines~\ref{algline:effu-update-p} and~\ref{algline:effu-update-n}, we add the last sample to $\peff$ (which was containing the before last samples) and increase the count by $1$. Hence, at the end of Line~\ref{algline:effu-update-n}, all the $\peff$ contains the sum of the last $\neff$ samples. Thus, refreshing $\peff$ and $\neff$ with $ p_i^{h_{j-1}}$ and $n_i^{h_{j-1}}$ keeps this property true (Lines~\ref{algline:effu-refresh-p} and~\ref{algline:effu-refresh-n}). 
+\paragraph{Proof of \ref{list:effu-p}. } At Lines~\ref{algline:effu-new-p} and~\ref{algline:effu-new-n}, we create a new pending statistics and count by initializing them with other statistics and counts. Hence, because of the recursion hypothesis, all the pending statistics $\peff$ (including the created one) contains the sum of the $\neff$ \emph{before last} pulls. At Lines~\ref{algline:effu-update-first-p} and~\ref{algline:effu-update-first-n}, we update $p_i^1$ with the last sample and set $n_i^1$ to $1$. At Lines~\ref{algline:effu-update-p} and~\ref{algline:effu-update-n}, we add the last sample to $\peff$ (which was containing the before last samples) and increase the count by $1$. Hence, at the end of Line~\ref{algline:effu-update-n}, all the $\peff$ contains the sum of the last $\neff$ samples. Thus, refreshing $\peff$ and $\neff$ with $ p_i^{h_{j-1}}$ and $n_i^{h_{j-1}}$ keeps this property true (Lines~\ref{algline:effu-refresh-p} and~\ref{algline:effu-refresh-n}). 
 
 \paragraph{Proof of \ref{list:effu-n1}.}
-
-For $j\geq2$, $\neff$ is created at Line~\ref{algline:effu-new-n} with $n_i^{N_i} = N_i -1 < \ceil{m \cdot N_i} = h_j$ ($m>1$). Indeed, at the beginning of $N_i$-th update $\hmu_{i,\, \texttt{eff}}^{N_i}$ is not created yet and $\peff$ contains the $\neff = N_i-1$ before last pulls. Then, $\neff$ ($j\geq2$) is increased by one at each update at Line~\ref{algline:effu-update-n}. When it reaches $\neff = h_j$ (Line~\ref{algline:effu-refresh-condition}), it is replaced by the precedent count $n_i^{h_{j-1}}<h_j$ (Line~\ref{algline:effu-update-n}). Indeed, for $j>3$, $n_i^{h_{j-1}} < h_{j-1} < h_j$ before the updating scheme (recursion hypothesis). After the increment by one at Line~\ref{algline:effu-update-n}, we still have $n_i^{h_{j-1}} \leq h_{j-1} < h_j$. For $j=2$, $n_i^{h_{j-1}} = n_i^1 \leq 1 < h_2$.
+For $j=0$, $n_i^1$, which is equal to $0$ at the initialization, is set at $1$ at every update (Line~\ref{algline:effu-update-first-n}). Hence, we have $n_i^{h_0} \leq h_0=1$.
+For $j\geq 1$, $n_i^{\ceil{m \cdot N_i}}$ is initialized at Line~\ref{algline:effu-new-n} with the value $n_i^{N_i} < N_i < \ceil{m \cdot N_i}$ by the induction hypothesis and because $m>1$.  Then, $\neff < h_j$ ($j\geq1$) is increased by one at each update at Line~\ref{algline:effu-update-n}. Hence, we now have $\neff \leq  h_j$ for all $j\in\Him$. However, for $j\geq 1$, if $\neff = h_j$ (Line~\ref{algline:effu-refresh-condition}), it is replaced by the precedent count $n_i^{h_{j-1}}\leq h_{j-1} < h_j$ (Line~\ref{algline:effu-update-n}).Thus, at the end of the update, we do have $\neff < h_j$ for $j\geq1$.
 
 \paragraph{Proof of \ref{list:effu-n2}.}
 At Line~\ref{algline:effu-new-n}, we create a new pending count corresponding to the largest $h_j$ and we initialize it with the precedent largest count. At Lines~\ref{algline:effu-update-first-n} and~\ref{algline:effu-update-n}, we set $n_i^1 =1$ and increase all the other $\neff$ by one. This operation preserves the non-decreasing property of the ordered set. Last, at Line~\ref{algline:effu-refresh-n}, we set few counts $\neff$ to the precedent value $n_i^{h_{j-1}}$- which also preserves the non-decreasing property of the ordered set. 
 
 \paragraph{Proof of \ref{list:effu-hmu} and \ref{list:effu-delay}.}
-Thanks to Property~\ref{list:effu-p}, we know that $\peff$ is the sum of the $\neff$ last sample. It is still true at the end of Line~\ref{algline:effu-update-n} (see the proof). Then, at Line~\ref{algline:effu-refresh-hmu}, and given the condition in Line~\ref{algline:effu-refresh-condition}, we set $\hmueff$ with the average of the last $h_j$ sample. Then, $\hmueff$ is not updated untill the condition at Line~\ref{algline:effu-refresh-condition} is fulfilled again. Given that $\neff$ is refreshed with a quantity larger or equal to $1$ and smaller or equal to $h_{j-1}$ at Line~\ref{algline:effu-refresh-n}. Then, it is increased by one at each update. we know that $\hmueff$ will be updated at least every $h_j-1$, and at most every $h_j -h_{j-1}$ round. Hence, considering the worst possible delay we can conclude : $\hmueff$ is the average of exactly $h_j$ consecutive samples among the $2h_j -1$ last ones. Last, considering that $h_{j-1}\leq h_j /m$, we conclude that the minimal delay is larger or equal to $\frac{m-1}{m}h_j$.
+Thanks to Property~\ref{list:effu-p}, we know that $\peff$ is the sum of the $\neff$ last sample. It is still true at the end of Line~\ref{algline:effu-update-n} (see the proof). Then, at Line~\ref{algline:effu-refresh-hmu}, and given the condition in Line~\ref{algline:effu-refresh-condition}, we set $\hmueff$ with the average of the last $h_j$ sample. Then, $\hmueff$ is not updated untill the condition at Line~\ref{algline:effu-refresh-condition} is fulfilled again. 
+
+$\neff$ is refreshed with a quantity larger or equal to $1$ and smaller or equal to $h_{j-1}$ at Line~\ref{algline:effu-refresh-n}. Then, it is increased by one at each update. we know that $\hmueff$ will be updated at least every $h_j-1$, and at most every $h_j -h_{j-1}$ round. Hence, considering the worst possible delay we can conclude : $\hmueff$ is the average of exactly $h_j$ consecutive samples among the $2h_j -1$ last ones. Last, considering that $h_{j-1}\leq h_j /m$, we conclude that the minimal delay is larger or equal to $\frac{m-1}{m}h_j$.
 
 \paragraph{Proof of \ref{list:effu-m2}.}
 When $m=2$, it is easy to find by induction that,
  \[
- h_{j+1} = \ceil{m\cdot h_j} = 2h_j = 2^j.
+ h_{j+1} = \ceil{m\cdot h_j} = 2h_j = 2^{j+1}.
  \]
-For $j=1$, $\hmu_{i,\,\texttt{eff}}^1$ is updated at every update at Line~\ref{algline:effu-update-first-hmu}.
-By induction on $j\geq 2$, $\hmueff$ is updated (Line~\ref{algline:effu-refresh-hmu}) for the first time after $h_j= 2^{j-1} = 4 \cdot 2^{j-3}$ pulls. Therefore, it is also an updating pull for $\hmu_{i,\,\texttt{eff}}^{h_{j-1}}$ (by the induction hypothesis) and $n_j$ is set with $n_{j-1} = 2^{j-2}$ at Line~\ref{algline:effu-refresh-n}. Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start}, hence $n_j$ is updated with $n_{j-1}$ before it is itself updated with $n_{j-2}$.  Hence, $\hmueff$ is updated again in $h_j - 2^{j-2} = 2^{j-2}$ pulls, \ie after $6 \cdot 2^{j-3}$ pulls of arm $i$. Again, $n_j$ is set with $n_{j-1} = 2^{j-2}$ (because it is an updating pull for $\hmu_{i,\,\texttt{eff}}^{h_{j-1}}$). By induction, we see that the $k$-th update happen at pull $ \pa{k+1} \cdot 2^{j-2}$, \ie every $2^{j-2}$ pulls.
+For $j=0$, $\hmu_{i,\,\tteff}^1$ is updated at every update at Line~\ref{algline:effu-update-first-hmu}.
+By induction on $j\geq 1$, $\hmueff$ is initialized (Line~\ref{algline:effu-refresh-hmu}) for the first time after $h_j= 2^{j} = 4 \cdot 2^{j-2}$ pulls. Therefore, it is also an updating pull for $\hmu_{i,\,\tteff}^{h_{j-1}}$ (by the induction hypothesis) and $n_j$ is set with $n_{j-1} = 2^{j-1}$ at Line~\ref{algline:effu-refresh-n}. Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start}, hence $n_j$ is updated with $n_{j-1}$ before it is itself updated with $n_{j-2}$.  Hence, $\hmueff$ is updated again in $h_j - 2^{j-1} = 2^{j-1}$ pulls, \ie after $6 \cdot 2^{j-2}$ pulls of arm $i$. Again, $n_j$ is set with $n_{j-1} = 2^{j-1}$ (because it is an updating pull for $\hmu_{i,\,\tteff}^{h_{j-1}}$). By induction, we see that the $k$-th update happens at pull $ \pa{k+1} \cdot 2^{j-1}$, \ie every $2^{j-1}$ pulls.
+
+
 \end{proof}
 
 \begin{remark}
-At Line~\ref{algline:effu-refresh-n}, we refresh $\neff$ with $n_i^{h_{j-1}}$ which is often larger than $1$. Indeed, we could refresh $\peff$ and $\neff$ at $0$. Yet, in order to reduce the delay in the update, we use the variable available in the memory which contains the sums of $h$ last sample, with the largest $h< h_j$. According to Properties~\ref{list:effu-p},~\ref{list:effu-n1} and~\ref{list:effu-n2}, this quantity is $p_i^{h_{j-1}}$. Therefore, while we were not able to prove that it reduces %TODO
+At Line~\ref{algline:effu-refresh-n}, we refresh $\neff$ with $n_i^{h_{j-1}}$ which is often larger than $1$. Indeed, we could refresh $\peff$ and $\neff$ at $0$. Yet, in order to reduce the delay in the update, we use the variable available in the memory which contains the sums of $h$ last sample, with the largest $h< h_j$. According to Properties~\ref{list:effu-p},~\ref{list:effu-n1} and~\ref{list:effu-n2}, this quantity is $p_i^{h_{j-1}}$. 
 
-Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start} to minimize the delay: if there is two consecutive updates of $\hmueff$ and $\hmu_{i,\, \texttt{eff}}^{h_{j+1}}$ at the same run of \EFF, doing a backward loop guarantees to refresh $n_i^{h_{j+1}}$ with a larger value than with a forward loop. 
+Notice that we also sort $\Him$ in the decreasing order at Line~\ref{algline:effu-refresh-start} to minimize the delay: if there is two consecutive updates of $\hmueff$ and $\hmu_{i,\, \tteff}^{h_{j+1}}$ at the same run of \EFF, doing a backward loop guarantees to refresh $n_i^{h_{j+1}}$ with a larger value than with a forward loop. 
 \end{remark}
 %Property~\ref{list:effu-delay} in Proposition~\ref{prop:effu} states that the delay in the update is at most $h_j-1$ in the worst case. Yet, notice that it is often much less: 
 
@@ -122,7 +126,7 @@ Notice that we sort $\Him$ in the decreasing order at Line~\ref{algline:effu-ref
 \subsection{{\EFFFEWA} and {\EFFRAW}}
 {\EFFFEWA} and {\EFFRAW} are the two efficient versions of our initial algorithms. With an hyperparameter $m>1$, they use \EFF instead of \UPDATE (Lines~\ref{algline:fewa-update1} and~\ref{algline:fewa-update2} in \FEWA and Lines~\ref{algline:raw-update1} and~\ref{algline:raw-update2} in \RUCB). Therefore, they use $\left\{\hmueff\right\}_{i,h_j\in \Him}$ instead of $\left\{\hmu_i^h\right\}_{i,h \leq \Nitmone}$. 
 
-More precisely, in \FEWA, we replace the increment $h\gets h+1$ by $h\gets\ceil{m\cdot h}$ at Line~\ref{algline:fewa-window}. Hence, the next set is not called $\arms_{h+1}$ but $\arms_{\ceil{m\cdot h}}$ (Line~\ref{algline:fewa-filter} in \FEWA and Line~\ref{algline:filter-add} in \FILTER). Finally, at Lines~\ref{algline:fewa-condition} and~\ref{algline:fewa-pull}, the condition is not $N_{i_t}=h$ but $N_{i_t} \leq h$. In the \FILTER procedure, we also change $\hmu_i^h$ by $\hmu_{i,\,\texttt{eff}}^h$ at Lines~\ref{algline:filter-max} and~\ref{algline:filter-delta}. In \RUCB, we only change the $h\leq N_i$ by $h_j \in \Him$ and $\hmu_i^h$ by $\hmu_{i,\,\texttt{eff}}^h$ in the index computation at Line~\ref{algline:raw-pull}.
+More precisely, in \FEWA, we replace the increment $h\gets h+1$ by $h\gets\ceil{m\cdot h}$ at Line~\ref{algline:fewa-window}. Hence, the next set is not called $\arms_{h+1}$ but $\arms_{\ceil{m\cdot h}}$ (Line~\ref{algline:fewa-filter} in \FEWA and Line~\ref{algline:filter-add} in \FILTER). Finally, at Lines~\ref{algline:fewa-condition} and~\ref{algline:fewa-pull}, the condition is not $N_{i_t}=h$ but $N_{i_t} \leq h$. In the \FILTER procedure, we also change $\hmu_i^h$ by $\hmu_{i,\,\tteff}^h$ at Lines~\ref{algline:filter-max} and~\ref{algline:filter-delta}. In \RUCB, we only change the $h\leq N_i$ by $h_j \in \Him$ and $\hmu_i^h$ by $\hmu_{i,\,\tteff}^h$ in the index computation at Line~\ref{algline:raw-pull}.
 
 \begin{proposition}
 \EFFFEWA and \EFFRAW tuned with hyperparmaeter $m$ have a $\cO\pa{K\log_m\pa{t}}$ worst-case time and space complexity at round $t$.
@@ -160,24 +164,27 @@ The probability of the unfavorable event $\bar{\HPeff}$ scales with $\cO\pa{t^{1
 \begin{proof}
 As in Propositions~\ref{prop:prb_favorable_event_SWA} and~\ref{prop:prb_favorable_event}, we have to count the number of statistics that are required to hold in the confidence region. Calling $u_j(t)$ the number of update of statistics $\hmueff$ after $t$ pulls, we have
 \begin{align*}
-    \PPempty\Big[\bar{\HPeff}\Big] &\leq \sum_{i \in \arms} \sum_{j=1}^{\floor{\log_2\pa{t}}} u_j(t) \delta_t \\
-    &\leq \sum_{i \in \arms} \pa{t - 1  + \sum_{j=2}^{\floor{\log_2\pa{t}}} \frac{t-1}{2^{j-2}}} \delta_t \\
+    \PPempty\Big[\bar{\HPeff}\Big] &\leq \sum_{i \in \arms} \sum_{j=0}^{\floor{\log_2\pa{t}}-1} u_j(t) \delta_t \\
+    &\leq \sum_{i \in \arms} \pa{t - 1  + \sum_{j=1}^{\floor{\log_2\pa{t}}-1} \frac{t-1}{2^{j-1}}} \delta_t \\
     &\leq 3Kt\delta_t
 \end{align*}
-In the second inequality, we use Property~\ref{list:effu-m2} in Proposition~\ref{prop:effu}: statistics $\hmueff(n)$ is only updated every $2^{j-2}$ pulls for $j\geq 2$ (and every pull for $j=1$).
+In the second inequality, we use Property~\ref{list:effu-m2} in Proposition~\ref{prop:effu}: statistics $\hmueff(n)$ is only updated every $2^{j-1}$ pulls for $j\geq 1$ (and every pull for $j=0$).
 \end{proof}
 
-\begin{restatable}{lemma}{restafundamentallemmaefficient}
-\label{fundamental-lemma_efficient}
-At round $t$ on favorable event $\HPeff$, if arm~$i_{t}$ is selected by $\EFFRAW$ (m=2), for any $h \leq N_{i,t-1}$,  the average of its $h$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
-
-\vspace{-4pt}
+\begin{lemma}
+\label{lem:core-eff}
+At round $t$ on favorable event $\HPeff$, if arm~$i_{t}$ is selected by $\pi \in \left\{\piEF, \piER\right\}$ tuned with $m=2$, for any $h \leq \Nitmone$,  the average of its $h$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
 \begin{equation*}
-\bar{\mu}^{h}_{i_{t}}(t-1,\pi) \geq \max_{i \in \possibleArms}\mu_i(t,N_{i,t-1}) - \frac{2\sqrt{2}}{\sqrt{2}-1} c(h, \delta_{t}).
+\bmu^{h}_{i_t}(t-1,\pi) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- C_\pi c(h, \delta_t) \quad \text{with } 
+\begin{cases}
+C_{\piER} = \frac{2\sqrt{2}}{\sqrt{2}-1}\\
+C_{\piEF} = \frac{4\sqrt{2}}{\sqrt{2}-1}
+\end{cases}\cdot
 \end{equation*}
-\end{restatable}
+\end{lemma}
+
 \begin{proof}
-Like for Lemma~\ref{lem:core-FEWA} (see its proof), our proof is done in a more general rotting framework that can be used in the next chapter. We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h \in \NN$ such that :
+Like for Lemma~\ref{lem:core-FEWA} (see its proof), our proof is done in a more general rotting framework that can be used in the next chapter. We denote by $\bar{\mu}^{hh'}_i(t-1,\pi)$ and $\hat{\mu}^{hh'}_i(t-1,\pi)$ the true mean and empirical average associated to the $h'-h$ samples between the $h$-th last one (included) and the $h'$-th last one (excluded). Let $j_h \in \NN^\star$ such that :
 $2^{j_h} -1 \leq  h < 2^{j_h+1}$.
 \begin{equation}
 \label{eq:eff-decompo}
@@ -188,54 +195,110 @@ The inequality follows because the reward is decreasing and $h\geq 2^{j_h}-1$. T
 \forall k \leq 2^j, \quad \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi) \geq \bar{\mu}^{k : k+2^{j}}_{i_t}(t-1,\pi).
 \end{equation*}
 
-$\hmuiteff$ contains $2^j$ samples among the $2^{j+1}$ last ones (see Proposition~\ref{prop:effu}). Because we are on $\HPeff$,  we can write
+$\hmuiteff$ contains $2^j$ samples among the $2^{j+1}-1$ last ones (see Proposition~\ref{prop:effu}). Because we are on $\HPeff$,  we can write
 \begin{equation}
 \label{eq:hmueff-link}
 \bar{\mu}^{2^{j}2^{j+1}}_{i_t}(t-1,\pi) \geq \hmuiteff = \bar{\mu}^{k : k+2^{j}}_{i_t}(t-1,\pi)\geq  \hmuiteff - c(2^j, \delta_t),
 \end{equation}
-with $k\leq 2^j$ the current delay of the statistics $\hmuiteff$. Therefore, putting Equations~\ref{eq:eff-decompo} and~\ref{eq:hmueff-link}, 
-\begin{equation*}
+with $k\leq 2^j$ the current delay of the statistics $\hmuiteff$. Therefore, gathering Equations~\ref{eq:eff-decompo} and~\ref{eq:hmueff-link}, 
+\begin{equation}
+\label{eq:eff-general}
 \bar{\mu}^{h}_{i_t}(t-1,\pi) \geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff - c(2^j, \delta_t)}.
-\end{equation*}
-Now, we will use the mechanics of the two algorithms. For $\EFFRAW$, we make the index appear in the inequality,
-\begin{align*}
- \bar{\mu}^{h}_{i_t}(t-1,\pi) &\geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff - c(2^j, \delta_t)}\\
- &=\sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff + c(2^j, \delta_t) - 2c(2^j, \delta_t)}\\
- &\geq \min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} + 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
- \end{align*}
+\end{equation}
+Now, we will use the mechanics of the two algorithms. On the first hand, for $\EFFRAW$, we make the index appear in the inequality,
+\begin{align}
+ \bar{\mu}^{h}_{i_t}(t-1,\piER) &\geq \sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff - c(2^j, \delta_t)} \nonumber\\
+ &=\sum_{j=0}^{j_h-1} \frac{2^j}{2^{j_h}-1} \pa{\hmuiteff + c(2^j, \delta_t) - 2c(2^j, \delta_t)}\nonumber\\
+ &\geq \min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} - 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
+ \label{eq:effraw-index-appear}
+ \end{align}
  
- On the first hand, we can relate the left part of the sum to the best arm current value :
- \begin{equation*}
-\min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} \geq \min_{j \in \Him} \pa{\hmueff + c(2^j, \delta_t)}\geq \min_{j \in \Him} \bmueff \geq \mu_i(t,\Nitmone).
- \end{equation*}
-The first inequality holds for any $i \in \arms$ by definition of the policy which selects the largest index. The second inequality holds on $\HPeff$. The third inequality uses the decreasing of the reward. 
+ Then, we can relate the left part of the sum to the best current value $\max_{i\in \arms} \mu_i(t, \Nitmone)$,
+ \begin{equation}
+\min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} \geq \min_{j \in H_{\ist,m}} \pa{\hmu_{\ist,\, \tteff}^{h_j} + c(2^j, \delta_t)}\geq  \bmu_{\ist,\, \tteff}^{h_{\min}} \geq \mu_{\ist}(t,\Nitmone).
+ \label{eq:effraw-index-use}
+ \end{equation}
+ 
+where $h_{\min} \in \argmin_{h_j \in \Him} \pa{\hmueff + c(h_j, \delta_t)} $.The first inequality follows because \EFFRAW selects the arm with the largest index. In particular, the index of $i_t$ is larger or equal to the index of $i^\star_t \in \argmax_{i\in \arms} \mu_i(t, N_{\ist,\,t})$. The second inequality holds on $\HPeff$. The third inequality uses the decreasing of the reward. Putting Equations~\ref{eq:effraw-index-appear} and~\ref{eq:effraw-index-use}, we get,
 
-On the second hand, we can reduce the sum with algebra : 
+\begin{equation}
+\label{eq:effraw-result}
+\bmu^{h}_{i_t}(t-1,\piER) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
+\end{equation}
+
+On the other hand, for \EFFFEWA, we know that the selected arm passes any filter of window $2^j \in \Him$. Therefore, with $i_{\max} \in \argmax_{i \in \arms_{h_j}} \bmueff$, we can write,
+\begin{flalign}
+\qquad\hmuiteff &\geq \max_{i\in \arms_{h_j}} \hmueff -2c\pa{h_j, \delta_t} \nonumber && \text{Filtering rule}\\
+\qquad&\geq \hmu_{i_{\max}, \, \tteff}^{h_j}  -2c\pa{h_j, \delta_t} \nonumber  && i_{\max} \in \arms_{h_j} \\
+\qquad&\geq \bmu_{i_{\max}, \, \tteff}^{h_j} - 3c(h_j, \delta_t)\nonumber && \text{ on }\HPeff \\
+\qquad& = \max_{i\in \arms_{h_j}}  \bmueff -3c\pa{h_j, \delta_t}
+\label{eq:efffewa-3c}
+\end{flalign}
+
+We relate $\bmueff$ to the largest available value at round $t$,
+\begin{equation}
+\label{eq:efffewa-ist-relation}
+\max_{i\in \arms_{h_j}} \bmueff \geq \max_{i\in \arms_{1}}\bmu_{i,\tteff}^1 =  \max_{i\in \arms}\bmu_{i,\tteff}^1 \geq \bmu_{\ist,\tteff}^1 \geq  \mu_{\ist}(t, \Nitmone).
+\end{equation}
+
+The last inequality follows from the decreasing of the reward and the before last from the definition of the maximum operator. The first one uses a similar argument than in Lemma~\ref{lem:core-FEWA} : $\max_{i\in \arms_{h_j}} \bmueff$ increases with $h_j$.  Indeed, on $\HPeff$, $i_j \triangleq \argmax_{i\in \arms_{h_j}} \bmueff$ is in $\arms_{h_{j+1}}$ because it cannot be at more than two confidence bounds from the best empirical value during the filter $h_j$. Thus, we get, 
+
+\[
+\max_{i\in \arms_{h_j}} \bmueff = \bmu_{i_j,\tteff}^{h_j} \leq \bmu_{i_j,\tteff}^{h_{j+1}} \leq \max_{i\in \arms_{h_{j+1}}}\bmu_{i,\tteff}^{h_{j+1}}. 
+\]
+
+The first inequality follows because $\bmu_{i_j,\tteff}^{h_{j+1}}$ contains reward sample which are either in $\bmu_{i_j,\tteff}^{h_j}$ or are older than the ones in $\bmu_{i_j,\tteff}^{h_j}$. Indeed, when $m=2$, $\hmu_{i, \, \tteff}^{h_{j+1}}$ is updated synchronously with $\hmueff$ (see Property~\ref{list:effu-m2} in Proposition~\ref{prop:effu}). Hence,  at each update of $\hmu_{i, \, \tteff}^{h_{j+1}}$, it contains all the samples of $\hmueff$ and the $2^j$ precedent ones. Thus, because the reward is decreasing, we have $\bmu_{i_j,\tteff}^{h_{j+1}} \geq \bmu_{i_j,\tteff}^{h_{j}} $.  The second inequality uses that $i_j \in \arms_{h_{j+1}}$. Gathering Equations~\ref{eq:eff-general}, \ref{eq:efffewa-3c} and~\ref{eq:efffewa-ist-relation}, we get 
+\begin{equation}
+\label{eq:efffewa-result}
+\bmu^{h}_{i_t}(t-1,\piEF) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- 4 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
+\end{equation}
+
+With few lines of algebra, we reduce the sum,
+\begin{flalign*}
+\sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t) &= \sum_{j=0}^{j_h-1} \frac{\sqrt{2}^{j}}{2^{j_h}-1} c(1, \delta_t) && c(2^j, \delta_t) = \frac{c(1,\delta_t)}{\sqrt{2^j}} \\
+& = \frac{\sqrt{2}^{j_h} -1 }{\pa{\sqrt{2}-1}\pa{2^{j_h}-1}}c(1, \delta_t) && \sum_{n=0}^N q^n = \frac{q^{N+1}-1}{q-1}\\
+& = \frac{1}{\pa{\sqrt{2}-1}\pa{\sqrt{2}^{j_h} +1}} c(1, \delta_t) && 2^{j_h}\!-\!1 \!=\!  \pa{\sqrt{2}^{j_h}\!-\!1}\!\pa{\sqrt{2}^{j_h}\!+\!1}\\
+& \leq  \frac{\sqrt{2}}{\pa{\sqrt{2}-1}\sqrt{2^{j_h+1}}} c(1, \delta_t) &&\sqrt{2^{j_h}} +1 \geq \sqrt{2^{j_h}} = \frac{\sqrt{2^{j_h+1}} }{\sqrt{2}} \\
+& = \frac{\sqrt{2}}{\sqrt{2}-1} c(2^{j_h+1}, \delta_t) &&  \frac{c(1,\delta_t)}{\sqrt{2^{j_h+1}}} = c(2^{j_h+1},\delta_t)\\
+& \leq \frac{\sqrt{2}}{\sqrt{2}-1} c(h, \delta_t). && h \leq 2^{j_h+1} \text{ and }  c(\cdot, \delta) \text{ decreases}
+\end{flalign*}
+
+Plugging this last equation in Equations~\ref{eq:effraw-result} and~\ref{eq:efffewa-result} leads to the final result,
+\[
+\bmu^{h}_{i_t}(t-1,\pi) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- C_\pi c(h, \delta_t) \quad \text{with } 
+\begin{cases}
+C_{\piER} = \frac{2\sqrt{2}}{\sqrt{2}-1}\\
+C_{\piEF} = \frac{4\sqrt{2}}{\sqrt{2}-1}
+\end{cases}\cdot
+\]
+\end{proof}
+
+Using Proposition~\ref{prop:prb_favorable_event_eff} and Lemma~\ref{lem:core-eff} instead of Prop.~\ref{prop:prb_favorable_event} and Lemmas~\ref{lem:core-FEWA} and~\ref{lem:core-RAWUCB}, we can obtain similar problem dependent and independent bounds than for \FEWA and \RUCB. The proof directly follows from the precedent analysis. 
+\begin{restatable}{theorem}{restaalgoindepub}
+\label{th:rested-PI}
+For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piER, \piEF \right\}$ run with $\alpha \geq 4$ and $m=2$ suffers an expected regret of
+\begin{equation*}
+\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 6KL\,.
+\end{equation*}
+\end{restatable}
+\begin{restatable}{theorem}{restaalgoub}\label{th:rested-PD}
+For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piER, \piEF \right\}$ run with $\alpha \geq 4$ and $m=2$ suffers an expected regret of
 \begin{align*}
-\sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t) &= \sum_{j=0}^{j_h-1} \frac{\sqrt{2}^{j}}{2^{j_h}-1} c(1, \delta_t) \\
-& = \frac{\sqrt{2}^{j_h} -1 }{\pa{\sqrt{2}-1}\pa{2^{j_h}-1}}c(1, \delta_t) \\
-& = \frac{1}{\pa{\sqrt{2}-1}\pa{\sqrt{2}^{j_h} +1}} c(1, \delta_t)\\
-& \geq  \frac{1}{\pa{\sqrt{2}-1}\sqrt{2^{j_h}-1}} c(1, \delta_t) \\
-& = \frac{1}{\sqrt{2}-1} c(2^{j_h}-1, \delta_t) \\
-& \geq \frac{1}{\sqrt{2}-1} c(h, \delta_t)
+\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +6L } \cdot
+%\\ 
+%\text{\ with  and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
 \end{align*}
+\end{restatable}
 
+Among the differences, we notice that our theory holds for a larger range of $\alpha \geq 4$ but the constant $C_\pi$ is $\frac{\sqrt{2}}{\sqrt{2}-1} \sim 3.4$ times larger than their original counter part. We will display multiple experiments where the regret ratio between the algorithms is much smaller than $3.4$. Indeed, to derive Lemma~\ref{lem:core-eff}, we consider that the statistics $\hmueff$ is delayed by at most $h_j$ rounds. According to Proposition~\ref{prop:effu}, the delay is at most $h_j/2$ for $m=2$ (and less than $h_j$ for any $m$). Moreover, these guarantees on the worst case delay are pessimistic: the delay could be much smaller. 
 
-
-
-% \left(\hmuiteff - c(2^j, \delta_t)\right)
-%& \geq \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \sum_{j=0}^{j_h-1} \frac{2^{j+1}}{2^{j_h}-1}c(2^j, \delta_t)\\
-%& = \min_j\left(s_{i_tj}^c + c(2^j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1}\sum_{j=0}^{j_h-1} 2^{\frac{j}{2}}\\
-%& = \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2c(1, \delta_t)}{2^{j_h}-1} \frac{2^{\frac{j_h}{2}}-1}{\sqrt{2}-1}\\
-%& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(2^{j_h+1}, \delta_t)}{\sqrt{2}-1}\\
-%& \geq \min_j\left(s_{i_tj}^c + c(h_j, \delta_t)\right) - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1}\\
-%& \geq \max_{i\in\possibleArms}\mu_i(t,N_{i,t-1})  - \frac{2\sqrt{2}c(h_j, \delta_t)}{\sqrt{2}-1} 
-
-The first inequality is due to the decreasing nature of the reward. The second inequality is because, on $\xi_t$, $s_{ij}^c$ concentrates near a value which is smaller than $\bar{\mu}^{2^{j}2^{j+1}}_i(t-1,\pi)$  because it is an average from a sequence of consecutive reward which is newer than $2h_j \leq 2^{j+1}$ (when $m \leq 2$). The third inequality holds by selecting the minimum. The fourth one is standard algebra. The fifth one hold because $c( \cdot, \delta_t)$ decreases with h and $h_j < 2^{j_h+1}$. For the last one, we use the concentration on $\xi_t$ and the decreasing assumption. 
+\begin{remark}
+\textbf{Can we adapt the theory for $m\neq2$?} %TODO
+\end{remark}
 
 \subsection{Experimental Result}
 
 
 
 
-\end{proof}
+
