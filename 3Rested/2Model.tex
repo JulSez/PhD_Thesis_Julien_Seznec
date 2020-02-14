@@ -1,11 +1,9 @@
 %!TEX root = ../main.tex
-
-
 \section{Rested rotting bandit : model and preliminaries}
-\label{Model}
+\label{sec:Model}
 \subsection{Model}
 \subsubsection*{Feedback loop}
-At each round $t$, an agent chooses an arm $i_t \in \possibleArms \triangleq \left\{ 1, ... , K\right\} $ and receives a noisy reward $o_t$. The reward associated to each arm $i$ is a $\subgaussian^2$-sub-Gaussian random variable with expected value of $\mu_i(n)$, which depends on the number of times $n$ it was pulled before; $\mu_i(0)$ is the initial expected value. %\footnote{Our definition slightly differs from the one of~\citet{levine2017rotting}. 
+At each round $t$, an agent chooses an arm $i_t \in \possibleArms \triangleq \left\{ 1, ... , K\right\} $ and receives a noisy reward $o_t$. The reward associated to each arm $i$ is a $\subgaussian^2$-sub-Gaussian random variable with expected value of $\mu_i(n)$, which depends on the number of times $n$ it was pulled before; $\mu_i(0)$ is the initial expected value.
 We use $\mu_i(n)$ for the expected value of arm~$i$ \textit{after $n$ pulls} instead of when it is pulled \textit{for the $n$-th time}. 
 Let $\historyt \triangleq \left\{ \left\{ i_s, o_s \right\}, \forall s < t \right\}$ be the sequence of arms pulled and rewards observed until round $t$, then 
 %
@@ -15,31 +13,22 @@ o_{t} \triangleq \mu_{i_t}(N_{i_t,t-1}) + \noise_t
  \;\; \text{with}\; \EE{ \noise_t | \historyt }= 0 \;\; \text{and} \; \forall \lambda \in \R, \; \EE{ e^{\lambda\noise_t}} \leq e^{\frac{\subgaussian\lambda^2}{2}},
 \end{equation}
 %
-where $N_{i,t}\triangleq \sum_{s=1}^{t} \mathbb{I}\{i_s = i\}$ is the number of times arm $i$ is pulled after round $t$. %We use $r_i(n)$ to denote the random reward of arm $i$ when pulled for the $n+1$-th time, i.e., $r_{i_t,t} = \obs_{i_t}(N_{i_t,t})$. 
-%
+where $N_{i,t}\triangleq \sum_{s\!=\!1}^{t} \mathbb{I}\{i_s \!=\! i\}$ is the number of times arm $i$ is pulled after round $t$.
 \begin{definition}\label{def:rew-bounded-decay} 
 We introduce $\rewardSet$, the set of non-increasing reward functions with bounded decay $L$,
 \[ 
-\rewardSet \triangleq \left\{ \mu : \left\{0, \dots, T-1 \right\} \rightarrow \left[- L\pa{T -1},  L\right] \;\big{|}\; 0 \leq \mu(n) - \mu(n+1)  \leq L \text{ and } \mu(0) \in \left[0,  L\right] \right\}.
+\rewardSet \triangleq \left\{ \mu : \NN \rightarrow \left[- \infty,  L\right] \;\big{|}\; 0 \leq \mu(n) - \mu(n+1)  \leq L \text{ and } \mu(0) \in \left[0,  L\right] \right\}.
 \]
 \end{definition}
-
+%
 \begin{remark}
 \label{rem:stationary-is-rotting}
-We define the set of constant reward function in $\left[0, L\right]$ : 
+We define the set of constant reward functions in $\left[0, L\right]$ : 
 \[ 
-\stationarySet \triangleq \left\{ \mu : \left\{0, \dots, T-1 \right\} \rightarrow \left[0,  L\right] \;\big{|}\;  \mu(n) = \mu_i  \right\}.
+\stationarySet \triangleq \left\{ \mu : \NN \rightarrow \left[0,  L\right] \;\big{|}\;  \mu(n) = \mu_i  \right\}.
 \]
-We have that $\stationarySet \subset \rewardSet$. Hence, we can conclude that the rotting bandits model include all the stationary bandits problems.
+We have that $\stationarySet \subset \rewardSet$. Hence, we can conclude that the rotting bandits model includes all the stationary bandits problems.
 \end{remark}
-
-%\begin{remark}
-%Notice that we have that $\mathcal{B}_L \in \rewardSet$ and $\rewardSet \in \mathcal{B}_{LT}$. 
-%Therefore, any upper bound on the performance of an algorithm on $\rewardSet$ holds on $\mathcal{B}_L$. Reciprocally, any upper bound derived on $\mathcal{B}_{LT}$ hold on $\rewardSet$. 
-%\end{remark}
-
-
-
 %
 \subsubsection*{Online and offline objectives}
 In this chapter, we will only consider deterministic agents which output an arm $i$ at each round $t$. They are degenerate cases of probabilistic agent, which outputs a probability distribution over arm at each round. For the sake of simplicity, we present only the deterministic formalism.   
@@ -52,46 +41,46 @@ For a policy $\pi$, let $N_{i,t}^\pi \triangleq \sum_{s=1}^{t} \mathbb{I}\{\pi(s
 \label{eq:cumul-reward}
 J_T(\pi) \triangleq \sum_{t=1}^T \mu_{\pi(t)}\pa{N_{\pi(t),t-1}} = \sum_{i \in \possibleArms} \sum_{n=0}^{N_{i,T}^\pi-1} \mu_i(n).
 \end{equation}
+%
 \begin{remark}
 \label{rem:pull-allocation}
 The cumulative reward depends only on the number of pull of each arm at the horizon $T$: it does not depend on the specific pulling order of the arms. Hence, two distinct policies with the same pulling allocation at the horizon $T$, \emph{i.e.} $N_{i,T}^{\pi_1} = N_{i,T}^{\pi_2}$ for all $i$, have the same cumulative reward.
 \end{remark}
-
-We notice that $\pi \in \PiL$ depends on the (random) history observed over time, and $J_T(\pi)$ is also random for learning policies. The goal of the learning agent is to maximize the expected reward $\EE{J_T(\pi)}$.
 %
+We notice that $\pi \in \PiL$ depends on the (random) history observed over time, and $J_T(\pi)$ is also random for learning policies. The goal of the learning agent is to maximize the expected reward $\EE{J_T(\pi)}$.
+
 On the contrary,  oracle policies do not depend on the (random) history. They can be computed entirely before the start of the game. Hence, finding $\pi^\star \in \argmax_{\pi \in \PiO} J_T(\pi)$ is called the \textit{offline problem}. For a given problem $\mathbbm{\mu}$, there is a finite number ($K^T$) of policies, hence the maximum always exists and it could be found by brute-force with infinite computational power.
 
 We set a policy $\pi^\star\in \argmax_{\pi \in \PiO} J_T(\pi)$. Calling $J_T^\star = J_T(\pi^\star)$ the largest cumulative reward achievable, one can measure the regret of any policy (learning or oracle) compared to the optimal one, 
 \begin{align}\label{eq:regret}
 \regret(\pi) \triangleq J^\star - J_T(\pi).
 \end{align}
-
+%
 Let $N_{i,T}^\star \triangleq N_{i,T}^{\pi^\star}$ be the number of times that arm~$i$ is pulled by the oracle policy $\pi^\star$ up to time~$T$ (excluded).  Using Equation~\ref{eq:cumul-reward},  we can conveniently rewrite the regret as
 %
 \begin{align}
 \!\regret(\pi) &= \sum_{i\in\possibleArms}\left( \sum_{n=0}^{N_{i,T}^\star-1}  \reward_{i}(n)  - \sum_{n=0}^{N_{i,T}^\pi-1}  \mu_{i}(n) \right) \nonumber\\ 
 & = \sum_{i \in \underpullSet}\sum_{n=N_{i, T}^{\pi}}^{N_{i, T}^{\star}-1} \mu_i(n) - \sum_{i \in \overpullSet} \sum_{n=N_{i, T}^{\star}}^{N_{i, T}^{\pi}-1} \mu_i(n),\label{eq:regret2}
 \end{align}
-
+%
 where we define $\underpullSet \triangleq \left\{ \arm \in \possibleArms | N_{i, T}^{\star} > N_{i, T}^{\pi} \right\}$ and likewise $\overpullSet \triangleq \left\{ i\in \possibleArms | N_{i, T}^{\star} < N_{i, T}^{\pi}\right\}$ as the sets of arms that are respectively under-pulled and over-pulled by~$\pi$ with respect to the optimal policy.
-
-
+%
 \begin{remark}
 The regret is measured against an optimal allocation over arms rather than a fixed-arm policy as it is a case in adversarial and stochastic bandits. Therefore, even the adversarial algorithms that one could think of applying in our setting (e.g., \EXP of \citet{auer2002finite}) are not known to provide any guarantee for our definition of regret. Moreover, for constant $\mu_i(n)$-s, our problem and definition of regret reduce to the one of stationary stochastic bandits. 
 \end{remark}
-
-We give an upperbound on the regret that holds for any policy and will be used in the analysis of all the presented learning policies. First, we upper-bound all the rewards in the first double sum - the underpulls - by their maximum $\reward^+_T(\pi) \triangleq \max_{i\in\possibleArms} \reward_i(N_{i,T}^\pi)$. Indeed, for any overpulls $\mu_i(n_i) $ (with  $n_i > N_{i,T}^\pi$), we have that
+%
+We give an upperbound on the regret that holds for any policy and will be used in the analysis of all the presented learning policies. First, we upper-bound all the rewards in the first double sum - the underpulls - by their maximum $\reward^+_T(\pi) \triangleq \max_{i\in\possibleArms} \reward_i(N_{i,T}^\pi)$. Indeed, for any overpulls $\mu_i(n_i) $ (with  $n_i \geq N_{i,T}^\pi$), we have that
 \[
-\mu_i(n_i) \leq \mu_i(N_{i,T}^\pi) \leq \max_{i\in\possibleArms} \reward_i(N_{i,T}^\pi),
+\mu_i(n_i) \leq \mu_i(N_{i,T}^\pi) \leq \mu^+_T(\pi)  \triangleq \max_{i\in\possibleArms} \reward_i(N_{i,T}^\pi),
 \]
 where the first inequality follows by the non-increasing property of $\mu_i$s; and the second by the defintion of the maximum operator. Second, we notice that there are as many underpulls than overpulls (terms of the second double sum) because there both policies $ \pi$ and $\pi^\star$ pull $T$ arms. Notice that this does \emph{not} mean that for each arm $i$, the number of overpulls equals to the number of underpulls, which cannot happen anyway since an arm cannot be simultaneously underpulled and overpulled. Therefore, we keep only the second double sum,
 \begin{equation}
 \label{eq:regret-first-bound}
 \regret(\pi) \leq \sum_{i\in \overpullSet}   \sum_{n=N_{i,T}^\star}^{N_{i,T}^\pi-1} \pa{\mu^+_T(\pi) - \mu_i(n)}.
 \end{equation}
-
+%
 The \textit{online problem} is to find a learning policy which maximizes the expected cumulative reward (or equivalently minimizes the expected regret). In the next sections, we will present the main results of \citet{heidari2016tight}, which has solved the offline problem and the online problem in the absence of noise, and \citet{levine2017rotting}, which has presented the first learning policy with non trivial guarantees for rotting bandits with noise. 
-
+%
 \subsection{The offline problem \citep{heidari2016tight}}
 We consider the greedy policy $\GO$ (Alg.~\ref{alg:greedy-oracle}) which at each round selects the arm with the best value.
 
@@ -102,7 +91,7 @@ We consider the greedy policy $\GO$ (Alg.~\ref{alg:greedy-oracle}) which at each
 \caption{Greedy Oracle $\GO$ (or $\Azero$, \citet{heidari2016tight})}
 \label{alg:greedy-oracle}
 \begin{algorithmic}[1]
-	\Require $\arms$, $\left\{\mu_i\right\}_{i \in \possibleArms}$
+	\Require $\left\{\mu_i\right\}_{i \in \possibleArms}$
 	\State Initialize $N_i \leftarrow 0$ for all $i \in \possibleArms$
 	\For{$t \gets 1, 2, \dots \do $}
 		\State \textsc{Pull}  $i_t \in \argmax_{i \in \possibleArms} \mu_i(N_{i})$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}
@@ -112,6 +101,7 @@ We consider the greedy policy $\GO$ (Alg.~\ref{alg:greedy-oracle}) which at each
 \end{algorithm}
 \end{savenotes}
 \end{minipage}
+
 \begin{proposition}[\citet{heidari2016tight}]
 For any reward functions $\mu \in \rewardSet^K$ and any horizon $T$, $\GO \in \argmax_{\pi \in \PiO} J_T(\pi)$.
 \end{proposition}%
@@ -127,7 +117,8 @@ The first inequality is due to the selection rule of the policy; the second is d
 A direct consequence is that, at round $T$, $\GO$ has selected the $T$ largest reward sample among the $KT$ possible ones. Therefore, any other policy which would select other reward samples can only have worse or equal cumulative reward. 
 \end{proof}
 
-According to Remark~\ref{rem:pull-allocation}, for a given horizon $T$, all the policies with the same number of pulls of each arm than $\GO$ at round $T$ have the optimal cumulative reward. Yet, we show in the following Proposition that $\GO$ is the only \emph{anytime} optimal policy.
+According to Remark~\ref{rem:pull-allocation}, for a given horizon $T$, all the policies with the same number of pulls of each arm than $\GO$ at round $T$ have the optimal cumulative reward. Yet, we show in the following Proposition that $\GO$ is the only \emph{anytime} optimal policy.\\
+
 \begin{proposition}
 Let $\pi$ such that $\pi(t) \notin \argmax_{i\in \possibleArms} \mu_i(\Nitpi)$.
 \[\text{Then, } J_t(\pi) < \max_{\pi \in \PiO} J_t(\pi).\]
@@ -137,16 +128,16 @@ Let $i^\star_t \in \argmax_{i\in \possibleArms} \mu_i(N_{i,t}^\pi)$. We consider
 \[ 
 J_t(\pi^+) - J_t(\pi) =  \mu_{i^\star_t}(N_{i^\star_t,\,t-1}^{\pi^+}) - \mu_{\pi(t)}(N_{\pi(t),\,t-1}^{\pi}) = \mu_{i^\star_t}(N_{i^\star_t,\,t-1}^{\pi}) - \mu_{\pi(t)}(N_{\pi(t),\,t-1}^{\pi}) > 0.
 \]
-
+%
 The inequality follows from $\pi(t) \notin \argmax_{i\in \possibleArms} \mu_i(N_{i,t}^\pi)$ and $i^\star_t \in \argmax_{i\in \possibleArms} \mu_i(N_{i,t}^\pi)$.
 \end{proof}
-
 \begin{remark}
+%
 \textbf{Complexity.} We have already highlighted that the offline problem is a computational problem. Indeed, the optimal solution can always be computed by brute force by iterating all the possible policies, i.e. with exponential time complexity per round $\cO(K^T)$. By contrast, $\GO$ can be computed with space complexity $\cO(K)$ and time complexity per round $\cO(\log{K})$. Indeed, at each round one should find the maximum among $K$ values. Yet, from one round to another, there is only one value which changes : the value of the last selected arm. Thus, one can store a sorted list of the $K$ arm's value and change one element at each round which costs $\cO(\log{K})$. Then, accessing the first element of the sorted list is a $\cO(1)$ operation.
 \end{remark}
-
+%
 To conclude, $\GO$ solves the offline problem in the sense that it provides a cheap way to compute the optimal policy without any knowledge of the horizon $T$. Interestingly, $\GO$ takes the optimal decision by being greedy on the current values. It shows that there is no planning aspect in this problem : the learner never has to sacrifice rewards in the present to get more reward in the future.
-
+%
 \subsection{The noise-free online problem \citep{heidari2016tight}}
 In the online problem, the learner does not have access to the current value of the arms. Can they track the best current value using only the observed past values ?  \citet{heidari2016tight} first studied the simpler noise-free problem ($\sigma =0$), where the learner observes the true value of an arm after selecting it (instead of a noisy sample). They suggested the greedy bandit $\GB$ (Alg.~\ref{alg:greedy-bandit}), a policy which selects greedily the arm with the largest last observed value. Indeed, instead of looking at the (unavaible) current values as $\GO$, $\GB$ looks at the closest past. 
 
@@ -157,7 +148,7 @@ In the online problem, the learner does not have access to the current value of 
 \caption{Greedy Bandit $\GB$ (or $\Atwo$, \citet{heidari2016tight})}
 \label{alg:greedy-bandit}
 \begin{algorithmic}[1]
-\Require $\arms$
+\Require
 \State Initialize $\hat{\mu}_{i}^1 \leftarrow + \infty$ for all $i \in \possibleArms$
 	\For{$t \gets 1, 2, \dots \do $}
 		\State \textsc{Pull} $i_t \in \argmax_{i \in \possibleArms} \hat{\mu}_{i}^1$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.}; \textsc{Receive} $o_{t}$
@@ -234,18 +225,14 @@ Therefore, we have that for any $\pi$, there exists a stationary problem $\mu \i
 \[\regret\pa{\pi} \geq \pa{K-1}L\pa{1- \frac{K-1}{T}}\]
 \end{proof} 
 \begin{remark}
-\citet{heidari2016tight} have also studied rested bandits with increasing and concave reward function (without noise).The offline analysis shows that the optimal policy selects always the same arm. This is very different from the rotting case, where the optimal allocation may pull several arms. They suggest an online policy which plays Round-robin on an active set of arms. An arm is excluded from this active set if the optimistic projection of its total available reward untill the end of the game (which can be computed thanks to the concavity assumption) is lower than the pessimistic projection of any other arm (i.e. the arm stays constant). They prove a $o\pa{T}$ regret bound (in the noise-less case !) for this algorithm. While they do not provide a lower bound, it suggests that this problem is harder than the rotting case, where the minimax rate is only in $\cO\pa{KL}$.
+\citet{heidari2016tight} have also studied rested bandits with increasing and concave reward functions (without noise).The offline analysis shows that the optimal policy selects always the same arm. This is very different from the rotting case, where the optimal allocation may pull several arms. They suggest an online policy which plays Round-robin on an active set of arms. An arm is excluded from this active set if the optimistic projection of its total available reward until the end of the game (which can be computed thanks to the concavity assumption) is lower than the pessimistic projection of any other arm (i.e. the arm stays constant). They prove a $o\pa{T}$ regret bound (in the noise-less case !) for this algorithm. While they do not provide a lower bound, it suggests that this problem is harder than the rotting case, where the minimax rate is only in $\cO\pa{KL}$.
 \end{remark}
-
-
-
-
 
 \subsection{\citet{levine2017rotting} : {\wSWA}, a first policy for the noisy problem}
 \subsubsection{Sliding-Window Average ({\SWA})}
-When the feedback is noisy ($\sigma > 0$), selecting greedily on the last observed reward may be very risky. Indeed, a sample from an optimal pull could be underestimated by $\cO(\sigma)$. $\GB$ may not pull this good underestimated arm for a long time, because it only estimates the value of the arm with the last sample. This behaviour may cause a regret of $\cO(\sigma T)$ which could be much larger from the noise-free rate $\cO(KL)$ depending on the parameters.
+When the feedback is noisy ($\sigma > 0$), selecting greedily on the last observed reward may be very risky. Indeed, a sample from an optimal pull could be underestimated by $\cO(\sigma)$. $\GB$ may not pull this good underestimated arm for a long time, because it only estimates the value of the arm with the last sample. This behavior may cause a regret of $\cO(\sigma T)$ which can be much larger than the noise-free rate $\cO(KL)$.
 
-\citet{levine2017rotting} suggested to use the Sliding-Window Average (\SWA) policy, a policy which selects the arm with the largest average of its $h$ last sample. Averaging in the presence of noise is a straightforward idea. Yet, it is unclear how the learner should choose $h$. Before going through the detailed analysis, we give the high-level idea. First, we notice that when $h=1$, \SWA reduces to $\GB$. Indeed, intuitively, the smaller the noise, the less averaging we need. On the one hand, with a window $h$, the learner should expect to do $\cO(h)$ overpulls for an arm which abruptly decay at $N_{i,T}^\star$. Indeed, its estimator $\hat{\mu}_i^h$ will be positively bias during the next $h$ pulls. Hence, the learner may suffer up to $\cO(KLh)$ due to this bias. On the other hand, the learner will also take decision based on estimators with variance $\tcO(\frac{\sigma}{\sqrt{h}})$ which may cost $\tcO(\frac{\sigma T}{\sqrt{h}})$ on the long run. Choosing $h = \tcO\pa{\frac{ \sigma T}{KL}}^{2/3}$, we get the regret rate of $\tcO\pa{L^{1/3} \sigma^{2/3} K^{1/3} T^{2/3}}$. 
+\citet{levine2017rotting} suggested to use the Sliding-Window Average (\SWA) policy, a policy which selects the arm with the largest average of its $h$ last sample. Averaging in the presence of noise is a straightforward idea. Yet, it is unclear how the learner should choose $h$. Before going through the detailed analysis, we give the high-level idea. First, we notice that when $h=1$, \SWA reduces to $\GB$. Indeed, intuitively, the smaller the noise, the less averaging we need. On the one hand, with a window $h$, the learner should expect to do $\cO(h)$ overpulls for an arm which abruptly decays at $N_{i,T}^\star$ with drop size $B$. Indeed, its estimator $\hat{\mu}_i^h$ will be positively bias during the next $h$ pulls. Hence, the learner may suffer up to $\cO(KBh)$ due to this bias. On the other hand, the learner takes slighlty wrong decisions due to the variance of their estimators $\cO(\frac{\sigma}{\sqrt{h}})$ which can cost up to $\tcO(\frac{\sigma T}{\sqrt{h}})$ on the long run. Choosing $h = \tcO\pa{\frac{ \sigma T}{KB}}^{2/3}$, we get the regret rate of $\tcO\pa{B^{1/3} \sigma^{2/3} K^{1/3} T^{2/3}}$. 
 
 \begin{minipage}{\textwidth}
 \renewcommand*\footnoterule{}
@@ -254,7 +241,7 @@ When the feedback is noisy ($\sigma > 0$), selecting greedily on the last observ
 \caption{\SWA \citep{levine2017rotting} }
 \label{alg:SWA}
 \begin{algorithmic}[1]
-\Require $\arms$, $h$
+\Require $h$
 \State Initialize $\hat{\mu}_{i}^h \leftarrow + \infty$ for all $i \in \possibleArms$
 \State Initialize $\history(i) \leftarrow []$ for all $i \in \possibleArms$
 	\For{$t \gets 1, 2, \dots, Kh \do $}
@@ -283,7 +270,7 @@ The analysis of \citet{levine2017rotting} uses the set of bounded decaying funct
 \begin{definition}\label{def:rew-bounded} 
 Let $\BBxSet$, the set of non-increasing reward functions with bounded amplitude $B$,
 \[ 
-\BBxSet \triangleq \left\{ \mu : \left\{0, \dots, T-1 \right\} \rightarrow \left[x , x +B\right] \;\big{|}\; \mu(n) \geq \mu(n+1)  \right\}.
+\BBxSet \triangleq \left\{ \mu : \NN \rightarrow \left[x , x +B\right] \;\big{|}\; \mu(n) \geq \mu(n+1)  \right\}.
 \]
 The choice of origin $x$ is not important. Without loss of generality, we will carry the analysis on $\BBSet \triangleq \BSet_{B,0}$. 
 \end{definition}
@@ -303,20 +290,16 @@ and the average of the associated means as
 \label{eq:def-bmu}
 \bar{\mu}_i^h(t,\pi) \!\triangleq\! \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,\,s}^\pi\!>\! N_{i,\,t-1}^\pi\! -\! h } \mu_{i}(N_{i,s-1}^\pi)\,.
 \end{equation}
-
+%
 We notice that $\bar{\mu}_i^h(t,\pi) = \frac{1}{h}\sum_{h'=1}^{h} \mu_i(N_{i,\,t-1}^\pi-h') = \bar{\mu}_i^h(N_{i,\,t-1}^\pi)$ . With a slight abuse of notation, we will also use $\hat{\mu}_i^h(\Nit^\pi) \triangleq \hat{\mu}_i^h(t,\pi)$. Indeed, the average of the observations depends on the realization of the noise $\epsilon_t$ at time $t$. Yet, these $h$ samples of noise are i.i.d.\,and thus do not perturb the analysis. 
 
-
-%Recall Chernoff Hoeffding bound
-
 \paragraph{A favorable event}
-
 \begin{proposition}
 \label{prop:prb_favorable_event_SWA}
-For a confidence level $\delta_{T} \triangleq 2T^{-3}$
+For a confidence level $\delta_{T} \triangleq T^{-2}$
 , let
 \begin{equation}
-\!\HPSWA \! \triangleq\! \Big\{\forall t\!\in\!\left\{Kh +1, \dots, T\right\}, \forall i\!\in\!\mathcal{K},\ \forall n\in \left\{h, \dots, t-1\right\}, \ \big| \ \hmu_i^h(n) - \bmu_i^h(n) \big| \!\leq\! c(\window, \delta_{T}) \!\Big\}
+\!\HPSWA \! \triangleq\! \Big\{\forall i\!\in\!\mathcal{K},\ \forall n\in \left\{h, \dots, t-1\right\}, \ \big| \ \hmu_i^h(n) - \bmu_i^h(n) \big| \leq c(\window, \delta_{T}) \Big\}
 \label{eq:def_favorable_event_SWA}
 \end{equation}
 be the event under which all the possible estimates constructed at round $t$ are all accurate up to $c(h,\delta_{T}) \triangleq \sqrt{2 \subgaussian^2\log(2/\delta_T)/h}$. Then, for a policy which pulls every arm $h$ times at the beginning (like \SWA),
@@ -324,78 +307,76 @@ be the event under which all the possible estimates constructed at round $t$ are
 \PPempty\Big[\bar{\HPSWA}\Big] \leq\frac{K}{T}\,\cdot
 \]
 \end{proposition} 
-
+%
 \begin{proof}
 We want to upper bound the probability
 \[
-\PP{\bar{\HPSWA}} = \PP{\exists t \in \left\{Kh +1, \dots, T\right\},\exists i \in \arms,\,\exists n\in \left\{h, \dots, t-1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }\,.
+\PP{\bar{\HPSWA}} = \PP{\exists i \!\in\! \arms,\,\exists n \!\in\! \left\{h, \dots, t\!-\!1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }.
 \]
+%
 For $N_{i,\,t-1}^{\piSWA} = n$, we have that, 
 \[
- \hmu_i^h(n) - \bmu_i^h(n)= \frac{1}{h} \sum_{s=1}^{t-1}\mathbbm{1}\pa{i_s = i \, |\, N_{i,s}> n - h }\epsilon_s\,.
+ \hmu_i^h(n) - \bmu_i^h(n)= \frac{1}{h} \sum_{s=1}^{T}\mathbbm{1}\pa{i_s = i \, |\, n -h < N_{i,s} \leq  n}\epsilon_s\,.
 \]
-By Doob's optional skipping (e.g. see \citet{chow1997probability}, Section 5.3) there exists a sequence of random independent variable $(\epsilon'_l)_{l\in\NN}$ , $\sigma^2$ sub-Gaussian such that 
-
-\[\hmu_i^h(n) - \bmu_i^h(n)= \frac{1}{h} \sum_{s=1}^{t-1}\mathbbm{1}\pa{i_s = i \, |\, N_{i,s}> n - h }\epsilon_s=  \frac{1}{h} \sum_{l=n-h+1}^n \epsilon'_l \triangleq \hepsilon^h_n. \]
-
+By Doob's optional skipping (e.g. see \citet{chow1997probability}, Section 5.3) there exists a sequence of random independent variables $(\epsilon'_l)_{l\in\NN}$ , $\sigma^2$ sub-Gaussian such that 
+\[\hmu_i^h(n) - \bmu_i^h(n)= \frac{1}{h} \sum_{s=1}^{T-1}\mathbbm{1}\pa{i_s = i \, |\, N_{i,s}> n - h }\epsilon_s=  \frac{1}{h} \sum_{l=n-h+1}^n \epsilon'_l \triangleq \hepsilon^h_n. \]
+%
 Hence, 
 \begin{align*}
-    &\PP{\exists t \in \left\{Kh +1, \dots, T\right\},\exists i \in \arms,\,\exists n \in \left\{h, \dots, t-1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }\\
-    &\qquad= \PP{\exists t\leq T,\exists i \in \arms,\,\exists n \in \left\{h, \dots, t-1\right\},|\hepsilon^h_n|>c(h,\delta_T) }\\
-    &\qquad\leq \sum_{t=Kh + 1}^{T}\sum_{i \in \arms} \sum_{n=h}^{t-1} \PP{|\hepsilon^h_n|>c(h,\delta_T)} \\
-    &\qquad\leq  \frac{KT(T-1)}{2}\cdot \delta_T  \\
+    &\PP{\exists i \in \arms,\,\exists n \in \left\{h, \dots, T-1\right\}, \big| \hmu_i^h(n) - \bmu_i^h(n)\big|>c(h,\delta_T) }\\
+    &\qquad= \PP{\exists i \in \arms,\,\exists n \in \left\{h, \dots, T-1\right\},|\hepsilon^h_n|>c(h,\delta_T) }\\
+    &\qquad\leq \sum_{i \in \arms} \sum_{n=h}^{T-1} \PP{|\hepsilon^h_n|>c(h,\delta_T)} \\
+    &\qquad\leq  KT \delta_T  \\
     &\qquad \leq \frac{K}{T}\,,
 \end{align*}
-where we used the Chernoff inequality at the before last line and $\delta_{T} = 2T^{-3}$ at the last one. 
+where we used the Chernoff inequality at the before last line and $\delta_{T} = T^{-2}$ at the last one. 
 \end{proof}
-
-
-\begin{remark}
-\label{rem:uncorrect-levine}
-Notice that \citet{levine2017rotting} suggests to use $\delta_T = \frac{1}{T^2}$ to recover the same probability $\frac{K}{T}$. They argue that \SWA only uses less than $KT$ statistics along a trajectory. Yet, this argument is wrong. Indeed, $\Nit^{\piSWA}$ is a random variable which depends on the past observations. When an arm  %TODO
-\end{remark}
-
-
- 
+%TODO correct this proof with \delta_t = 1/T^2
+%
 \paragraph{Regret upper-bound}
-
+%
 \begin{proposition}[\citet{levine2017rotting}]
 \label{prop:SWA}
  For a problem $\Bmu \in \BBSet^K$, the expected regret of \SWA tuned with $h$ is bounded as
  \[
-\EE{ \regret(\piSWA)} \leq 2\sigma T\cdot\sqrt{\frac{6\log\pa{T}}{h}} + K\pa{h+1}B
+\EE{\regret(\piSWA)} \leq 4\sigma T\cdot\sqrt{\frac{\log\pa{\sqrt{2}T}}{h}} + K\pa{h+1}B
  \]
 \end{proposition}
-
+%
 \begin{proof}
-We split the regret on the events $\HPSWA$ and $\bar{\HPSWA}$, 
+If $T \leq Kh$, we can bound the regret by the maximum regret ($T$ errors of magnitude $B$)
+\[
+\EE{\regret(\piSWA)} \leq TB \leq KhB \leq 4\sigma T\cdot\sqrt{\frac{\log\pa{\sqrt{2}T}}{h}} + K\pa{h+1}B.
+\]
+%
+If $T > Kh$, we notice that any arm $i$ is pulled at least $h$ times, \ie $\NiT^{\piSWA} \geq h$. We split the regret on the events $\HPSWA$ and $\bar{\HPSWA}$, 
 \[
 \EE{\regret(\piSWA)} \leq \EE{\mathbbm{1} \Big[\HPSWA\Big] \regret(\piSWA)} + \EE{\mathbbm{1} \left[\bar{\HPSWA}\right] \regret(\piSWA)}.
 \]
-The regret on the unfavorable event $\mathbbm{1} \left[\bar{\HPSWA}\right]$ can be bounded by the maximal regret $LT$ (since $\mu \in \BBSet^K$), 
+%
+The regret on the unfavorable event $\mathbbm{1} \left[\bar{\HPSWA}\right]$ can be bounded by the maximal regret $BT$ (since $\mu \in \BBSet^K$), 
 \[
 \EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPSWA\Big] \regret(\piSWA)} + \PP{\bar{\HPSWA}} BT.
 \]
-
+%
 Using Proposition~\ref{prop:prb_favorable_event_SWA}, we get,
 \begin{equation}
 \label{eq:regret-unfav-event-SWA}
 \EE{\regret(\piSWA)} \leq  \EE{\mathbbm{1} \Big[\HPSWA\Big]  \regret(\piSWA)} + KB.
 \end{equation}
-
-
+%
 We will now bound the regret on the favorable event,
 \[
 \regret(\piSWA | \HPSWA) \triangleq \mathbbm{1} \Big[\HPSWA\Big]  \regret(\piSWA)
 \]
-
+%
 We start from Equation~\ref{eq:regret-first-bound} applied to policy $\SWA$,
 \begin{equation}
 \label{eq:regret-first-bound-SWA}
 \regret(\piSWA| \HPSWA) \leq  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}.
 \end{equation}
 %
-The remaining of the proof is similar to the proof of Proposition~\ref{prop:GB-ub} about algorithm $\GB$. Instead of showing that the before last terms in the sums are equals to zeros, we will show that the terms before $h$ last one are less than $2c(h, \delta_T)$. Let $i \in \arms$ an arm which is pulled at least $h+1$ times at the end of the game $\NiT^{\piSWA} \geq h+1$. We call $t_i \triangleq \min\left\{t\leq T\; |\; \Nit^{\piSWA} = \NiT^{\piSWA}\right\}$ the last round at which $i$ is pulled. For any arm $j \in \arms$ pulled at least $h$ at the end of the game $\NjT^{\piSWA} \geq h$, and for all $n_i \leq \NiT^{\piSWA} -(h+1)$, 
+The remaining of the proof is similar to the proof of Proposition~\ref{prop:GB-ub} about algorithm $\GB$. Instead of showing that the before last terms in the sums are equals to zeros, we will show that the terms before the $h$ last one cost less than $2c(h, \delta_T)$. Let $i \in \arms$ an arm which is pulled at least $h+1$ times at the end of the game $\NiT^{\piSWA} \geq h+1$. We call $t_i \triangleq \min\left\{t\leq T\; |\; \Nit^{\piSWA} = \NiT^{\piSWA}\right\}$ the last round at which $i$ is pulled. Notice that $t_i > Kh$ because the $Kh$ first pulls corresponds to the round-robin period. Hence, for any arm $j \in \arms$, $N_{j,\,t_i -1}^{\piSWA} \geq h$. For all $n_i \leq \NiT^{\piSWA} -(h+1)$, 
 \begin{align}
 \label{eq:overpull-SWA1}
 \mu_i(n_i) &\geq \mu_i(\NiT^{\piSWA} - (h+1) )\nonumber\\
@@ -404,7 +385,8 @@ The remaining of the proof is similar to the proof of Proposition~\ref{prop:GB-u
 & \geq \hmu_j^h(N_{j,\,t_i -1}^{\piSWA}) - c(h, \delta_T)  \nonumber\\
 & \geq \bmu_j^h(N_{j,\,t_i -1}^{\piSWA}) - 2c(h, \delta_T). 
 \end{align}
-The first inequality follows by the non-increasing hypothesis on the reward function. The second inequality is because $\bmu_i^h(N_{i,\,t_i -1}^{\piSWA})$ is the average of $h$ reward sample of arm $i$ after the $\NiT^{\piSWA} - (h+1)$-th. The third and fifth one use the concentration of all the possible estimates on the event $\HPSWA$.  The fourth  inequality follows by definition of the policy : at time $t_i$, $\piSWA$ selects $i \in \argmax_{j \in \arms} \hmu_j^h(N_{j,\,t_i -1}^{\piSWA})$, the largest last observed sample. 
+%
+The first inequality follows by the non-increasing hypothesis on the reward function. The second inequality is because $\bmu_i^h(N_{i,\,t_i -1}^{\piSWA})$ is the average of $h$ reward sample of arm $i$ after the $\NiT^{\piSWA} - (h+1)$-th (according to the definition of $t_i$). The third and fifth one use the concentration of all the constructed estimates on the event $\HPSWA$.  The fourth  inequality follows by definition of the policy : at time $t_i$, $\piSWA$ selects $i \in \argmax_{j \in \arms} \hmu_j^h(N_{j,\,t_i -1}^{\piSWA})$.
 
 We choose $j$ such that $ \mu_j(\NjT^{\piSWA}) = \mu^+_T(\piSWA) \pa{\triangleq \max_{j'\in \possibleArms} \mu_{j'}(N_{j',\,T}^{\piSWA})}$. \\Since $t_i \leq T$, by the rotting assumption, 
 \begin{equation}
@@ -418,7 +400,6 @@ Gathering Equations~\ref{eq:overpull-SWA1} and~\ref{eq:overpull-SWA2}, we have t
 \forall n_i \leq \NiT^{\piSWA} \!-\! \pa{h+1}, \;\;   \pa{\mu^+_T(\piSWA) - \mu_i(n_i)} \leq 2c(h, \delta_T).
 \end{equation}
 Therefore,  in Equation~\ref{eq:regret-first-bound-SWA}, we can split the sum on $\NiT^{\piSWA} \!-\! h$. Hence, 
-
 \begin{align}
 \regret(\piSWA| \HPSWA) \leq&  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-1} \pa{\mu^+_T(\piSWA) - \mu_i(n)}\nonumber\\
 =&  \mathbbm{1} \Big[\HPSWA\Big] \sum_{i\in \overpullSet}    \sum_{n=\NiT^\star}^{\NiT^{\piSWA}-\pa{h+1}} \pa{\mu^+_T(\piSWA) - \mu_i(n)} \nonumber\\ 
@@ -426,32 +407,29 @@ Therefore,  in Equation~\ref{eq:regret-first-bound-SWA}, we can split the sum on
 \leq& 2Tc\pa{h,\delta_T} + KhB.
 \label{eq:regret-fav-event-SWA}
 \end{align}
-In the last inequality, we used Equation~\ref{eq:overpull-SWA3} and that there is less than $T$ overpulls in the first sums. We also use $\mu \in \BBSet$ to bound each term in the second sum by $B$. Finally,  we can conclude by plugging Equation~\ref{eq:regret-fav-event-SWA} in Equation~\ref{eq:regret-unfav-event-SWA} and by using the definition of $c\pa{h,\delta_T}$ and $\delta_T= 2T^{-3}$ in Proposition~\ref{prop:prb_favorable_event_SWA},
+%
+In the last inequality, we used Equation~\ref{eq:overpull-SWA3} and that there is less than $T$ overpulls in the first sums. We also use $\mu \in \BBSet$ to bound each term in the second sum by $B$. Finally,  we can conclude by plugging Equation~\ref{eq:regret-fav-event-SWA} in Equation~\ref{eq:regret-unfav-event-SWA} and by using the definition of $c\pa{h,\delta_T}$ and $\delta_T= T^{-2}$ in Proposition~\ref{prop:prb_favorable_event_SWA},
 \[
-\EE{\regret(\piSWA)} \leq 2\sigma T\cdot\sqrt{\frac{6\log\pa{T}}{h}} + K\pa{h+1}B
+\EE{\regret(\piSWA)} \leq 4\sigma T\cdot\sqrt{\frac{\log\pa{\sqrt{2}T}}{h}} + K\pa{h+1}B
 \]
 \end{proof}
 \begin{corollary}[\citet{levine2017rotting}]
 \label{cor:SWA}
-For $C$ such that $h:= \ceil{C \pa{\frac{\sigma T}{KB}}^{2/3}\pa{6\log\pa{T}}^{1/3}}$, 
+\newcommand*{\Scale}[2][4]{\scalebox{#1}{$#2$}}
+For $C$ such that $h:= \ceil{\Scale[0.90]{C \pa{\frac{\sigma T}{KB}}^{2/3}\log\pa{\sqrt{2}T}^{1/3}}}$,
 \[
-\regret(\piSWA) \leq \pa{\frac{2}{C^{1/2}} + C} \pa{6 \sigma^2 B K T^2 \log\pa{T}}^{1/3} + 2KB. 
+\regret(\piSWA) \leq \pa{\frac{4}{C^{1/2}} + C} \pa{\sigma^2 B K T^2 \log\pa{\sqrt{2}T}}^{1/3} + 2KB. 
 \]
-
-Hence, if the learner knows $T$ and the ratio $\frac{\sigma}{B}$, they can set $h:= \ceil{\pa{\frac{\sigma T}{KB}}^{2/3}\pa{6\log\pa{T}}^{1/3}}$ (i.e. $C=1$) and be guaranteed to perform 
+%
+Hence, if the learner knows $T$ and the ratio $\frac{\sigma}{B}$, they can set $h:= \ceil{\Scale[0.90]{\pa{\frac{2\sigma T}{KB}}^{2/3}\log\pa{\sqrt{2}T}^{1/3}}}$ (\ie $C=2^{2/3}$) and be guaranteed to perform,
 \[
-\regret(\piSWA) \leq 6 \pa{\sigma^2 B K T^2 \log\pa{T}}^{1/3} + 2KB. 
+\regret(\piSWA) \leq 5 \pa{\sigma^2 B K T^2 \log\pa{\sqrt{2}T}}^{1/3} + 2KB. 
 \]
-
+%
 \end{corollary}
 
-\begin{remark}
-\label{rem:comparaison-levine}
-We highlighted in Remark~\ref{rem:uncorrect-levine} that we have to use tighter confidence level $\delta_T$  in the analysis that what \citet{levine2017rotting} suggest. It slightly impacts the theoretical optimal choice of the window as they recommand  $h:= \ceil{\pa{\frac{\sigma T}{KB}}^{2/3}\pa{4\log\pa{\sqrt{2}T}}^{1/3}}$.
-\end{remark}
-
 \subsubsection*{Empirical evaluation of the anytime version {\wSWA}}
-The theoretical window choice require the knowledge of the horizon $T$, the subgaussian parameter $\sigma$ and the reward range $B$ (or at least the ratio $\frac{B}{\sigma}$). \citet{levine2017rotting} suggest \wSWA, which wraps \SWA  with the doubling trick. The algorithm is initialized with a first (small) guess of the horizon. When the horizon is reached, the algorithm is fully reinitialized with a doubled horizon. This is a classic trick in the litterature : it is known to recover the problem-independent rate of a given algorithm (with a worse constant factor), but the empirical performance is often significantly reduced \citep{besson2018}. In the case of \wSWA, the doubling trick erases all the history $\history_t$ and increases the window. In Algorithm~\ref{alg:wSWA}, we reproduce the version suggested by \citet{levine2017rotting} (without the small modification of the tuning $h$) . 
+The theoretical window choice require the knowledge of the horizon $T$, the subgaussian parameter $\sigma$ and the reward range $B$ (or at least the ratio $\frac{\sigma}{B}$). \citet{levine2017rotting} suggest \wSWA (Alg. ~\ref{alg:wSWA}), which wraps \SWA  with the doubling trick. The algorithm is initialized with a first (small) guess of the horizon. When the horizon is reached, the algorithm is fully reinitialized and restarted with a doubled horizon. This is a classic trick in the literature : it is known to recover the problem-independent rate of a given algorithm (with a worse constant factor), but the empirical performance is often significantly reduced \citep{besson2018doubling}. In the case of \wSWA, the doubling trick erases all the history $\history_t$ and increases the window. 
 
 \begin{minipage}{\textwidth}
 \renewcommand*\footnoterule{}
@@ -460,31 +438,26 @@ The theoretical window choice require the knowledge of the horizon $T$, the subg
 \caption{\wSWA \citep{levine2017rotting} }
 \label{alg:wSWA}
 \begin{algorithmic}[1]
-\Require $\alpha$, $\sigma$, $T_0 \gets 1$
-\State $T \gets T_0$
+\Require $\alpha$, $\sigma$, $T \gets 1$
 \State $h \gets \ceil{\alpha\pa{\frac{4\sigma T}{K}}^{2/3}\pa{\log\pa{\sqrt{2}T}}^{1/3}}$
 \For{$t \gets 1, 2, \dots, T \do $}
 		\State \textsc{Run} \SWA(h)
 	\EndFor
 \State \textsc{Clean \SWA's \textsc{Memory}}
-\State \wSWA($\alpha$, $\sigma$, $2T_0$) 
+\State \wSWA($\alpha$, $\sigma$, $2T$) 
 \end{algorithmic}
 \end{algorithm}
 \end{savenotes}
 \end{minipage}
 
-We notice that the parameter $\alpha$ of \wSWA hide the dependency in $B$. Indeed, the best theoretical tuning corresponds to $\alpha := \pa{2B}^{-2/3}$. In their experimental section, \citet{levine2017rotting} select $\alpha:= 0.2$ by grid-search on one problem. Yet, the reader should not forget that the tuning of $\alpha$ is dependent on $B$, and more generally on which $\Bmu \in \BBSet$. 
-
-
-
+We notice that the parameter $\alpha$ of \wSWA hides the dependency on $B$. Indeed, the best theoretical tuning corresponds to $\alpha := \pa{2B}^{-2/3}$. In their experimental section, \citet{levine2017rotting} select $\alpha:= 0.2$ by grid-search on one problem. Yet, the reader should not forget that the tuning of $\alpha$ depends on the rotting magnitude $B$.
 %TODO figures
 
 \subsection{Open problems}
-
 \subsubsection{Minimax rate}
 We report existing regret bounds for two special cases. First, in Proposition~\ref{prop:lb-noisefree}, \citet{heidari2016tight} show that in the absence of noise, the regret is lower bounded by $\cO\pa{KL}$. Second, we recall the minimax regret lower bound for stochastic stationary bandits.
 
-\begin{proposition}{\cite[Thm.\,5.1]{auer2002nonstochastic}}
+\begin{proposition}[\cite{auer2002nonstochastic}][Thm.\,5.1]
 \label{stochastic-LB}
 For any learning policy $\policy$ and any horizon $T$, there exists a stochastic stationary problem $\left\{ \mu_i (n) \triangleq \mu_i\right\}_i$ with $K$ $\sigma$-sub-Gaussian arms such that $\pi$ suffers a regret
 \begin{equation*}
@@ -498,14 +471,11 @@ over rewards and algorithm's internal randomization.
 Any problem in the two settings above is a rotting problem with parameters ($\sigma$, $L$). Therefore, the performance of any algorithm on the general rotting problem is also bounded by these two lower bounds. For reward functions in $\BBSet$, \SWA is guaranteed to achieve $\cO\pa{T^{2/3}}$ regret rate. Yet, \citet{levine2017rotting} do not provide a lower bound while they suggest it could be an interesting future work direction.
 
 \subsubsection{Problem-dependent rate}
-\SWA starts by pulling every arm $h$ times. It means that even for simple stationary problem with large difference $\Delta_i > \sigma$ between suboptimal and optimal arms, \SWA does $h = \cO\pa{T^{2/3}}$ mistakes per suboptimal arms which is much more than the standard $\cO\pa{\frac{\sigma\log\pa{T}}{\Delta_i^2}}$.
-
-More generally, it is an open-question whether it is possible to get problem-dependent guarantees - which depends on the values $\mu_i(n)$ - while keeping 
+\SWA starts by pulling every arm $h$ times. It means that even for simple stationary problem with large difference $\Delta_i > \sigma$ between suboptimal and optimal arms, \SWA does $h = \cO\pa{T^{2/3}}$ mistakes per suboptimal arms which is much more than the stationary optimal pulling rate $\cO\pa{\frac{\sigma\log\pa{T}}{\Delta_i^2}}$.
 
 
 \subsubsection{Agnostic algorithm}
 \SWA requires the knowledge of the horizon $T$, the subgaussian parameter $\sigma$ and the reward range $B$  to tune the window $h$. We showed empirically that the doubling trick leads to large regret increases at each restart. We also showed that the tuning of $h$
-
 
 
 \subsubsection{Global budget or Budget per round}

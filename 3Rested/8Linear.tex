@@ -1,7 +1,6 @@
 %!TEX root = ../main.tex 
 
 \section{Linear rotting bandits are impossible to learn}
-\label{Model} 
 
 
 
@@ -9,7 +8,8 @@
 In this section, we present our rotting linear bandit framework which recovers 1) the linear model of %TODO name paper
  as soon as the reward is stationnary; and 2) the rotting multi-armed bandits model as soon as $\mathcal{X}$ contains exclusively canonical basis vectors. 
 
-We introduce $d$ non-increasing and $L$-Lipschitz functions $\mu_i : \realset \rightarrow \realset$. These functions satisfies Assumption~\ref{assum-Lipschitz}, but while there were $K$ reward functions defined on $\NN$ in the rotting MAB model, we now have $d$ functions defined on $\realset$. Indeed, in the linear setup the number of reward parameter is $d$ and we expect this value to replace $K$ in the regret bound.
+We introduce $d$ non-increasing and $L$-Lipschitz functions $\mu_i : \realset \rightarrow \realset$. These functions satisfies Assumption~ %TODO
+ but while there were $K$ reward functions defined on $\NN$ in the rotting MAB model, we now have $d$ functions defined on $\realset$. Indeed, in the linear setup the number of reward parameter is $d$ and we expect this value to replace $K$ in the regret bound.
 
 We call $N_{i,t} \triangleq \sum_{t'=0}^t (X_{t'})_i$, which quantifies the amount of pull of direction $i$. We then define the reward : 
 \[

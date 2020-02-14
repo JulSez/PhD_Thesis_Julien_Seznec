@@ -12,7 +12,11 @@ We first give problem-independent regret bound for \FEWA and \RUCB and sketch it
 \label{th:rested-PI}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piR, \piF \right\}$ run with $\alpha \geq 5$ suffers an expected regret of
 \begin{equation*}
-\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\,.
+\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\, \;\; \text{with } 
+\begin{cases}
+C_{\piR} \!=\! 1\\
+C_{\piF} \!=\! 4
+\end{cases}\!\cdot
 \end{equation*}
 \end{restatable}
 \paragraph{Comparison to \citet{levine2017rotting}} The regret of \SWA is bounded by $\tcO(B^{1/3}K^{1/3} T^{2/3})$ for bounded rotting functions in $\BBSet$. According to Remark~\ref{rem:BBvsLL}, the regret guarantee translate in $\cO(T)$ for rotting functions in $\rewardSet$.  Thus, according to its original analysis, \SWA may not be able to learn for our general setting. On the other hand, we could use \FEWA or \RUCB with rotting functions in $\BBSet$ and recover the same regret bound with $L := B$. In this case, our two algorithms suffer a regret of $\tcO(\sqrt{KT})$, thus significantly improving over \SWA. 
@@ -28,28 +32,23 @@ functions, which is the standard stochastic bandits, for which \MOSS-like~\citep
 \subsection{Problem-dependent guarantees}
 \label{ss:rested-PD}
 Since our setting generalizes the stationary stochastic bandit setting, a natural question is whether we pay any price for this generalization. While the result of~\citet{levine2017rotting} suggested that learning in rotting bandits could be more difficult, in Thm.\,\ref{th:rested-PI} we actually proved that \FEWA and \RUCB nearly match the problem-independent regret rate $\tcO(\sqrt{KT})$. We may wonder whether this is true for the \emph{problem-dependent} regret as well.
-% As illustrated in the next remark, we show that up to constants, \myAlgorithm performs as well as \UCB on any stochastic problem.
-
+%
 \begin{remark}\label{rem:pd-stationary}
-Consider a stationary stochastic bandit setting with expected rewards $\{\mu_i\}_i $ and $\mu_\star \triangleq \max_i \mu_i$. For $\pi \in \piFRSet$, on the favorable event $\HPevent$ with $\delta_t \geq 1/T^\alpha$,  we can apply Lemmas~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} at the last time arm $i$ is pulled (\emph{i.e.} after $\NiTpi\!-\!1$ pulls) for $h = \NiTpi\!-\!1$, 
+Consider a stationary stochastic bandit setting with expected rewards $\{\mu_i\}_i $ and $\mu_\star \triangleq \max_i \mu_i$. For $\pi \in \piFRSet$, on the favorable event $\HPevent$ with $\delta_t \geq 2/T^\alpha$,  we can apply Lemmas~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} at the last time arm $i$ is pulled (\ie after $\NiTpi\!-\!1$ pulls) for $h = \NiTpi\!-\!1$, 
 \begin{align}
-\mu_\star - \mu_i \leq C_\pi c\pa{\NiTpi-1,  \delta_t} = C_\pi\sqrt{\frac{2\alpha\sigma^2 \log(T)}{\NiTpi -1}}
-%\CommaBin
-\nonumber\\
+\mu_\star - \mu_i \leq C_\pi c\pa{\NiTpi-1,  \delta_t} = C_\pi\sqrt{\frac{2\alpha\sigma^2 \log(T)}{\NiTpi -1}} \CommaBin\nonumber \\
 \text{\ or equivalently,\ }
-%\begin{equation}
-\label{eq:LaiRob}
-\NiTpi \leq 1+ \frac{2\alpha C_\pi^2 \sigma^2 \log(T)}{(\mu_{\star} - \mu_i) ^2}\cdot
+\NiTpi \leq 1+ \frac{2\alpha C_\pi^2 \sigma^2 \log(T)}{(\mu_{\star} - \mu_i) ^2}\cdot\label{eq:LaiRob}
 \end{align}
 Therefore, for $\alpha > 4$\footnote{$\alpha$ should be large enough to control the cost of the unfavorable events, see Lemma~\ref{lem:rested-B}.}, our algorithms match the lower bound of~\citet{lai1985asymptotically} up to a constant factor $\alpha C_\pi^2$.
 \end{remark}
-
+%
 With a similar reasonning than in Remark~\ref{rem:pd-stationary}, we can show a similar bound on the number of overpulls $\hiTpi$  of arm $i$ in the general rested rotting bandits case. Indeed, we show in Lemma~\ref{lem:UB-OP-PD} that $\hiTpi$ is smaller than a problem-dependent quantity $\hiT^+$ which is itself smaller by construction than a function of "gaps" $\Delta_{i,\hiT^+-1}$,
-
+%
 \begin{equation}
 \label{eq:hit+}
 \hiT^+ \triangleq \max \left\{ h \leq 
-1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\text{\quad with \ } \Delta_{i,h} \triangleq \min_{j \in \arms} \mu_j\pa{N_{j,T}^\star -1} - \bar{\mu}_i^h\left( \Nit^\star+h \right). 
+1 \! + \! \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\text{ with  } \Delta_{i,h} \triangleq \min_{j \in \arms} \mu_j\pa{N_{j,T}^\star \!-\!1} - \bar{\mu}_i^h\left( \Nit^\star\!+\!h \right). 
 \end{equation}
 \begin{remark}
 Notice that for stationary bandits, we have for all $h$, $\Delta_{i,\,h} = \Delta_i = \mu_\star - \mu_i$. In fact, $ \Delta_{i,\,h} $ extends the notion of gap to our non-stationary setting : it is the average gap between the smallest value pulled by the optimal policy and the average value of the $h$ first overpulls of arm $i$.  We also highlight that $\hit^+$ is always defined because $h=1$ always verify the self-bounding property. 
@@ -60,20 +59,22 @@ Moreover,  on the favorable event $\HPevent$, we can show that the regret of $\h
 \begin{restatable}{theorem}{restaalgoub}\label{th:rested-PD}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piR, \piF \right\}$ run with $\alpha \geq 5$ suffers an expected regret of
 \begin{align*}
-\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +3L } \cdot
-%\\ 
-%\text{\ with  and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
+\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +3L } \CommaBin \\
+\text{with } 
+\begin{cases}
+C_{\piR} \!=\! 2\\
+C_{\piF} \!=\! 4\\
+\text{$\Delta_{i,h}$ and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
+\end{cases}
 \end{align*}
 \end{restatable}
 \begin{remark}
 \label{rem:pd-optimality}
 The problem-dependent guarantee of \RUCB is 4 times smaller than the guarantee of \FEWA : this is the benefits of upper-confidence bound index policies over confidence bound filtering ones. However, for $\alpha = 5$, \RUCB is still at a factor $\alpha C_{\piR}^2 = 20$ of the lower bound of~\citet{lai1985asymptotically}. This is mostly due to our proof technique. Indeed, \citet{auer2002finite} also use a similar high-probability proof for \UCBone and also get a large factor compared to the lower bound and an over-conservative tuning of the confidence bounds\footnote{To make the results comparable to the one of~\citet{auer2002finite}, we need to replace $2\sigma^2$ by $\nicefrac{1}{2}$ for sub-Gaussian noise.}. Yet, even compared to \UCBone, we have to use a more conservative tuning of the confidence bounds. On the first hand, we use a larger number of estimators at each round : $Kt^2$ instead of $Kt$ for \UCB. Hence, after taking the union bound, we need to increase $\alpha$ by one to have the same probability of the unfavorable event than for \UCBone (see Prop.~\ref{prop:prb_favorable_event_SWA}). On the other hand, for reward functions in $\rewardSet$, the maximal possible regret at round $t$ is bounded by $Lt$ which is larger than the constant cost $L$ for the stationary case. Thus, we have to increase $\alpha$ by one to control the cost of the unfavorable event. Notice that it is a consequence of our extended setting : we would not need to increase $\alpha$ for reward functions in $\BBSet$.
 
-While we presented our Theorems~\ref{th:rested-PI} and~\ref{th:rested-PD} with $\alpha \geq 5$, we could have similar results for $\alpha > 4$ by replacing the additive term $3KL$ by $\pa{1 + \zeta(\alpha-3)}KL$\footnote{$\zeta(x) \triangleq \sum_n n^{-x}$}. For bounded reward functions, we can further reduce $\alpha >3$. It is still much larger confidence interval than $\delta_t \sim \frac{1}{t\log{t}^2}$ which is used in \UCB with asymptotic-optimal tuning for gaussian stationary bandits with fixed (and known) variance \citep{lattimore2019bandit}. We further discuss the notion of asymptotic optimality in rotting bandits in Section~\ref{sec:optimality}.
+While we presented our Theorems~\ref{th:rested-PI} and~\ref{th:rested-PD} with $\alpha \geq 5$, we could have similar results for $\alpha > 4$ by replacing the additive term $3KL$ by $\pa{1 + \zeta(\alpha-3)}KL$\footnote{$\zeta(x) \triangleq \sum_n n^{-x}$}. For bounded reward functions, we can further reduce $\alpha >3$. It is still much larger confidence interval than $\delta_t \sim \frac{1}{t\log{t}^2}$ which is used in \UCB with asymptotic-optimal tuning for gaussian stationary bandits with fixed (and known) variance \citep{lattimore2020banditbook}. We further discuss the notion of asymptotic optimality in rotting bandits in Section~\ref{sec:optimality}. %TODO sec:optimality
 \end{remark}
-
-
-
+%
 \subsection{Proof}
 \subsubsection*{Notation}
 \subsubsection*{Sketch of the proof}
@@ -88,10 +89,9 @@ The proof of Theorem~\ref{th:rested-PI} follows by noticing that $\sum_{i \in \a
 In Lemma~\ref{lem:UB-OP-PD}, we construct a problem-dependent bound of $\hiTpi$ which extends the notion of gap for rotting bandits using Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB}.
 
 The proof of Theorem~\ref{th:rested-PD} follows by plugging this bound in the result of Lemma~\ref{lem:rested-A}.
-
+%
 \subsubsection*{Full proof}
 \label{ss:rested-proof}
-
 Let $t_i^\pi(n)$ the function such that $t_i^\pi(n) = t$ when policy $\pi$ selects arm $i$ at time $t$ for the $n$-th time. We call $\mu_T^+(\pi) \triangleq \max_{i \in \arms} \mu_i\left(\NiT^\pi\right)$, \textit{i.e.} the largest available reward for $\pi$ at round T+1.  
 \begin{lemma}
 \label{lem:regret-decompo}
@@ -217,8 +217,12 @@ Therefore, using Lemma~\ref{lem:regret-decompo} together with Equations~\ref{eq:
 \end{proof}
 
 \begin{lemma}\label{lem:UB-OP-PD}
-Let $\mu^-_T\triangleq \min_{i \in \arms^\star} \mu_i \pa{\NiT^\star -1}\text{ with } \arms^\star \triangleq\left\{ i \in \arms | \NiT^\star \geq 1 \right\}$; and $\Delta_{i,h} \triangleq \mu^-_T- \bar{\mu}_i^h\left( \Nit^\star+h \right)$. $\hiT^\xi$ defined in Lemma~\ref{lem:regret-decompo} is upper-bounded by a problem-dependent quantity,
-
+We define the smallest reward gathered by the optimal policy $\mu^-_T$ and the gap of the h first overpulls of arm $i$ with respect to that value $\Delta_{i,h}$.
+\begin{align*}
+&\mu^-_T\triangleq \min_{i \in \arms^\star} \mu_i \pa{\NiT^\star -1} \text{ with }\arms^\star \triangleq\left\{ i \in \arms | \NiT^\star \geq 1 \right\}, \\
+&\Delta_{i,h} \triangleq \mu^-_T- \bar{\mu}_i^h\left( \Nit^\star+h \right).
+\end{align*}
+$\hiT^\xi$ defined in Lemma~\ref{lem:regret-decompo} is upper-bounded by a problem-dependent quantity,
 \begin{equation*}
 \hiT^\xi \leq   \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}  \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
 \end{equation*}
@@ -236,31 +240,27 @@ Hence, we have that
 \label{eq:hiTxi-bound}
 \hiT^\xi \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\cdot
 \end{equation}
-
+%
 Yet, this upperbound still depends on random quantities such as $\mu_T^+(\pi)$ or $\hiT^\xi$ on the denominator. 
 Consider the smallest value collected by the optimal policy, 
 \[
 \mu^-_T\triangleq \min_{i \in \arms^\star} \mu_i \pa{\NiT^\star -1}\text{ with } \arms^\star \triangleq\left\{ i \in \arms | \NiT^\star \geq 1 \right\}.
 \]
-It is the $T$-th largest value among the $KT$ possible ones. Therefore, since $\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi  - 1 \right)$ is an average of overpulls value, which are smaller or equal to $\mu^-_T$.
-\[\mu^-_T\geq \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right)\CommaBin\] 
-
+It is the $T$-th largest value among the $KT$ possible ones. Since $\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi  - 1 \right)$ is an average of overpulls value, which are all smaller or equal to $\mu^-_T$, we have
+\[\mu^-_T\geq \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right).\] 
+%
 Moreover, $\mu_T^- > \mu_T^+(\pi)$ implies that the regret is 0. Indeed, in that case $\mu_T^+(\pi)$ - the pull with the largest value among the remaining values at the end of the game for $\pi$ - is \emph{strictly smaller} than $\mu_T^-$ - the $T$-th largest reward sample.  Therefore, $\pi$ has collected the $T$ largest value and has zero regret. Hence, we focus on the case $\mu^-_T\leq \mu^+_T(\pi)$, for which the regret may not be zero.  In that case, we can upperbound the RHS term Equation~\ref{eq:hiTxi-bound} by replacing the random quantity $\mu_T^+(\pi)$ by the smaller quantity $\mu^-_T$. Hence, 
-
 \[
 \hiT^\xi \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\ \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\Delta_{i,\hiT^\xi  - 1}^2}\CommaBin
 \] 
-with $\Delta_{i,h} \triangleq \mu^-_T- \bar{\mu}_i^h\left( \Nit^\star+h \right)$, the difference between the lowest mean value of the arm pulled by $\pi^\star$ and the average of the $h$ first overpulls of arm~$i$. Yet, this self-bounding property of $\hiT^\xi $ is not a proper problem-dependent upper bound. We will consider the largest $h$ which satisfies this self-bounding property, i.e.
+with $\Delta_{i,h} \triangleq \mu^-_T- \bar{\mu}_i^h\left( \Nit^\star+h \right)$, the difference between the lowest mean value of the arm pulled by $\pi^\star$ and the average of the $h$ first overpulls of arm~$i$. Yet, this self-bounding property of $\hiT^\xi $ is not a proper problem-dependent upper bound. We will consider the largest $h$ which satisfies this self-bounding property, 
 \begin{equation*}
  \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\cdot
 \end{equation*}
-
 We have that,
 \begin{equation*}
 \hiT^\xi \leq  \hiT^+  \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
 \end{equation*}
-
-
 \end{proof}
 \restaalgoub*
 \begin{proof}
@@ -284,11 +284,4 @@ Using Lemmas~\ref{lem:regret-decompo}, \ref{lem:rested-B}, and Equation~\ref{eq:
 \end{proof}
 
 
-%TODO 3 ingredients : 
-% 1) The regret upperbound  
-% 2) Proposition low probability event
-% 3) Lemmas
-
 %TODO General Lemma 
-
-

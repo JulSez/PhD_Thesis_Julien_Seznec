@@ -123,10 +123,10 @@ Notice that we also sort $\Him$ in the decreasing order at Line~\ref{algline:eff
 %Property~\ref{list:effu-delay} in Proposition~\ref{prop:effu} states that the delay in the update is at most $h_j-1$ in the worst case. Yet, notice that it is often much less: 
 
 
-\subsection{{\EFFFEWA} and {\EFFRAW}}
-{\EFFFEWA} and {\EFFRAW} are the two efficient versions of our initial algorithms. With an hyperparameter $m>1$, they use \EFF instead of \UPDATE (Lines~\ref{algline:fewa-update1} and~\ref{algline:fewa-update2} in \FEWA and Lines~\ref{algline:raw-update1} and~\ref{algline:raw-update2} in \RUCB). Therefore, they use $\left\{\hmueff\right\}_{i,h_j\in \Him}$ instead of $\left\{\hmu_i^h\right\}_{i,h \leq \Nitmone}$. 
+\subsection{{\EFFFEWA} ($\piEF$) and {\EFFRAW} ($\piER$)}
+{\EFFFEWA} ($\piEF$) and {\EFFRAW} ($\piER$) are the two efficient versions of our initial algorithms. With an hyperparameter $m>1$, they use \EFF instead of \UPDATE (Lines~\ref{algline:fewa-update1} and~\ref{algline:fewa-update2} in \FEWA and Lines~\ref{algline:raw-update1} and~\ref{algline:raw-update2} in \RUCB). Therefore, they use $\left\{\hmueff\right\}_{i,h_j\in \Him}$ instead of $\left\{\hmu_i^h\right\}_{i,h \leq \Nitmone}$. 
 
-More precisely, in \FEWA, we replace the increment $h\gets h+1$ by $h\gets\ceil{m\cdot h}$ at Line~\ref{algline:fewa-window}. Hence, the next set is not called $\arms_{h+1}$ but $\arms_{\ceil{m\cdot h}}$ (Line~\ref{algline:fewa-filter} in \FEWA and Line~\ref{algline:filter-add} in \FILTER). Finally, at Lines~\ref{algline:fewa-condition} and~\ref{algline:fewa-pull}, the condition is not $N_{i_t}=h$ but $N_{i_t} \leq h$. In the \FILTER procedure, we also change $\hmu_i^h$ by $\hmu_{i,\,\tteff}^h$ at Lines~\ref{algline:filter-max} and~\ref{algline:filter-delta}. In \RUCB, we only change the $h\leq N_i$ by $h_j \in \Him$ and $\hmu_i^h$ by $\hmu_{i,\,\tteff}^h$ in the index computation at Line~\ref{algline:raw-pull}.
+More precisely, in \FEWA, we replace the increment $h\gets h+1$ by $h\gets\ceil{m\cdot h}$ at Line~\ref{algline:fewa-window}. Hence, the next set is not called $\arms_{h+1}$ but $\arms_{\ceil{m\cdot h}}$ (Line~\ref{algline:fewa-filter} in \FEWA and Line~\ref{algline:filter-add} in \FILTER). Finally, at Lines~\ref{algline:fewa-condition} and~\ref{algline:fewa-pull}, the condition is not $N_{i_t}=h$ but $N_{i_t} \leq h$. In the \FILTER procedure, we also change $\hmu_i^h$ by $\hmu_{i,\,\tteff}^h$ at Lines~\ref{algline:filter-max} and~\ref{algline:filter-delta}. In \RUCB, we only change the $h\leq N_i$ by $h_j \in \Him$ and $\hmu_i^h$ by $\hmueff$ in the index computation at Line~\ref{algline:raw-pull}.
 
 \begin{proposition}
 \EFFFEWA and \EFFRAW tuned with hyperparmaeter $m$ have a $\cO\pa{K\log_m\pa{t}}$ worst-case time and space complexity at round $t$.
@@ -212,20 +212,19 @@ Now, we will use the mechanics of the two algorithms. On the first hand, for $\E
  &\geq \min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} - 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
  \label{eq:effraw-index-appear}
  \end{align}
- 
+ %
  Then, we can relate the left part of the sum to the best current value $\max_{i\in \arms} \mu_i(t, \Nitmone)$,
  \begin{equation}
 \min_{j \in \Hitm} \pa{\hmuiteff + c(2^j, \delta_t)} \geq \min_{j \in H_{\ist,m}} \pa{\hmu_{\ist,\, \tteff}^{h_j} + c(2^j, \delta_t)}\geq  \bmu_{\ist,\, \tteff}^{h_{\min}} \geq \mu_{\ist}(t,\Nitmone).
  \label{eq:effraw-index-use}
  \end{equation}
- 
+%
 where $h_{\min} \in \argmin_{h_j \in \Him} \pa{\hmueff + c(h_j, \delta_t)} $.The first inequality follows because \EFFRAW selects the arm with the largest index. In particular, the index of $i_t$ is larger or equal to the index of $i^\star_t \in \argmax_{i\in \arms} \mu_i(t, N_{\ist,\,t})$. The second inequality holds on $\HPeff$. The third inequality uses the decreasing of the reward. Putting Equations~\ref{eq:effraw-index-appear} and~\ref{eq:effraw-index-use}, we get,
-
 \begin{equation}
 \label{eq:effraw-result}
 \bmu^{h}_{i_t}(t-1,\piER) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- 2 \sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t).
 \end{equation}
-
+%
 On the other hand, for \EFFFEWA, we know that the selected arm passes any filter of window $2^j \in \Him$. Therefore, with $i_{\max} \in \argmax_{i \in \arms_{h_j}} \bmueff$, we can write,
 \begin{flalign}
 \qquad\hmuiteff &\geq \max_{i\in \arms_{h_j}} \hmueff -2c\pa{h_j, \delta_t} \nonumber && \text{Filtering rule}\\
@@ -241,7 +240,11 @@ We relate $\bmueff$ to the largest available value at round $t$,
 \max_{i\in \arms_{h_j}} \bmueff \geq \max_{i\in \arms_{1}}\bmu_{i,\tteff}^1 =  \max_{i\in \arms}\bmu_{i,\tteff}^1 \geq \bmu_{\ist,\tteff}^1 \geq  \mu_{\ist}(t, \Nitmone).
 \end{equation}
 
-The last inequality follows from the decreasing of the reward and the before last from the definition of the maximum operator. The first one uses a similar argument than in Lemma~\ref{lem:core-FEWA} : $\max_{i\in \arms_{h_j}} \bmueff$ increases with $h_j$.  Indeed, on $\HPeff$, $i_j \triangleq \argmax_{i\in \arms_{h_j}} \bmueff$ is in $\arms_{h_{j+1}}$ because it cannot be at more than two confidence bounds from the best empirical value during the filter $h_j$. Thus, we get, 
+The last inequality follows from the decreasing of the reward and the before last from the definition of the maximum operator. The first one uses a similar argument than in Lemma~\ref{lem:core-FEWA} : $\max_{i\in \arms_{h_j}} \bmueff$ increases with $h_j$.  Indeed, on $\HPeff$, 
+
+\[  i_j \triangleq \argmax_{i\in \arms_{h_j}} \bmueff \in \arms_{h_{j+1}}\]
+
+ because it cannot be at more than two confidence bounds from the best empirical value during the filter $h_j$. Thus, we get, 
 
 \[
 \max_{i\in \arms_{h_j}} \bmueff = \bmu_{i_j,\tteff}^{h_j} \leq \bmu_{i_j,\tteff}^{h_{j+1}} \leq \max_{i\in \arms_{h_{j+1}}}\bmu_{i,\tteff}^{h_{j+1}}. 
@@ -255,45 +258,60 @@ The first inequality follows because $\bmu_{i_j,\tteff}^{h_{j+1}}$ contains rewa
 
 With few lines of algebra, we reduce the sum,
 \begin{flalign*}
-\sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t) &= \sum_{j=0}^{j_h-1} \frac{\sqrt{2}^{j}}{2^{j_h}-1} c(1, \delta_t) && c(2^j, \delta_t) = \frac{c(1,\delta_t)}{\sqrt{2^j}} \\
+\sum_{j=0}^{j_h-1} \frac{2^{j}}{2^{j_h}-1} c(2^j, \delta_t) &= \sum_{j=0}^{j_h-1} \frac{\sqrt{2}^{j}}{2^{j_h}\!-\!1} c(1, \delta_t) && c(2^j, \delta_t) = \frac{c(1,\delta_t)}{\sqrt{2^j}} \\
 & = \frac{\sqrt{2}^{j_h} -1 }{\pa{\sqrt{2}-1}\pa{2^{j_h}-1}}c(1, \delta_t) && \sum_{n=0}^N q^n = \frac{q^{N+1}-1}{q-1}\\
-& = \frac{1}{\pa{\sqrt{2}-1}\pa{\sqrt{2}^{j_h} +1}} c(1, \delta_t) && 2^{j_h}\!-\!1 \!=\!  \pa{\sqrt{2}^{j_h}\!-\!1}\!\pa{\sqrt{2}^{j_h}\!+\!1}\\
-& \leq  \frac{\sqrt{2}}{\pa{\sqrt{2}-1}\sqrt{2^{j_h+1}}} c(1, \delta_t) &&\sqrt{2^{j_h}} +1 \geq \sqrt{2^{j_h}} = \frac{\sqrt{2^{j_h+1}} }{\sqrt{2}} \\
-& = \frac{\sqrt{2}}{\sqrt{2}-1} c(2^{j_h+1}, \delta_t) &&  \frac{c(1,\delta_t)}{\sqrt{2^{j_h+1}}} = c(2^{j_h+1},\delta_t)\\
-& \leq \frac{\sqrt{2}}{\sqrt{2}-1} c(h, \delta_t). && h \leq 2^{j_h+1} \text{ and }  c(\cdot, \delta) \text{ decreases}
+& = \frac{1}{\pa{\sqrt{2}-1}\pa{\sqrt{2}^{j_h}+1}} c(1, \delta_t) && a^2\!-\!1 \!=\!  \pa{a\!-\!1}\!\pa{a\!+\!1}\\
+& \leq  \frac{\sqrt{2}}{\pa{\sqrt{2}-1}\sqrt{2^{j_h+1}}} c(1, \delta_t) &&\sqrt{2^{j_h}} +1 \geq  \frac{\sqrt{2^{j_h+1}} }{\sqrt{2}} \\
+& \leq \frac{\sqrt{2}}{\pa{\sqrt{2}-1}\sqrt{h}} c(1, \delta_t) &&  h \leq 2^{j_h+1}  \\
+& = \frac{\sqrt{2}}{\sqrt{2}-1} c(h, \delta_t) &&  \frac{c(1,\delta_t)}{\sqrt{h}} = c(h, \delta_t)
+%& \leq \frac{\sqrt{2}}{\sqrt{2}-1} c(h, \delta_t). && }  c(\cdot, \delta) \searrow
 \end{flalign*}
 
 Plugging this last equation in Equations~\ref{eq:effraw-result} and~\ref{eq:efffewa-result} leads to the final result,
 \[
-\bmu^{h}_{i_t}(t-1,\pi) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- C_\pi c(h, \delta_t) \quad \text{with } 
+\bmu^{h}_{i_t}(t-1,\pi) \geq \min_{j \in \Hitm} \mu_{\ist}(t,\Nitmone)- C_\pi c(h, \delta_t) \;\; \text{with } 
 \begin{cases}
-C_{\piER} = \frac{2\sqrt{2}}{\sqrt{2}-1}\\
-C_{\piEF} = \frac{4\sqrt{2}}{\sqrt{2}-1}
-\end{cases}\cdot
+C_{\piER} \!=\! \frac{2\sqrt{2}}{\sqrt{2}-1}\\
+C_{\piEF} \!=\! \frac{4\sqrt{2}}{\sqrt{2}-1}
+\end{cases}\!\cdot
 \]
 \end{proof}
 
 Using Proposition~\ref{prop:prb_favorable_event_eff} and Lemma~\ref{lem:core-eff} instead of Prop.~\ref{prop:prb_favorable_event} and Lemmas~\ref{lem:core-FEWA} and~\ref{lem:core-RAWUCB}, we can obtain similar problem dependent and independent bounds than for \FEWA and \RUCB. The proof directly follows from the precedent analysis. 
-\begin{restatable}{theorem}{restaalgoindepub}
-\label{th:rested-PI}
+\begin{theorem}
+\label{th:rested-PI-eff}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piER, \piEF \right\}$ run with $\alpha \geq 4$ and $m=2$ suffers an expected regret of
 \begin{equation*}
-\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 6KL\,.
+\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 6KL \;\; \text{with } 
+\begin{cases}
+C_{\piER} \!=\! \frac{2\sqrt{2}}{\sqrt{2}-1}\\
+C_{\piEF} \!=\! \frac{4\sqrt{2}}{\sqrt{2}-1}
+\end{cases}\!\cdot
 \end{equation*}
-\end{restatable}
-\begin{restatable}{theorem}{restaalgoub}\label{th:rested-PD}
+\end{theorem}
+\begin{theorem}\label{th:rested-PD-eff}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piER, \piEF \right\}$ run with $\alpha \geq 4$ and $m=2$ suffers an expected regret of
 \begin{align*}
-\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +6L } \cdot
-%\\ 
-%\text{\ with  and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
+\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +6L } \\
+\text{with } 
+\begin{cases}
+C_{\piER} \!=\! \frac{2\sqrt{2}}{\sqrt{2}-1}\\
+C_{\piEF} \!=\! \frac{4\sqrt{2}}{\sqrt{2}-1}\\
+\text{$\Delta_{i,h}$ and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
+\end{cases}
 \end{align*}
-\end{restatable}
+\end{theorem}
 
 Among the differences, we notice that our theory holds for a larger range of $\alpha \geq 4$ but the constant $C_\pi$ is $\frac{\sqrt{2}}{\sqrt{2}-1} \sim 3.4$ times larger than their original counter part. We will display multiple experiments where the regret ratio between the algorithms is much smaller than $3.4$. Indeed, to derive Lemma~\ref{lem:core-eff}, we consider that the statistics $\hmueff$ is delayed by at most $h_j$ rounds. According to Proposition~\ref{prop:effu}, the delay is at most $h_j/2$ for $m=2$ (and less than $h_j$ for any $m$). Moreover, these guarantees on the worst case delay are pessimistic: the delay could be much smaller. 
 
 \begin{remark}
-\textbf{Can we adapt the theory for $m\neq2$?} %TODO
+\textbf{Can we adapt our theory for {$m\neq2$}?} 
+
+For $m>2$, 
+
+For $m<2$,
+
+%TODO
 \end{remark}
 
 \subsection{Experimental Result}
