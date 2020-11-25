@@ -9,7 +9,6 @@
 \DeclareMathOperator{\logloglog}{logloglog}
 \DeclareMathOperator{\polyloglog}{polyloglog}
 
-
 \newcommand*\diff{\mathop{}\!\mathrm{d}}
 \newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
 \renewcommand{\d}[1]{\ensuremath{\operatorname{d}\!{#1}}}
@@ -36,7 +35,7 @@
 \newcommand{\specialcell}[2][c]{%
  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
 
-\newtheorem{assumption}{Assumption}
+%\newtheorem{assumption}{Assumption}
 %\newtheorem{lemma}{Lemma}
 %\newtheorem{theorem}{Theorem}
 %\newtheorem{definition}{Definition}
@@ -70,6 +69,7 @@
 %parens
 \newcommand{\pa}[1]{\left(#1\right)}
 \newcommand{\sqpa}[1]{\left[#1\right]}
+\newcommand{\bra}[1]{\left[#1\right]}
 \newcommand{\ac}[1]{\left\{#1\right\}}
 \newcommand{\ev}[1]{\left\{#1\right\}}
 \newcommand{\card}[1]{\left|#1\right|}
@@ -96,6 +96,12 @@
 \newcommand{\cD}{\mathcal{D}}
 \newcommand{\cE}{\mathcal{E}}
 \newcommand{\F}{\mathcal{F}}
+\newcommand{\Ft}{\mathcal{F}_t}
+\newcommand{\Ftmone}{\mathcal{F}_{t-1}}
+\newcommand{\Ftpone}{\mathcal{F}_{t+1}}
+\newcommand{\FT}{\mathcal{F}_T}
+\newcommand{\FTmone}{\mathcal{F}_{T-1}}
+\newcommand{\FTpone}{\mathcal{F}_{T+1}}
 \newcommand{\cF}{\mathcal{F}}
 \newcommand{\cG}{\mathcal{G}}
 \newcommand{\cH}{\mathcal{H}}
@@ -202,14 +208,29 @@
 \newcommand{\CMG}{\texttt{CMG}\xspace}
 %bandits
 \newcommand{\FPL}{\texttt{FPL}\xspace}
+\newcommand{\FTL}{\texttt{FTL}\xspace}
+\newcommand{\OMD}{\texttt{OMD}\xspace}
+\newcommand{\FTRL}{\texttt{FTRL}\xspace}
 \newcommand{\TS}{\texttt{TS}\xspace}
 \newcommand{\UCB}{\texttt{UCB}\xspace}
+\newcommand{\UCRLtwo}{\texttt{UCRL2}\xspace}
+\newcommand{\ADAUCB}{\texttt{ADA-UCB}\xspace}
+\newcommand{\BayesUCB}{\texttt{Bayes-UCB}\xspace}
 \newcommand{\MOSS}{\texttt{MOSS}\xspace}
+\newcommand{\MOSSa}{\texttt{MOSS-anytime}\xspace}
+\newcommand{\MOTS}{\texttt{MOTS}\xspace}
 \newcommand{\UCBE}{\texttt{UCB-E}\xspace}
+\newcommand{\UCBV}{\texttt{UCB-V}\xspace}
 \newcommand{\ImprovedUCB}{\texttt{ImprovedUCB}\xspace}
+\newcommand{\KLUCB}{\texttt{KL-UCB}\xspace}
+\newcommand{\KLUCBpp}{\texttt{KL-UCB++}\xspace}
 \newcommand{\klucb}{\texttt{KL-UCB}\xspace}
 \newcommand{\CUCB}{\texttt{CUCB}\xspace}
 \newcommand{\EXP}{\texttt{Exp3}\xspace}
+\newcommand{\REXP}{\texttt{Rexp3}\xspace}
+\newcommand{\EXPfour}{\texttt{Exp4}\xspace}
+\newcommand{\INF}{\texttt{INF}\xspace}
+\newcommand{\TsallisINF}{\texttt{Tsallis-INF}\xspace}
 \newcommand{\exph}{\EXP}
 %linear bandits
 \newcommand{\LinearTS}{\texttt{LinearTS}\xspace}
@@ -276,9 +297,10 @@
 \newcommand{\metagrill}{\texttt{\textcolor[rgb]{0.5,0.2,0}{TrailBlazer}}\xspace}
 %polymatroid bandits
 \newcommand{\greedy}{\texttt{Greedy}\xspace}
+\newcommand{\epsilongreedy}{\texttt{$\epsilon$-Greedy}\xspace}
 \newcommand{\opm}{\texttt{\textcolor[rgb]{0.5,0.2,0}{OPM}}\xspace}
 
-
+\newcommand{\ForcingBalance}{\texttt{ForcingBalance}\xspace}
 \newcommand{\maxn}{\texttt{max}\xspace}
 \newcommand{\avgn}{\texttt{avg}\xspace}
 
@@ -293,12 +315,14 @@
 \newcommand{\hs}{\hat{\sigma}}
 \newcommand{\hepsilon}{\hat{\epsilon}}
 
+%RL
+\newcommand{\QLearning}{\normalfont\texttt{Q-Learning}\xspace}
 
 %graph bandit notation
 \newcommand{\etat}{\eta_t}
 \newcommand{\gammat}{\gamma_t}
 \newcommand{\nodes}{{\textcolor[rgb]{0.3,0.8,0.0}{N}}}
-\newcommand{\rounds}{{\textcolor[rgb]{0.3,0.0,0.8}{T}}}
+\newcommand{\rounds}{T}
 \newcommand{\td}{{\textcolor[rgb]{0.6,0.0,0.6}{\tilde{d}}}}
 \newcommand{\matL}{{\textcolor[rgb]{0.6,0.0,0.6}{L}}}
 \newcommand{\matK}{{\textcolor[rgb]{0.6,0.0,0.6}{K}}}
@@ -373,17 +397,22 @@
 
 
 %%% todos
-\usepackage[colorinlistoftodos, textwidth=30mm, shadow, textsize=small]{todonotes}
-\definecolor{babyblue}{rgb}{0.54, 0.81, 0.94}
+\usepackage[colorinlistoftodos, textwidth=30mm, shadow, textsize=small,disable]{todonotes}
+\definecolor{blued}{rgb}{0.54, 0.81, 0.94}
 \definecolor{citrine}{rgb}{0.89, 0.82, 0.04}
 \definecolor{misocolor}{rgb}{0.16,0.27,0.86}
 \newcommand{\todom}[1]{\todo[color=misocolor!30]{#1}\xspace}
 \newcommand{\todomi}[1]{\todo[inline,color=misocolor!30]{#1}}
 \newcommand{\wb}[1]{\overline{#1}}
+\newcommand\todoju[1]{\todo[color=blued,inline]{#1}}
+\newcommand{\todoj}[1]{\todo[color=blued]{\tiny#1}}
+\newcommand{\todoa}[1]{\todo[color=yellow, inline]{#1}}
+\newcommand{\todoaout}[1]{\todo[color=yellow]{\tiny#1}}
 
 
 
-\newcommand{\ind}{\mathbb{I}}
+
+\newcommand{\ind}[1]{\mathbbm{1}\left[#1\right]}
 \newcommand{\narms}{K}
 \newcommand{\currentTime}{t}
 \newcommand{\lipschitz}{L}
@@ -410,7 +439,9 @@
 \newcommand{\underpullSet}{\textsc{up}}
 \newcommand{\overpullSet}{\textsc{op}}
 \newcommand{\HPevent}{\xi^\alpha_t}
-\newcommand{\HPeff}{\xi^\alpha_{t,\, \texttt{eff}}}
+\newcommand{\HPt}[1]{\xi^\alpha_{{#1}}}
+\newcommand{\HPeff}{\xi^\alpha_{t,\, m}}
+\newcommand{\HPtwo}{\xi^\alpha_{t,\, 2}}
 \newcommand{\HPSWA}{\xi_{\rm SWA}}
 \newcommand{\policySet}{\Pi}
 \newcommand{\rewardSet}{\mathcal{L}_L}
@@ -430,6 +461,7 @@
 \newcommand{\wSWA}{\normalfont \texttt{wSWA}\xspace}
 \newcommand{\SWA}{\normalfont \texttt{SWA}\xspace}
 \newcommand{\piSWA}{\pi_{\rm SWA}}
+\newcommand{\piwSWA}{\pi_{\rm wSWA}}
 
 \newcommand{\DUCB}{\normalfont \texttt{D-UCB}\xspace}
 \newcommand{\SWUCB}{\normalfont \texttt{SW-UCB}\xspace}
@@ -439,15 +471,15 @@
 \newcommand{\FILTER}{\normalfont \texttt{FILTER}\xspace}
 \newcommand{\UPDATE}{\normalfont \texttt{UPDATE}\xspace}
 \newcommand{\EFFFEWA}{\normalfont \texttt{EFF-FEWA}\xspace}
-\newcommand{\EUCB}{\normalfont \texttt{RAW-UCB}\xspace}
-\newcommand{\XUCB}{\normalfont \texttt{RAW-UCB}\xspace}
+\newcommand{\RAWUCB}{\normalfont \texttt{RAW-UCB}\xspace}
+\newcommand{\RAWUCBpp}{\normalfont \texttt{RAW-UCB++}\xspace}
 \newcommand{\RUCB}{\normalfont \texttt{RAW-UCB}\xspace}
 \newcommand{\RAW}{\normalfont \texttt{RAW-UCB}\xspace}
 \newcommand{\piX}{\policy_{\rm R}}
 \newcommand{\piR}{\policy_{\rm R}}
-\newcommand{\EFFU}{\normalfont \texttt{EFF-RAW-UCB}\xspace}
-\newcommand{\EFFX}{\normalfont \texttt{EFF-RAW-UCB}\xspace}
+\newcommand{\EFFU}{\normalfont {\texttt{EFF\_UPDATE}}\xspace}
 \newcommand{\EFFRAW}{\normalfont \texttt{EFF-RAW-UCB}\xspace}
+\newcommand{\EFFRAWpp}{\normalfont \texttt{EFF-RAW-UCB++}\xspace}
 \newcommand{\piEFFE}{\normalfont \policy_{\rm ERUCB}\xspace}
 \newcommand{\piEXU}{\normalfont \policy_{\rm ERUCB}\xspace}
 \newcommand{\piEFFR}{\normalfont \policy_{\rm ERUCB}\xspace}
@@ -467,6 +499,7 @@
 \newcommand{\PiL}{\Pi_{\rm L}}
 \newcommand{\Nit}{N_{i,\,t}}
 \newcommand{\Nitmone}{N_{i,\,t-1}}
+\newcommand{\Nisttmone}{N_{\ist,\,t-1}}
 \newcommand{\NiT}{N_{i,\,T}}
 \newcommand{\Njt}{N_{j,\,t}}
 \newcommand{\Njtmone}{N_{j,\,t-1}}
@@ -491,12 +524,55 @@
 \newcommand{\ie}{\emph{i.e.}\xspace} 
 \newcommand{\piFRSet}{\left\{\piF, \piR\right\}}
 \newcommand{\Him}{H_{i,\,m}}
+\newcommand{\Hitwo}{H_{i,\,2}}
 \newcommand{\Hitm}{H_{i_t,\,m}}
-\newcommand{\hmueff}{\hmu_{i,\texttt{eff}}^{h_j}}
-\newcommand{\hmuiteff}{\hmu_{i_t,\texttt{eff}}^{h_j}}
-\newcommand{\bmueff}{\bmu_{i,\texttt{eff}}^{h_j}}
-\newcommand{\bmuiteff}{\bmu_{i_t,\texttt{eff}}^{h_j}}
+\newcommand{\hmueff}{\hmu_{i,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\hmuiteff}{\hmu_{i_t,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\bmueff}{\bmu_{i,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\bmuiteff}{\bmu_{i_t,\texttt{\footnotesize{eff}}}^{h_j}}
 \newcommand{\neff}{n_i^{h_j}}
 \newcommand{\peff}{p_i^{h_j}}
 \newcommand{\ist}{i^\star_t}
-\newcommand{\tteff}{\texttt{eff}}
+\newcommand{\tteff}{\normalfont{\texttt{eff}}}
+
+\newcommand{\Tp}{\mathcal{T}}
+\newcommand{\student}{\mathcal{S}}
+\newcommand{\oracle}{\Tilde{\pi}^\star}
+\newcommand{\armsbelow}{\arms_t^-}
+\newcommand{\armsabove}{\arms_t^+}
+\newcommand{\Krt}{\arms_t^r}
+\newcommand{\Krtpone}{\arms_{t+1}^r}
+\newcommand{\state}{\boldsymbol{\mu}}
+\newcommand{\statet}{\boldsymbol{\mu_t}}
+\newcommand{\statetit}{\statet^{\boldsymbol{i_t}}}
+\newcommand{\statetmone}{\state_{\boldsymbol{t-1}}}
+\newcommand{\statetpone}{\state_{\boldsymbol{t+1}}}
+\newcommand{\statetmoneit}{\statetmone^{\boldsymbol{i_t}}}
+\newcommand{\statetponeit}{\statetpone^{\boldsymbol{i_t}}}
+\newcommand{\Ort}{\Or(\statet)}
+\newcommand{\Ortmone}{\Or(\statetmone)}
+\newcommand{\Ortpone}{\Or(\statetpone)}
+\newcommand{\Ormonet}{\Ormone(\statet)}
+\newcommand{\Ormonetmone}{\Ormone(\statetmone)}
+\newcommand{\Ormonetpone}{\Ormone(\statetpone)}
+\newcommand{\Ortit}{\Or(\statetit)}
+\newcommand{\Ortmoneit}{\Or(\statetmoneit)}
+\newcommand{\Ortponeit}{\Or(\statetponeit)}
+\newcommand{\Ormonetit}{\Ormone(\statetit)}
+\newcommand{\Ormonetmoneir}{\Ormone(\statetmone^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetir}{\Ormone(\statet^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetponeir}{\Ormone(\statetpone^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetmoneit}{\Ormone(\statetmoneit)}
+\newcommand{\Ormonetponeit}{\Ormone(\statetponeit)}
+\newcommand{\Or}{\OO_r}
+\newcommand{\Ormone}{\OO_{r-1}}
+\newcommand{\Tpi}{\Tilde{\pi}}
+\newcommand{\Tpikt}{\Tilde{\pi}_{k,t}}
+\newcommand{\TpikT}{\Tilde{\pi}_{k,T}}
+\newcommand{\isT}{i^\star_T}
+\newcommand{\FLUT}{\normalfont\texttt{FLUT}\xspace}
+\newcommand{\FLUTE}{\normalfont\texttt{FLUT-E}\xspace}
+\newcommand{\ucb}{\normalfont\operatorname{ucb}\xspace}
+\newcommand{\lcb}{\normalfont\operatorname{lcb}\xspace}
+\newcommand{\None}{\texttt{None}\xspace}
+\newcommand{\Null}{\texttt{Null}\xspace}

@@ -1,7 +1,6 @@
 \documentclass[12pt,fleqn]{book} % Default font size and left-justified equations
 
 \input{structure}
-\chapterimage{chapter_head_1.pdf} 
 \usepackage{amsthm}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -19,19 +18,176 @@
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{wrapfig}
+\usepackage{afterpage}
+\usepackage{placeins}
+\usepackage{svg}
 \newcommand{\bookboxx}[1]{\small
 \par\medskip\noindent
 \framebox[0.46\textwidth]{
 \begin{minipage}{0.44\dimexpr\textwidth-\parindent\relax} {#1} \end{minipage} } \par\medskip }
 
-\usepackage{todonotes}
 \setlength\parindent{0pt}
-\setlength{\parskip}{1em}
+\setlength\parskip{1em plus 2pt}
+%\setlength{\parskip}{1em}
 
 \newcommand{\citep}{\parencite}
 \newcommand{\citet}{\textcite}
-\hypersetup{pdftitle={These de Doctorat, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
+\hypersetup{pdftitle={Thèse de Doctorat, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
+
 
 \begin{document}
+\newpage
+~\vfill
+\thispagestyle{empty}
+{\fontfamily{ptm}\selectfont 
+
+ \vspace{-3cm} \hspace{-1cm}\fbox{
+\begin{minipage}[c]{16cm}
+\vspace{.2cm}
+\begin{center}
+{\large\sc\bf\sffamily TH\`ESE DE DOCTORAT DE L'UNIVERSIT\'E DE LILLE} 
+\\{\bf {\sffamily École Doctorale Sciences Pour l'Ingénieur}}\\
+{\sffamily Sp{\'e}cialit{\'e} :} {\bf\sffamily Informatique}
+
+\vspace{.2cm}
+\end{center}
+\end{minipage}
+}
+
+%\vspace{1.0cm}
+%\begin{center}
+%  \includegraphics[width=0.2\columnwidth]{fig/ens.pdf}
+%  %\hspace{5cm}
+%  %\includegraphics[width=0.18\columnwidth]{fig/inria.pdf}
+%\end{center}
+%\vspace{0.5cm}
+
+\begin{center}
+{\sffamily \vspace{.4cm} Thèse de Doctorat pr\'esent\'ee par \vspace{.4cm}}
+
+{\large \bf\sffamily  Julien SEZNEC} \\
+\end{center}
+
+\vspace{.4cm}
+\begin{center}
+\hspace{-0.3cm}\hrulefill \hspace{.2cm}
+
+\vspace{.2cm}
+
+\hspace{-.5cm}{\bf \Large \sffamily{Sequential Machine Learning for Adaptive Educational Systems}}
+
+\vspace{-.1cm}
+
+\hspace{-0.3cm}\hrulefill \\ \hspace{.2cm}
+
+{\sffamily
+sous la direction de MM. Michal Valko et Alessandro Lazaric, \\ et l'encadrement de M. Jonathan Banon.
+}
+\end{center}
+
+
+
+\vspace{1.cm}
+
+{\sffamily
+
+\begin{tabular}{lllll}
+{\bf\sffamily Rapporteurs :} 
+& {M.}   & Aur\' elien & {\bf\sffamily GARIVIER} & ENS de Lyon \\
+& {M.}   & Gilles & {\bf\sffamily STOLTZ}     & Universit\'e Paris Saclay \& CNRS \\
+\end{tabular}
+
+{\sffamily\vspace{1.cm} Soutenue le {\bf\sffamily 15 décembre 2020} devant le jury
+compos{\'e} de}
+}
+\bigskip
+
+\bigskip
+
+%\hspace{-1.5cm}
+{\sffamily
+\begin{tabular}{llllll}
+ {M.}   & Gilles & {\bf\sffamily STOLTZ}     & Univ. Paris Saclay \& CNRS & Rapporteur\\
+{M.}   & Aur\' elien & {\bf\sffamily GARIVIER} & ENS de Lyon & Rapporteur \\
+{M.}   & Steffen & {\bf\sffamily GRÜNEWÄLDER}     &  University of Lancaster & Examinateur\\
+{M.}   & Manuel & {\bf\sffamily LOPES}     &  Instituto Superior Tecnico & Examinateur\\
+{Mme}   & Mathilde & {\bf\sffamily MOUGEOT}     & Univ. Paris Saclay \& ENSIEE & Examinatrice\\
+{M.}   & Michal & {\bf\sffamily VALKO}     &  INRIA Lille \& Deepmind & Directeur\\
+{M.}   & Alessandro & {\bf\sffamily LAZARIC}     &  INRIA Lille \& FAIR  & Co-Directeur\\
+{M.}   & Jonathan & {\bf\sffamily BANON}     &  Lelivrescolaire.fr & Encadrant\\
+\end{tabular}
+}
+\begin{center}
+\small\sffamily{Centre de Recherche en Informatique, Signal et Automatique de Lille (CRIStAL),\\
+UMR 9189 Équipe SequeL, 59650, Villeneuve d’Ascq, France}
+\end{center}
+\makebox[\textwidth][c]{
+\includegraphics[width=0.36\columnwidth]{fig/logo_lls.pdf}
+\includegraphics[width=0.288\columnwidth]{fig/logo_univ-lille.png}
+\includegraphics[width=0.264\columnwidth]{fig/logo_cristal.pdf}
+\includegraphics[width=0.288\columnwidth]{fig/logo_inria.pdf}
+}
+\input{94e_couverture}
+\chapterimage{chapter_head/0_content.jpg} % Table of contents heading image
+
+\pagestyle{empty} % Disable headers and footers for the following pages
+
+\tableofcontents % Print the table of contents itself
+\chapterimage{chapter_head/0_figures.jpg}
+% list of items
+\begingroup
+\makeatletter
+\chapter*{List of items}
+\section*{Figures}
+\@starttoc{lof}
+\let\clearpage\relax
+%\listoftables
+\section*{Tables}
+\@starttoc{lot}
+\section*{Algorithms}
+\@starttoc{loa}
+\makeatother
+\endgroup
+
+
+\cleardoublepage % Forces the first chapter to start on an odd page so it is not on the right side of the book
+
+\pagestyle{fancy} % Enable headers and footers again
+
+%%----------------------------------------------------------------------------------------
+%%	GLOSSARY
+%%----------------------------------------------------------------------------------------
+%\clearpage
+%
+%\printglossary[numberedsection,type=symbols,style=list,nogroupskip]
+%
+%%\printglossary[type=\acronymtype, style=myList]
+%\printglossary[type=\acronymtype]
+%\printglossaries
+\clearpage
+\input{2Literature/main}
 \input{3Rested/main}
+\input{4Restless/main}
+\input{5Bandits/main}
+\chapterimage{chapter_head/7_782phare.jpg} 
+\part{References}
+\chapter*{References}
+\vspace{-3cm}
+\emph{– Tu n’as même pas appris le métier de tailleur ? dit-elle.\\
+– Jamais, répondit K.\\
+– Quelle est ta profession ?\\
+– Arpenteur.\\
+– Qu’est-ce là ? \\
+K. le lui expliqua, l’explication la fit bâiller. } \\ \vspace{-1.2cm}
+\begin{flushright}
+\emph{Franz Kafka,} Le Château, \emph{Dernier Chapitre}.
+\end{flushright}
+\markboth{References}{}
+\addcontentsline{toc}{chapter}{\textcolor{myBlue}{References}}
+\begin{refcontext}[sorting=nyt]
+\printbibliography[heading=bibempty]
+\end{refcontext}
+
+
+
 \end{document} 

@@ -1,0 +1,38 @@
+%!TEX root = ./main.tex
+\cleardoublepage
+\hspace{0pt}
+\vfill
+\begin{flushright}
+\emph{À mes grands-parents: Denise, Jean et Germaine}.
+\end{flushright}
+\vfill
+\hspace{0pt}
+\cleardoublepage
+\section*{R\'esum\'e}
+Proposer des séquences adaptatives d'exercices dans un Environnement informatique pour l'Apprentissage Humain (EIAH) nécessite de caractériser les lacunes de l'élève et d'utiliser cette caractérisation dans une stratégie pédagogique adaptée. Puisque les élèves ne font que quelques dizaines de questions dans une session de révision, ces deux objectifs sont en compétition. L'apprentissage automatique appelle \emph{problème de bandits} ces dilemmes d'exploration-exploitation dans les prises de décisions séquentielles. Dans cette thèse, nous étudions trois problèmes de bandits pour une application dans les systèmes éducatifs adaptatifs.
+
+Les \emph{bandits décroissants au repos} sont un problème de décision séquentiel dans lequel la récompense associée à une action décroît lorsque celle-ci est sélectionnée. Cela modélise le cas où un élève progresse quand il travaille et l'EIAH cherche à sélectionner le sujet le moins maîtrisé pour combler les plus fortes lacunes. Nous présentons de nouveaux algorithmes et nous montrons que pour un horizon inconnu $T$ et sans aucune connaissance sur la décroissance des $K$ bras, ces algorithmes atteignent une borne de regret dépendante du problème $\cO(\log{T}),$ et une borne indépendante du problème $\tcO(\sqrt{KT})$. Nos résultats améliorent substantiellement l'état de l'art, ou seule une borne minimax $\tcO(K^{\nicefrac{1}{3}}T^{\nicefrac{2}{3}})$ avait été atteinte. Ces nouvelles bornes sont à des facteurs polylog des bornes optimales sur le problème stationnaire, donc nous concluons: les bandits décroissants ne sont pas plus durs que les bandits stationnaires.
+
+Dans les \emph{bandits décroissants sans repos}, la récompense peut décroître à chaque tour pour toutes les actions. Cela modélise des situations différentes telles que le vieillissement du contenu dans un système de recommandation. On montre que les algorithmes conçus pour le problème "au repos" atteignent les bornes inférieures agnostiques au problème et une borne dépendante du problème $\cO(\log{T})$. Cette dernière est inatteignable dans le cas général ou la récompense peut croître. Nous concluons : l'hypothèse de décroissance simplifie l'apprentissage des bandits sans repos. 
+
+Viser le sujet le moins connu peut être intéressant avant un examen, mais pendant le cursus - quand tous les sujets ne sont pas bien compris - cela peut mener à l'échec de l'apprentissage de l'étudiant. On étudie un Processus de Décision Markovien Partiellement Observable (POMDP, selon l'acronyme anglais) dans lequel on cherche à maîtriser le plus de sujets le plus rapidement possible. On montre que sous des hypothèses raisonnables sur l'apprentissage de l'élève, la meilleure stratégie oracle sélectionne le sujet le plus connu sous le seuil de maîtrise. Puisque cet oracle optimal n'a pas besoin de connaitre la dynamique de transition du POMDP, nous proposons une stratégie apprenante avec des outils "bandits" classiques, en évitant ainsi les méthodes gourmandes en données de l'apprentissage de POMDP.
+\newpage
+
+\section*{Abstract}
+Designing an adaptive sequence of exercises in Intelligent Tutoring Systems (ITS) requires to characterize the gaps of the student and to use this characterization in a relevant pedagogical strategy. Since a student does no more than a few tens of exercises in a session, these two objectives compete. Machine learning called these exploration-exploitation trade-offs in sequential decision making the \emph{bandits problems}. In this thesis, we study different bandits setups for intelligent tutoring systems.%TODO
+
+The \emph{rested rotting bandits} are a sequential decision problem in which the reward associated with an action may decrease when it is selected. It models the situation where the student improves when he works and the ITS aims the least known subject to fill the most important gaps.  We design new algorithms and we prove that for an unknown horizon $T$, and without any knowledge on the decreasing behavior of the $K$ arms, these algorithms achieve problem-dependent regret bound of $\cO(\log{T}),$ and a problem-independent one of $\tcO(\sqrt{KT})$. Our result substantially improves over existing algorithms, which suffers minimax regret $\tcO(K^{\nicefrac{1}{3}}T^{\nicefrac{2}{3}})$. These bounds are at a polylog factor of the optimal bounds on the classical stationary bandit; hence our conclusion: rotting bandits are not harder than stationary ones. 
+
+In the \emph{restless rotting bandits}, the reward may decrease at each round for all the actions. They model different situations such as the obsolescence of content in recommender systems. We show that the rotting algorithms designed for the rested case match the problem-independent lower bounds and a $\cO(\log{T})$ problem-dependent one. The latter was shown to be unachievable in the general case where rewards can increase. We conclude: the rotting assumption makes the restless bandits easier.
+
+Targeting the least known topic may be interesting before an exam but during the curriculum - when all the subjects are not yet understood - it can lead to failure in the learning of the student. We study a Partially Observable Markov Decision Process in which we aim at mastering as many topics as fast as possible. We show that under relevant assumptions on the learning of the student, the best oracle policy targets the most known topic under the mastery threshold. Since this optimal oracle does not need to know the transition dynamics of the POMDP, we design a learning policy with classical bandits tools, hence avoiding the data-intensive methods of POMDP learning. 
+\newpage
+
+\section*{Acknowledgments}
+Je remercie Aurélien Garivier et Gilles Stoltz pour leurs relectures de cette version du manuscrit. Je n'ignore pas la quantité de travail que cela représente, et je suis sincèrement touché qu'ils aient accepté d'être Rapporteurs.
+
+I also would like to thank the examiners - Mathilde Mougeot, Manuel Lopes, and Steffen Grünewälder -  for accepting my invitation.
+
+More acknowledgments to come in the final version.
+
+\cleardoublepage

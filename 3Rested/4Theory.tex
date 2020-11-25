@@ -1,9 +1,18 @@
 %!TEX root = ../main.tex 
 \section{Regret Analysis}\label{sec:theory}
 
-In the last section, we presented two algorithms which have very different behaviours. Yet, they show two main similarities. First, for each arm they compute several statistics $\hmu_i^h(\Nitmone)$ for different windows $h\leq \Nitmone$. Second, on the same favorable events $\HPevent$ (on which all these aforementioned statistics are well concentrated around their means, see Prop.~\ref{prop:prb_favorable_event}), we have shown that both algorithms share a guarantee with similar shape (see Lemmas~\ref{lem:core-FEWA} and~\ref{lem:core-RAWUCB}). We will see that these preliminary results are the only characterization we need. Therefore, we define $C_{\piR} = 2$ and $C_{\piF} = 4$, the constant associated to each algorithm in their respective Lemma. 
+In the last section, we presented two algorithms which have very different behaviours. Yet, they show two main similarities. First, for each arm they compute several statistics $\hmu_i^h(\Nitmone)$ for different windows $h\leq \Nitmone$. Second, on the same favorable events $\HPevent$ (on which all these aforementioned statistics are well concentrated around their means, see Prop.~\ref{prop:prb_favorable_event}), we have shown that both algorithms share a guarantee with similar shape that we restate in a general form,
+\begin{corollary}[Lemmas~\ref{lem:core-FEWA} and~\ref{lem:core-RAWUCB}]
+\label{cor:core-RAW-FEWA}
+At a round $t$, on favorable event $\HPevent$, if arm~$i_{t}$ is selected by $\pi(\alpha) \in \left\{ \piR, \piF\right\}$, for any $h \leq N_{i,t-1}$,  the average of its $h$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+%
+\begin{multline*}
+\bar{\mu}_{i_t}^{h}(N_{i_t,\, t-1}) \geq \max_{i \in \arms} \mu_{i}(\Nitmone) - \frac{C_\pi}{\sqrt{2\alpha}} c(h, \delta_t) = \max_{i \in \arms} \mu_{i}(\Nitmone) - C_\pi \sigma\sqrt{\frac{\log\pa{t}}{h}}\,,\\
+\text{with } C_{\piR} = 2\sqrt{2\alpha} \text{ and } C_{\piF} = 4\sqrt{2\alpha}.
+\end{multline*}
+\end{corollary}
 
-We first give problem-independent regret bound for \FEWA and \RUCB and sketch its proof in Subsection~\ref{ss:rested-PI}. Then, we discuss problem-dependent guarantees in Subsection~\ref{ss:rested-PD}. Finally, we give the detailed analysis in Subsection~\ref{ss:rested-proof}.
+We will see that this Corollary is the only characterization we need in our Analysis. We first give problem-independent regret bound for \FEWA and \RUCB and sketch its proof in Subsection~\ref{ss:rested-PI}. Then, we discuss problem-dependent guarantees in Subsection~\ref{ss:rested-PD}. Finally, we give a detailed analysis in Subsection~\ref{ss:rested-proof}.
 
 
 \subsection{Problem-independent bound}
@@ -12,127 +21,126 @@ We first give problem-independent regret bound for \FEWA and \RUCB and sketch it
 \label{th:rested-PI}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piR, \piF \right\}$ run with $\alpha \geq 5$ suffers an expected regret of
 \begin{equation*}
-\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\, \;\; \text{with } 
+\mathbb{E}[\regret(\pi)] \leq C_\pi \sigma \sqrt{\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\, \;\; \text{with } 
 \begin{cases}
-C_{\piR} \!=\! 1\\
-C_{\piF} \!=\! 4
+C_{\piR} \!=\! 2\sqrt{2\alpha}\\
+C_{\piF} \!=\! 4\sqrt{2\alpha}
 \end{cases}\!\cdot
 \end{equation*}
 \end{restatable}
-\paragraph{Comparison to \citet{levine2017rotting}} The regret of \SWA is bounded by $\tcO(B^{1/3}K^{1/3} T^{2/3})$ for bounded rotting functions in $\BBSet$. According to Remark~\ref{rem:BBvsLL}, the regret guarantee translate in $\cO(T)$ for rotting functions in $\rewardSet$.  Thus, according to its original analysis, \SWA may not be able to learn for our general setting. On the other hand, we could use \FEWA or \RUCB with rotting functions in $\BBSet$ and recover the same regret bound with $L := B$. In this case, our two algorithms suffer a regret of $\tcO(\sqrt{KT})$, thus significantly improving over \SWA. 
+\paragraph{Comparison to \citet{levine2017rotting}} The regret of \SWA is bounded by $\tcO(B^{1/3}K^{1/3} T^{2/3})$ for bounded rotting functions in $\BBSet$. According to Subsection~\ref{subsec:rested-open}, the regret guarantee translate in $\cO(T)$ for rotting functions in $\rewardSet$.  Thus, according to its original analysis, \SWA may not be able to learn for our general setting. On the other hand, we could use \FEWA or \RUCB with rotting functions in $\BBSet$ and recover the same regret bound with $L := B$. In this case, our two algorithms suffer a regret of $\tcO(\sqrt{KT})$, thus significantly improving over \SWA. 
 
-The improvement is mostly due to the fact that \FEWA and \RUCB use adaptive window mechanisms to smoothly track changes in the value of each arm.  Indeed, \SWA relies on a fixed exploratory phase where all arms are pulled in a round-robin way and the tracking is performed using averages constructed with a fixed window. According to Proposition~\ref{prop:SWA}, this fixed window trades off between the cost of biased estimates $\cO\pa{KBh}$ - for scenarios where the arms abruptly decay and their values are overestimated during at most $h$ rounds - and the cost of variance of the estimators $\tcO\pa{{\frac{\sigma T}{\sqrt{h}}}}$ - for scenarios where the arms keep their value close to each other for $\cO\pa{T}$ rounds. In Theorem~\ref{th:rested-PI}, the regret of \FEWA and \RUCB is also bounded by an additive decomposition between the terms depending on the noise level $\sigma$ and the terms depending on the rotting level $L$. Yet, adaptive window algorithms do not need to trade-off: their regret is bounded by $\cO\pa{KL} +\tcO\pa{\sigma\sqrt{KT}}$. It evidence that our algorithms are able to take decision based on a relevant $h \in \left\{1, \dots, \Nitmone\right\}$ depending on the scenarios.
+The improvement is mostly because \FEWA and \RUCB use adaptive window mechanisms to smoothly track changes in the value of each arm.  Indeed, \SWA relies on a fixed exploratory phase where all arms are pulled in a round-robin way and the tracking is performed using averages constructed with a fixed window. According to Proposition~\ref{prop:SWA}, this fixed window trades off between the cost of biased estimates $\cO\pa{KBh}$ - for scenarios where the arms abruptly decay and their values are overestimated during at most $h$ rounds - and the cost of the variance of estimators $\tcO\pa{{\nicefrac{\sigma T}{\sqrt{h}}}}$ - for scenarios where the arms keep their value close to each other for $\cO\pa{T}$ rounds. In Theorem~\ref{th:rested-PI}, the regret of \FEWA and \RUCB is also bounded by an additive decomposition between the terms depending on the noise level $\sigma$ and the terms depending on the rotting level $L$. Yet, adaptive window algorithms do not need to trade-off: their regret is bounded by $\cO\pa{KL} +\tcO\pa{\sigma\sqrt{KT}}$. It evidence that our algorithms can take decision based on a relevant $h \in \left\{1, \dots, \Nitmone\right\}$ depending on the scenarios.
 
 Last, our algorithms are anytime and agnostic to $L$ (or $B$), while the tuning of \SWA requires to know $B$ and $T$ (or to resort to a doubling trick, which performs poorly in practice). 
 
 \paragraph{Comparison to stationary stochastic bandits}
-The regret of \FEWA and \RUCB match the worst-case optimal regret bound of the standard stochastic bandits (i.e., $\mu_i(n)$s are constant) up to a logarithmic factor. Whether an algorithm can achieve $\cO(\sqrt{KT})$ regret bound is an open question. On one hand, our analysis needs confidence bounds to hold for different windows at the same time, which requires an additional union bound and thus larger confidence intervals w.r.t.\,\UCBone. On the other hand, our worst-case analysis shows that some of the difficult problems that reach the worst-case bound of Thm.\,\ref{th:rested-PI} are realized with constant 
-functions, which is the standard stochastic bandits, for which \MOSS-like~\citep{audibert2009minimax} algorithms achieve regret guarantees without the $\log T$ factor. Thus, the necessity of the extra $\log T$ factor for the worst-case regret of rotting bandits remains an open problem.
+The regret upper bounds of \FEWA and \RUCB match the worst-case optimal regret bound of the standard stochastic bandits (i.e., $\mu_i(n)$s are constant) up to a logarithmic factor. Whether an algorithm can achieve $\cO(\sqrt{KT})$ regret bound is an open question. On one hand, our analysis needs confidence bounds to hold for different windows at the same time, which requires an additional union bound and thus larger confidence intervals w.r.t.\,\UCBone. On the other hand, our worst-case analysis shows that some of the difficult problems that reach the worst-case bound of Thm.\,\ref{th:rested-PI} are realized with constant functions, which is the standard stochastic bandits, for which \MOSS-like~\citep{audibert2009minimax} algorithms achieve regret guarantees without the $\sqrt{\log T}$ factor. Thus, the necessity of the extra $\sqrt{\log T}$ factor for the worst-case regret of rotting bandits remains an open problem.
 
-\subsection{Problem-dependent guarantees}
+\subsection{Problem-dependent bound}
 \label{ss:rested-PD}
 Since our setting generalizes the stationary stochastic bandit setting, a natural question is whether we pay any price for this generalization. While the result of~\citet{levine2017rotting} suggested that learning in rotting bandits could be more difficult, in Thm.\,\ref{th:rested-PI} we actually proved that \FEWA and \RUCB nearly match the problem-independent regret rate $\tcO(\sqrt{KT})$. We may wonder whether this is true for the \emph{problem-dependent} regret as well.
 %
-\begin{remark}\label{rem:pd-stationary}
-Consider a stationary stochastic bandit setting with expected rewards $\{\mu_i\}_i $ and $\mu_\star \triangleq \max_i \mu_i$. For $\pi \in \piFRSet$, on the favorable event $\HPevent$ with $\delta_t \geq 2/T^\alpha$,  we can apply Lemmas~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} at the last time arm $i$ is pulled (\ie after $\NiTpi\!-\!1$ pulls) for $h = \NiTpi\!-\!1$, 
+\begin{remark}
+Consider a stationary stochastic bandit setting with expected rewards $\{\mu_i\}_i $ and $\mu_\star \triangleq \max_i \mu_i$. For $\pi \in \piFRSet$, on the favorable event $\HPevent$ with $\delta_t \geq 2/T^\alpha$,  we can apply Corollary~\ref{cor:core-RAW-FEWA}  at the last time arm $i$ is pulled (\ie after $\NiT\!-\!1$ pulls) for $h = \NiT\!-\!1$, 
 \begin{align}
-\mu_\star - \mu_i \leq C_\pi c\pa{\NiTpi-1,  \delta_t} = C_\pi\sqrt{\frac{2\alpha\sigma^2 \log(T)}{\NiTpi -1}} \CommaBin\nonumber \\
+\mu_\star - \mu_i \leq \frac{C_\pi}{\sqrt{2\alpha}} c\pa{\NiT-1,  \delta_t} = C_\pi\sigma \frac{\sqrt{\log(T)}}{\NiT -1} \CommaBin\nonumber \\
 \text{\ or equivalently,\ }
-\NiTpi \leq 1+ \frac{2\alpha C_\pi^2 \sigma^2 \log(T)}{(\mu_{\star} - \mu_i) ^2}\cdot\label{eq:LaiRob}
+\NiT \leq 1+ \frac{C_\pi^2 \sigma^2 \log(T)}{(\mu_{\star} - \mu_i) ^2}\cdot\label{eq:LaiRob}
 \end{align}
-Therefore, for $\alpha > 4$\footnote{$\alpha$ should be large enough to control the cost of the unfavorable events, see Lemma~\ref{lem:rested-B}.}, our algorithms match the lower bound of~\citet{lai1985asymptotically} up to a constant factor $\alpha C_\pi^2$.
+Therefore, for $\alpha > 4$\footnote{$\alpha$ should be large enough to control the cost of the unfavorable events, see Lemma~\ref{lem:rested-B}.}, our algorithms match the lower bound of~\citet{lai1985asymptotically} up to a constant factor $C_\pi^2/2$.
 \end{remark}
 %
-With a similar reasonning than in Remark~\ref{rem:pd-stationary}, we can show a similar bound on the number of overpulls $\hiTpi$  of arm $i$ in the general rested rotting bandits case. Indeed, we show in Lemma~\ref{lem:UB-OP-PD} that $\hiTpi$ is smaller than a problem-dependent quantity $\hiT^+$ which is itself smaller by construction than a function of "gaps" $\Delta_{i,\hiT^+-1}$,
+With a similar argument, we can show a similar bound on the number of overpulls $\hiT$  of arm $i$ in the general rested rotting bandits case. Indeed, we show in Lemma~\ref{lem:UB-OP-PD} that $\hiT$ is smaller than a problem-dependent quantity $\hiT^+$ which is itself smaller by construction than a function of "gaps" $\Delta_{i,\hiT^+-1}$,
 %
 \begin{equation}
 \label{eq:hit+}
 \hiT^+ \triangleq \max \left\{ h \leq 
-1 \! + \! \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\text{ with  } \Delta_{i,h} \triangleq \min_{j \in \arms} \mu_j\pa{N_{j,T}^\star \!-\!1} - \bar{\mu}_i^h\left( \Nit^\star\!+\!h \right). 
+1 \! + \! \frac{C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\text{ with  } \Delta_{i,h} \triangleq \min_{j \in \arms} \mu_j\pa{N_{j,T}^\star \!-\!1} - \bar{\mu}_i^h\left( \NiT^\star \!+\!h \right). 
 \end{equation}
 \begin{remark}
-Notice that for stationary bandits, we have for all $h$, $\Delta_{i,\,h} = \Delta_i = \mu_\star - \mu_i$. In fact, $ \Delta_{i,\,h} $ extends the notion of gap to our non-stationary setting : it is the average gap between the smallest value pulled by the optimal policy and the average value of the $h$ first overpulls of arm $i$.  We also highlight that $\hit^+$ is always defined because $h=1$ always verify the self-bounding property. 
+Notice that for stationary bandits, we have for all $h$, $\Delta_{i,\,h} = \Delta_i = \mu_\star - \mu_i$. In fact, $ \Delta_{i,\,h} $ extends the notion of gap to our non-stationary setting: it is the average gap between the smallest value pulled by the optimal policy and the average value of the $h$ first overpulls of arm $i$.  We also highlight that $\hit^+$ is always defined because $h=1$ always verify the self-bounding property. 
 \end{remark}
 
-Moreover,  on the favorable event $\HPevent$, we can show that the regret of $\hiTpi$ overpulls of arm $i$ is bounded by $\cO (\sqrt{\hiTpi})$ (see Lemma~\ref{lem:rested-A}, in Subsection~\ref{ss:rested-proof}). Hence, we bound $\hiTpi$ by $\hiT^+$ and we use the self-bounding property in the definition of $\hiT^+$ (Equation~\ref{eq:hit+}) to get a $\cO\pa{\log\pa{T}}$ problem-dependent bound for our algorithms on any rotting bandit scenario. 
+Moreover,  on the favorable event $\HPevent$, we can show that the regret of $\hiT$ overpulls of arm $i$ is bounded by $\cO (\sqrt{\hiT})$ (see Lemma~\ref{lem:rested-A}, in Subsection~\ref{ss:rested-proof}). Hence, we bound $\hiT$ by $\hiT^+$ and we use the self-bounding property in the definition of $\hiT^+$ (Equation~\ref{eq:hit+}) to get a $\cO\pa{\log\pa{T}}$ problem-dependent bound for our algorithms on any rotting bandit scenario. 
 
 \begin{restatable}{theorem}{restaalgoub}\label{th:rested-PD}
 For any rotting bandit scenario with means $\{\mu_i\}_{i} \in \rewardSet^K$ and any time horizon $T$, $\pi \in \left\{\piR, \piF \right\}$ run with $\alpha \geq 5$ suffers an expected regret of
 \begin{align*}
-\mathbb{E}\left[R_T(\pi)\right]  \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +3L } \CommaBin \\
+\EE{R_T(\pi)} \leq \sum_{i\in \arms} \pa{\frac{C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + C_\pi \sigma \sqrt{ \log\pa{T}} +3L } \CommaBin \\
 \text{with } 
 \begin{cases}
-C_{\piR} \!=\! 2\\
-C_{\piF} \!=\! 4\\
+C_{\piR} \!=\! 2\sqrt{2\alpha}\\
+C_{\piF} \!=\! 4\sqrt{2\alpha}\\
 \text{$\Delta_{i,h}$ and $\hiT^+$ defined in Equation~\ref{eq:hit+}.}
 \end{cases}
 \end{align*}
 \end{restatable}
 \begin{remark}
-\label{rem:pd-optimality}
-The problem-dependent guarantee of \RUCB is 4 times smaller than the guarantee of \FEWA : this is the benefits of upper-confidence bound index policies over confidence bound filtering ones. However, for $\alpha = 5$, \RUCB is still at a factor $\alpha C_{\piR}^2 = 20$ of the lower bound of~\citet{lai1985asymptotically}. This is mostly due to our proof technique. Indeed, \citet{auer2002finite} also use a similar high-probability proof for \UCBone and also get a large factor compared to the lower bound and an over-conservative tuning of the confidence bounds\footnote{To make the results comparable to the one of~\citet{auer2002finite}, we need to replace $2\sigma^2$ by $\nicefrac{1}{2}$ for sub-Gaussian noise.}. Yet, even compared to \UCBone, we have to use a more conservative tuning of the confidence bounds. On the first hand, we use a larger number of estimators at each round : $Kt^2$ instead of $Kt$ for \UCB. Hence, after taking the union bound, we need to increase $\alpha$ by one to have the same probability of the unfavorable event than for \UCBone (see Prop.~\ref{prop:prb_favorable_event_SWA}). On the other hand, for reward functions in $\rewardSet$, the maximal possible regret at round $t$ is bounded by $Lt$ which is larger than the constant cost $L$ for the stationary case. Thus, we have to increase $\alpha$ by one to control the cost of the unfavorable event. Notice that it is a consequence of our extended setting : we would not need to increase $\alpha$ for reward functions in $\BBSet$.
+The problem-dependent guarantee of \RUCB is 4 times smaller than the guarantee of \FEWA: this is the benefits of upper-confidence bound index policies over confidence bound filtering ones. However, for $\alpha = 5$, our guarantee for \RUCB is still at a factor $C_{\piR}^2 /2 = 20$ of the lower bound of~\citet{lai1985asymptotically} for stationary bandits.
 
-While we presented our Theorems~\ref{th:rested-PI} and~\ref{th:rested-PD} with $\alpha \geq 5$, we could have similar results for $\alpha > 4$ by replacing the additive term $3KL$ by $\pa{1 + \zeta(\alpha-3)}KL$\footnote{$\zeta(x) \triangleq \sum_n n^{-x}$}. For bounded reward functions, we can further reduce $\alpha >3$. It is still much larger confidence interval than $\delta_t \sim \frac{1}{t\log{t}^2}$ which is used in \UCB with asymptotic-optimal tuning for gaussian stationary bandits with fixed (and known) variance \citep{lattimore2020banditbook}. We further discuss the notion of asymptotic optimality in rotting bandits in Section~\ref{sec:optimality}. %TODO sec:optimality
+This is mostly due to our proof technique. Indeed, \citet{auer2002finite} also use a similar high-probability proof for \UCBone and also get a large factor compared to the lower bound and an over-conservative tuning of the confidence bounds\footnote{To make the results comparable to the one of~\citet{auer2002finite}, we need to replace $\sigma^2$ by $\nicefrac{1}{4}$ for sub-Gaussian noise.}. Yet, even compared to \UCBone, we have to use a more conservative tuning of the confidence bounds. On the first hand, we use a larger number of estimators at each round: $Kt^2$ instead of $Kt$ for \UCB. Hence, after taking the union bound, we need to increase $\alpha$ by one to have the same probability of the unfavorable event as for \UCBone (see Prop.~\ref{prop:prb_favorable_event_SWA}). On the other hand, for reward functions in $\rewardSet$, the maximal possible regret at a round $t$ is bounded by $Lt$ which is larger than the constant cost $L$ for the stationary case. Thus, we have to increase $\alpha$ by one to control the cost of the unfavorable event. Notice that it is a consequence of our extended setting: we would not need to increase $\alpha$ for reward functions in $\BBSet$.
+
+While we presented our Theorems~\ref{th:rested-PI} and~\ref{th:rested-PD} with $\alpha \geq 5$, we could have similar results for $\alpha > 4$ by replacing the additive term $3KL$ by $\pa{1 + \zeta(\alpha-3)}KL$\footnote{$\zeta(x) \triangleq \sum_n n^{-x}$}. For bounded reward functions, we can further reduce $\alpha >3$. It is still a larger confidence interval than with $\delta_t \sim \frac{1}{t\log{t}^2}$, which is used in \UCB with asymptotic-optimal tuning for sub-gaussian stationary bandits  \citep{lattimore2020banditbook}.  We further discuss the notion of asymptotic optimality and confidence level tuning in rotting bandits in Section~\ref{sec:howhard}. 
 \end{remark}
 %
 \subsection{Proof}
-\subsubsection*{Notation}
 \subsubsection*{Sketch of the proof}
 In Lemma~\ref{lem:regret-decompo}, we split the regret decomposition according to whether the overpulls has been done on the favorable event $\HPevent$ or not. 
 
 In Lemma~\ref{lem:rested-B}, we show that the part of the expected regret due to pulls under $\bar{\HPevent}$ is bounded by a constant with respect to $T$ for $\alpha > 4$. Indeed, while we have only trivial bounds on the quality of the pulls on these events, we can control their probabilities thanks to Proposition~\ref{prop:prb_favorable_event}.
 
-In Lemma~\ref{lem:rested-A}, we show that for $\hiTpi$ overpulls of arm $i$, we suffer no more than $\tcO\pa{\sqrt{\hitpi}}$ on the favorable event. Indeed, thanks to Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB}, we know that the cost of the $h$ before last pulls is bounded by $h \cdot c(h, \delta_t) = \tcO\pa{\sqrt{h}}$.
+In Lemma~\ref{lem:rested-A}, we show that for $\hiT$ overpulls of arm $i$, we suffer no more than $\tcO\pa{\sqrt{\hiT}}$ on the favorable event. Indeed, thanks to Corollary~\ref{cor:core-RAW-FEWA}, we know that the cost of the $h$ before last pulls is bounded by $h \cdot c(h, \delta_t) = \tcO\pa{\sqrt{h}}$.
 
-The proof of Theorem~\ref{th:rested-PI} follows by noticing that $\sum_{i \in \arms} \hiTpi \leq T$ which leads to the $\tcO\pa{\sqrt{KT}}$ rate. Indeed, thanks to the concavity of the $\sqrt{\cdot}$ and to Jensen's inequality, we find that the worst allocation is $\hiTpi = \frac{T}{K}$.
+The proof of Theorem~\ref{th:rested-PI} follows by noticing that $\sum_{i \in \arms} \hiT \leq T$ which leads to the $\tcO\pa{\sqrt{KT}}$ rate. Indeed, thanks to the concavity of the $\sqrt{\cdot}$ and to Jensen's inequality, we find that the worst allocation is $\hiT = \frac{T}{K}$.
 
-In Lemma~\ref{lem:UB-OP-PD}, we construct a problem-dependent bound of $\hiTpi$ which extends the notion of gap for rotting bandits using Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB}.
+In Lemma~\ref{lem:UB-OP-PD}, we construct a problem-dependent bound of $\hiT$ which extends the notion of gaps for rotting bandits using Corollary~\ref{cor:core-RAW-FEWA}.
 
 The proof of Theorem~\ref{th:rested-PD} follows by plugging this bound in the result of Lemma~\ref{lem:rested-A}.
 %
 \subsubsection*{Full proof}
 \label{ss:rested-proof}
-Let $t_i^\pi(n)$ the function such that $t_i^\pi(n) = t$ when policy $\pi$ selects arm $i$ at time $t$ for the $n$-th time. We call $\mu_T^+(\pi) \triangleq \max_{i \in \arms} \mu_i\left(\NiT^\pi\right)$, \textit{i.e.} the largest available reward for $\pi$ at round T+1.  
+Let $t_i^\pi(n)$ the function such that $t_i^\pi(n) = t$ when policy $\pi$ selects arm $i$ at time $t$ for the $n$-th time. We call $\mu_T^+(\pi) \triangleq \max_{i \in \arms} \mu_i\left(\NiT\right)$, \textit{i.e.} the largest available reward for $\pi$ at the round T+1.  
 \begin{lemma}
 \label{lem:regret-decompo}
- Let $\hiT^\pi \triangleq | \NiT^\pi - \NiT^{\star}|$. For any policy $\pi$, the regret at round T is no bigger than
+ Let $\hiT \triangleq | \NiT - \NiT^{\star}|$. For any policy $\pi$, the regret at the round T is no bigger than
 \begin{equation*}
-R_T(\pi) \leq \sum_{i \in \overpullSet} \sum_{h=0}^{\hiTpi-1}\left[\xi^\alpha_{t_i^\pi(\NiT^\star + h)} \right]\left(\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h ) \right) + \sum_{t=1}^T \Big[\bar{\HPevent}\Big]Lt.
+R_T(\pi) \leq \sum_{i \in \overpullSet} \sum_{h=0}^{\hiT-1}\left[\xi^\alpha_{t_i^\pi(\NiT^\star + h)} \right]\left(\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h ) \right) + \sum_{t=1}^T \Big[\bar{\HPevent}\Big]Lt.
 \end{equation*}
 We refer to the the first sum above as to $A_\pi$ and to the second sum as to $B$.
 \end{lemma}
 \begin{proof}
-We consider the regret at round $T$. We start from the upper bound in Equation~\ref{eq:regret-first-bound}, 
+We consider the regret at the round $T$. We start from the upper bound in Equation~\ref{eq:regret-first-bound}, 
 \begin{equation}
 %\label{eq:RegretDecompo}
-\regret(\pi) \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiTpi-1} \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}.
+\regret(\pi) \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1} \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}.
 \end{equation}
 Then, we need to separate overpulls that are done under $\HPevent$ and under $\bar{\HPevent}$. We introduce $t_i^{\pi}(n)$, the round at which $\pi$ pulls arm $i$ for the $n$-th time. We now make the round at which each overpull occurs  explicit,
 \begin{align*}
-\regret(\pi) & \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiTpi-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \right]  \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}\\
-& \leq \underbrace{\sum_{i\in \overpullSet}   \sum_{h=0}^{\hiTpi-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \land \HPevent \right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_{A_\pi}\\
-&+ \underbrace{\sum_{i\in \overpullSet}\sum_{h=0}^{\hiTpi-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \land \bar{\HPevent} \right]\pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_B.
+\regret(\pi) & \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \right]  \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}\\
+& \leq \underbrace{\sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \land \HPevent \right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_{A_\pi}\\
+&+ \underbrace{\sum_{i\in \overpullSet}\sum_{h=0}^{\hiT-1} \sum_{t=1}^T \left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t \land \bar{\HPevent} \right]\pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_B.
 \end{align*}
 For the analysis of the pulls done under $\HPevent$ we do not need to know at which round it was done. Therefore, 
 \[
-A_\pi \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiTpi-1}  \left[ \xi^\alpha_{t(\Nit^\star + h)} \right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}.
+A_\pi \leq \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1}  \left[ \xi^\alpha_{t(\Nit^\star + h)} \right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}.
 \]
-For \FEWA or \RUCB, it is not easy to directly guarantee the low probability of overpulls (the second sum). Thus, we upper-bound the regret of each overpull at round $t$ under $\bar{\HPevent}$ by its maximum value $Lt$. While this is done to ease \myAlgorithm analysis, this is valid for any policy $\pi$. Then, noticing that we can have at most 1 overpull per round $t$, i.e., $\sum_{i\in \overpullSet}\sum_{h=0}^{\hiTpi-1}\left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t  \right] \leq 1$, we get
+For \FEWA or \RUCB, it is not easy to directly guarantee the low probability of overpulls (the second sum). Thus, we upper-bound the regret of each overpull at a round $t$ under $\bar{\HPevent}$ by its maximum value $Lt$. While this is done to ease \myAlgorithm analysis, this is valid for any policy $\pi$. Then, noticing that we can have at most 1 overpull per round $t$, i.e., $\sum_{i\in \overpullSet}\sum_{h=0}^{\hiT-1}\left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t  \right] \leq 1$, we get
 \[
-B \leq  \sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt\pa{\sum_{i\in \overpullSet}\sum_{h=0}^{\hiTpi-1}\left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t  \right]} \leq  \sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt.
+B \leq  \sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt\pa{\sum_{i\in \overpullSet}\sum_{h=0}^{\hiT-1}\left[ t_i^{\pi}\pa{\NiT^{\star} + h} = t  \right]} \leq  \sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt.
 \]
 Therefore, we conclude that
 \[
-\regret(\pi) \leq \underbrace{\sum_{i\in \overpullSet} \sum_{h=0}^{\hiTpi-1} \left[ \xi^\alpha_{t_i^\pi(\Nit^\star + h)} \right]\pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_{A_{\pi}} + \underbrace{\sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt}_B. 
+\regret(\pi) \leq \underbrace{\sum_{i\in \overpullSet} \sum_{h=0}^{\hiT-1} \left[ \xi^\alpha_{t_i^\pi(\Nit^\star + h)} \right]\pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)}}_{A_{\pi}} + \underbrace{\sum_{t=1}^T \Big[\bar{\HPevent}\Big] Lt}_B. 
 \]
 \end{proof}
 \begin{lemma}
 \label{lem:rested-B}
-Let $\zeta(x) = \sum_n n^{-x}$. Thus, with $\delta_t = t^{-\alpha}$ and $\alpha > 4$, we can use Proposition~\ref{prop:prb_favorable_event} and get
+Let $\zeta(x) = \sum_n n^{-x}$. Thus, with $\delta_t = 2t^{-\alpha}$ and $\alpha > 4$, we can use Proposition~\ref{prop:prb_favorable_event} and get
 \[
 \EE B \triangleq \sum_{t=1}^T p\pa{\bar{\HPevent}}Lt \leq \sum_{t=1}^T KLt^{3-\alpha}\leq KL \zeta(\alpha -3)\, .
 \]
-In particular, for $\alpha \geq 5$, we have :
+In particular, for $\alpha \geq 5$, we have:
 \[
 \EE B \leq KL\zeta(2) \leq 2KL\, .
 \]
@@ -140,30 +148,30 @@ In particular, for $\alpha \geq 5$, we have :
 
 \begin{lemma}
 \label{lem:rested-A}
-We define $\hiT^\xi \triangleq \max\left\{ h \leq \hiT | \ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h)}\right\}$, the largest number of overpulls of arm $i$ pulled under $\HPevent$ at round $t = t_i^{\pi}(\Nit^\star + \hiT^\xi) \leq T$. We also define $\overpullSet_\xi \triangleq \left\{ i \in \overpullSet | \  \hiT^\xi \geq 1 \right\}.$ For policy $\pi \in \left\{ \piR, \piF\right\}$ with parameter $\alpha$, $A_{\pi}$ defined in Lemma~\ref{lem:regret-decompo} is upper-bounded by
+We define $\hiT^\xi \triangleq \max\left\{ h \leq \hiT | \ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h)}\right\}$, the largest number of overpulls of arm $i$ pulled under $\HPevent$ at the round $t = t_i^{\pi}(\Nit^\star + \hiT^\xi) \leq T$. We also define $\overpullSet_\xi \triangleq \left\{ i \in \overpullSet | \  \hiT^\xi \geq 1 \right\}.$ For policy $\pi \in \left\{ \piR, \piF\right\}$ with parameter $\alpha$, $A_{\pi}$ defined in Lemma~\ref{lem:regret-decompo} is upper-bounded by
 \begin{align*}
-A_{\pi} &\triangleq  \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiTpi-1}  \left[ \xi^\alpha_{t_i^{\pi}(\NiT^\star + h) }\right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)} \\
-& \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi\sqrt{2\alpha\sigma^2\left(\hiT^\xi -1\right)\log\pa{T}} +C_\pi\sqrt{2\alpha\sigma^2\log{\pa{T}}}+  L}.
+A_{\pi} &\triangleq  \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1}  \left[ \xi^\alpha_{t_i^{\pi}(\NiT^\star + h) }\right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)} \\
+& \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi \sigma \sqrt{\left(\hiT^\xi -1\right)\log\pa{T}} +C_\pi \sigma\sqrt{\log{\pa{T}}}+  L}.
 \end{align*}
 \end{lemma}
 \begin{proof}
 
-First, we define $\hiT^\xi \triangleq \max\left\{ h \leq \hiT | \ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h)}\right\}$, the largest number of overpulls of arm $i$ pulled at round $t_i \triangleq t_i^{\pi}(\Nit^\star + \hiT^\xi) \leq T$ under $\HPevent$. Now, we upper-bound $A_{\pi}$ by including all the overpulls of arm $i$ until the $\hiT^\xi$-th overpull, even the ones under $\bar{\HPevent}$,
+First, we define $\hiT^\xi \triangleq \max\left\{ h \leq \hiT | \ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h)}\right\}$, the largest number of overpulls of arm $i$ pulled at the round $t_i \triangleq t_i^{\pi}(\Nit^\star + \hiT^\xi) \leq T$ under $\HPevent$. Now, we upper-bound $A_{\pi}$ by including all the overpulls of arm $i$ until the $\hiT^\xi$-th overpull, even the ones under $\bar{\HPevent}$,
 \begin{align*}
-A_{\pi} &\triangleq  \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT^{\pi}-1}  \left[ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h) }\right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)} \\
+A_{\pi} &\triangleq  \sum_{i\in \overpullSet}   \sum_{h=0}^{\hiT-1}  \left[ \xi^\alpha_{t_i^{\pi}(\Nit^\star + h) }\right] \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)} \\
 &
-\leq \sum_{i\in \overpullSet_\xi}   \sum_{h=0}^{\hiT^\xi}  \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)},
+\leq \sum_{i\in \overpullSet_\xi}   \sum_{h=0}^{\hiT^\xi-1}  \pa{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + h)},
 \end{align*}
-where $\overpullSet_\xi \triangleq \left\{ i \in \overpullSet | \  \hiT^\xi \geq 1 \right\}.$ We can therefore split the second sum of~$\hiT^\xi$ term above  into two parts. The first part corresponds to the first $\hiT^\xi-1$ (possibly zero) terms (overpulling differences) and the second part to the last  $(\hiT^\xi-1)$-th one. Recalling that at round $t_i$, arm $i$ was selected under $\xi^\alpha_{t_i}$, we apply
-Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} to bound the regret caused by previous overpulls of $i$ (possibly none),
+where $\overpullSet_\xi \triangleq \left\{ i \in \overpullSet | \  \hiT^\xi \geq 1 \right\}.$ We can split the second sum of~$\hiT^\xi$ terms above into two parts: on the one hand, the first $\hiT^\xi-1$ (possibly zero) terms (overpulling differences); and on the other hand, the last  $(\hiT^\xi-1)$-th one. Recalling that at the round $t_i$, arm $i$ was selected under $\xi^\alpha_{t_i}$, we apply
+Corollary~\ref{cor:core-RAW-FEWA} to bound the regret caused by the first $\hiT^\xi-1$ overpulls of $i$ (possibly none),
 \begin{align}
-A_{\pi} &\leq  \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + C_\pi\pa{\hiT^\xi - 1}c\pa{\hiT^\xi-1, \delta_{t_i }} \label{eq:cor1-use1}\\
-&\leq \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + C_\pi\pa{\hiT^\xi - 1}c\pa{\hiT^\xi-1, \delta_{T}}\\
-&\leq \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + C_\pi\sqrt{2\alpha\sigma^2\pa{\hiT^\xi - 1}\log{\pa{T}}}\CommaBin
+A_{\pi} &\leq  \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + \frac{C_\pi}{\sqrt{2\alpha}}\pa{\hiT^\xi - 1}c\!\pa{\hiT^\xi-1, \delta_{t_i }} \label{eq:cor1-use1}\\
+&\leq \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + \frac{C_\pi}{\sqrt{2\alpha}}\pa{\hiT^\xi - 1}c\!\pa{\hiT^\xi-1, \delta_{T}}\\
+&\leq \sum_{i \in \overpullSet_\xi}   \mu^+_T(\pi) - \mu_i\pa{N_{i, T}^\star + \hiT^\xi  -1} + C_\pi \sigma\sqrt{\pa{\hiT^\xi - 1}\log{\pa{T}}}.
 \label{eq:lasttimepdq}
 \end{align}
- The second inequality is obtained because $\delta_t$ is decreasing and $c(.,\delta)$ is decreasing as well. The last inequality is the definition of confidence interval in Proposition~\ref{prop:prb_favorable_event}. 
- If  $\NiT^{\star} = 0$ and $\hiT^\xi = 1$ then
+ The second inequality is obtained because $\delta_t$ is decreasing and $c(\cdot,\delta)$ is decreasing as well. The last inequality is the definition of confidence interval in Proposition~\ref{prop:prb_favorable_event} with $\delta_T = 2T^{-\alpha}$. 
+ If  $\NiT^{\star} = 0$ and $\hiT^\xi = 1$, then,
 \[ \mu^+_T(\pi) - \mu_i(\NiT^{\star} + \hiT^\xi - 1) =  \mu^+_T(\pi) - \mu_i(0) \leq L,\] 
 since $\mu^+_T (\pi) \leq \max_{j\in\arms}\mu_j(0)$ and  $\max_{j\in\arms}\mu_j(0) - \mu_i(0) \leq L$ because $\left\{\mu_i\right\}_{i \in \arms} \in \rewardSet^K$ (Def.~\ref{def:rew-bounded-decay}).
 Otherwise, we can decompose 
@@ -173,16 +181,16 @@ Otherwise, we can decompose
 = &\underbrace{\mu^+_T(\pi) - \mu_i(\NiT^{\star} + \hiT^\xi-2)}_{A_1} \\&+ 
 \underbrace{\mu_i(\NiT^{\star} + \hiT^\xi-2) -  \mu_i(\NiT^{\star} + \hiT^\xi - 1)}_{A_2}.
 \end{align*}
-For term $A_1$, since this $\hiT^\xi$-th overpull is done under $\xi^\alpha_{t_i}$, by Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} we have that
+For term $A_1$, since this $\hiT^\xi$-th overpull is done under $\xi^\alpha_{t_i}$, by Corollary~\ref{cor:core-RAW-FEWA} we have that
 \[
-A_1 = \mu^+_T(\pi) - \bmu_i^1(\NiT^{\star} + \hiT^\xi-1) \leq 1c(1, \delta_{t_i}) \leq 2c(1,\delta_{T}) \leq C_\pi\sqrt{2\alpha\sigma^2\log\left(T\right)} .
+A_1 = \mu^+_T(\pi) - \bmu_i^1(\NiT^{\star} + \hiT^\xi-1) \leq 1c(1, \delta_{t_i}) \leq 2c(1,\delta_{T}) \leq C_\pi \sigma \sqrt{\log\left(T\right)} .
 \] 
 The second difference, 
 $A_2 = \mu_i(\NiT^{\star} + \hiT^\xi-2) -  \mu_i(\NiT^{\star} + \hiT^\xi - 1 )$  
 cannot exceed $L$, since by the assumptions of our setting  (Def.~\ref{def:rew-bounded-decay}), the maximum decay in one round is bounded.
 Therefore, we further upper-bound Equation~\ref{eq:lasttimepdq} as
 \begin{align}
-A_{\pi} \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi\sqrt{2\alpha\sigma^2\left(\hiT^\xi -1\right)\log\pa{T}} +C_\pi\sqrt{2\alpha\sigma^2\log{\pa{T}}}+  L}.
+A_{\pi} \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi \sigma \sqrt{\left(\hiT^\xi -1\right)\log\pa{T}} + C_\pi \sigma\sqrt{\log{\pa{T}}}+  L}.
 \label{HPevent0}
 \end{align}
 \end{proof}
@@ -197,7 +205,7 @@ In Lemma~\ref{lem:regret-decompo}, we split the regret in two parts. The first o
 The second one $A_\pi$ corresponds to the regret due to favorable events $\HPevent$ which can be bounded for our two algorithms (\FEWA and \RUCB) thanks to Lemma~\ref{lem:rested-A}. In order to get a problem-independent upper bound, we need to replace $\hiT^\xi$ by a problem-independent quantity. Starting from Lemma~\ref{lem:rested-A},
 
 \begin{equation*}
-A_{\pi} \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi\sqrt{2\alpha\sigma^2\left(\hiT^\xi -1\right)\log\pa{T}} +C_\pi\sqrt{2\alpha\sigma^2\log{\pa{T}}}+  L}.
+A_{\pi} \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi \sigma \sqrt{\left(\hiT^\xi -1\right)\log\pa{T}} +C_\pi \sigma\sqrt{\log{\pa{T}}}+  L}.
 \end{equation*}
 
 Since $\overpullSet_\xi \subseteq \overpullSet$, we can upper-bound the number of terms in the above sum by  $K$.
@@ -205,14 +213,14 @@ Next, the total number of overpulls $\sum_{i\in\overpullSet} \hiT$ cannot exceed
 As square-root function is concave we can use Jensen's inequality. 
 Moreover, we can deduce that the worst allocation of overpulls is the uniform one, i.e., $\hiT = T/K,$
 \begin{align}
-A_{\pi} &\leq K(C_\pi\sqrt{2\alpha\sigma^2\log(T)} + L) + C_\pi\sqrt{2\alpha\sigma^2\log(T)} \sum_{i\in \overpullSet} \sqrt{(\hiT - 1)}\nonumber\\ 
-&\leq K (C_\pi\sqrt{2\alpha\sigma^2\log(T)} + L) + C_\pi\sqrt{2\alpha\sigma^2KT\log(T)}.
+A_{\pi} &\leq K(C_\pi \sigma\sqrt{\log(T)} + L) + C_\pi \sigma\sqrt{\log(T)} \sum_{i\in \overpullSet} \sqrt{(\hiT - 1)}\nonumber\\ 
+&\leq K (C_\pi \sigma\sqrt{\log(T)} + L) + C_\pi \sigma\sqrt{KT\log(T)}.
 \label{eq:Abound-PI}
 \end{align}
 
 Therefore, using Lemma~\ref{lem:regret-decompo} together with Equations~\ref{eq:Abound-PI} and Lemma~\ref{lem:rested-B}, we bound the total expected regret as
 \begin{equation}
-\mathbb{E}[\regret(\pi)] \leq C_\pi\sqrt{2\alpha\sigma^2\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\cdot
+\mathbb{E}[\regret(\pi)] \leq C_\pi \sigma\sqrt{\log\pa{T}}\pa{\sqrt{KT} +K} + 3KL\cdot
 \end{equation}
 \end{proof}
 
@@ -224,64 +232,61 @@ We define the smallest reward gathered by the optimal policy $\mu^-_T$ and the g
 \end{align*}
 $\hiT^\xi$ defined in Lemma~\ref{lem:regret-decompo} is upper-bounded by a problem-dependent quantity,
 \begin{equation*}
-\hiT^\xi \leq   \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}  \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
+\hiT^\xi \leq   \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}  \leq  1 + \frac{C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
 \end{equation*}
 \end{lemma}
 \begin{proof}
 
-We want to bound $\hiT^\xi $ with a problem dependent quantity $\hiT^+$. We remind the reader that for arm $i$ at round $T$, the $\hiT^\xi$-th overpull is pulled under $\xi^\alpha_{t_i}$ at round $t_i$. Therefore, Lemma~\ref{lem:core-FEWA} or~\ref{lem:core-RAWUCB} applies and we have
+We want to bound $\hiT^\xi $ with a problem dependent quantity $\hiT^+$. We remind the reader that for arm $i$, the $\hiT^\xi$-th overpull is pulled under $\xi^\alpha_{t_i}$ at the round $t_i$. Therefore, Corollary~\ref{cor:core-RAW-FEWA} applies and we have
 \begin{align*}
-\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) &\geq \mu_T^+(\pi) - C_\pi c\pa{\hiT^\xi   - 1, \delta_{t_i}}
-\\& \geq \mu_T^+(\pi) - C_\pi c\pa{\hiT^\xi   - 1, \delta_T}
-\\& \geq \mu_T^+(\pi) - C_\pi \sqrt{\frac{2\alpha\sigma^2\log\pa{T}}{\hiT^\xi-1}}\CommaBin
+\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) &\geq \mu_T^+(\pi) - \frac{C_\pi}{\sqrt{2\alpha}} c\pa{\hiT^\xi   - 1, \delta_{t_i}}
+\\& \geq \mu_T^+(\pi) - \frac{C_\pi}{\sqrt{2\alpha}} c\pa{\hiT^\xi   - 1, \delta_T}
+\\& \geq \mu_T^+(\pi) - C_\pi \sigma \sqrt{\frac{\log\pa{T}}{\hiT^\xi-1}}\CommaBin
 \end{align*}
 Hence, we have that 
 \begin{equation}
 \label{eq:hiTxi-bound}
-\hiT^\xi \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\cdot
+\hiT^\xi \leq 1 + \frac{C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\cdot
 \end{equation}
 %
-Yet, this upperbound still depends on random quantities such as $\mu_T^+(\pi)$ or $\hiT^\xi$ on the denominator. 
+Yet, this upper bound still depends on random quantities such as $\mu_T^+(\pi)$ or $\hiT^\xi$ on the denominator. 
 Consider the smallest value collected by the optimal policy, 
 \[
 \mu^-_T\triangleq \min_{i \in \arms^\star} \mu_i \pa{\NiT^\star -1}\text{ with } \arms^\star \triangleq\left\{ i \in \arms | \NiT^\star \geq 1 \right\}.
 \]
-It is the $T$-th largest value among the $KT$ possible ones. Since $\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi  - 1 \right)$ is an average of overpulls value, which are all smaller or equal to $\mu^-_T$, we have
+We recall that the greedy oracle $\GO$ selects the rewards in the decreasing order (see the proof of Proposition~\ref{prop:heidari-oracle}). Therefore, $\mu^-_T$ (the smallest value selected at the round $T$) is the $T$-th largest value among the $KT$ possible ones. Moreover, the overpulls - which are the values that are not among the $T$ largest ones selected by $\GO$ - are all smaller than $\mu^-_T$. Since $\bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi  - 1 \right)$ is an average of overpulls' values, we have,
 \[\mu^-_T\geq \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right).\] 
 %
-Moreover, $\mu_T^- > \mu_T^+(\pi)$ implies that the regret is 0. Indeed, in that case $\mu_T^+(\pi)$ - the pull with the largest value among the remaining values at the end of the game for $\pi$ - is \emph{strictly smaller} than $\mu_T^-$ - the $T$-th largest reward sample.  Therefore, $\pi$ has collected the $T$ largest value and has zero regret. Hence, we focus on the case $\mu^-_T\leq \mu^+_T(\pi)$, for which the regret may not be zero.  In that case, we can upperbound the RHS term Equation~\ref{eq:hiTxi-bound} by replacing the random quantity $\mu_T^+(\pi)$ by the smaller quantity $\mu^-_T$. Hence, 
+Moreover, $\mu_T^- > \mu_T^+(\pi)$ implies that the regret is 0. Indeed, in that case $\mu_T^+(\pi)$ - the pull with the largest value among the remaining values at the end of the game for $\pi$ - is \emph{strictly smaller} than $\mu_T^-$ - the $T$-th largest reward sample.  Therefore, $\pi$ has collected the $T$ largest values and has zero regret. Hence, we focus on the case $\mu^-_T\leq \mu^+_T(\pi)$, for which the regret may not be zero.  In that case, we can upperbound the RHS term Equation~\ref{eq:hiTxi-bound} by replacing the random quantity $\mu_T^+(\pi)$ by the smaller quantity $\mu^-_T$. Hence, 
 \[
-\hiT^\xi \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\ \leq 1 + \frac{2\alpha C_\pi^2 \sigma^2\log\pa{T}}{\Delta_{i,\hiT^\xi  - 1}^2}\CommaBin
+\hiT^\xi \leq 1 + \frac{C_\pi^2 \sigma^2\log\pa{T}}{\pa{\mu_T^+(\pi)- \bmu_i^{\hiT^\xi  - 1} \left( \NiT^\star + \hiT^\xi   - 1 \right) }^2 }\ \leq 1 + \frac{C_\pi^2 \sigma^2\log\pa{T}}{\Delta_{i,\hiT^\xi  - 1}^2}\CommaBin
 \] 
 with $\Delta_{i,h} \triangleq \mu^-_T- \bar{\mu}_i^h\left( \Nit^\star+h \right)$, the difference between the lowest mean value of the arm pulled by $\pi^\star$ and the average of the $h$ first overpulls of arm~$i$. Yet, this self-bounding property of $\hiT^\xi $ is not a proper problem-dependent upper bound. We will consider the largest $h$ which satisfies this self-bounding property, 
 \begin{equation*}
- \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\cdot
+ \hiT^+  \triangleq \max \left\{ h \leq T \big| \ h \leq  1 + \frac{C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,h-1}^2} \right\}\cdot
 \end{equation*}
 We have that,
 \begin{equation*}
-\hiT^\xi \leq  \hiT^+  \leq  1 + \frac{2\alpha C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
+\hiT^\xi \leq  \hiT^+  \leq  1 + \frac{C_\pi^2 \sigma^2 \log \pa{T}}{\Delta_{i,\hiT^+-1}^2}\cdot
 \end{equation*}
 \end{proof}
 \restaalgoub*
 \begin{proof}
 We use Lemmas~\ref{lem:rested-A} and Lemma~\ref{lem:UB-OP-PD} to bound $A_\pi$ (see Lemma~\ref{lem:regret-decompo}). Indeed, since the square-root function is increasing, we can upper-bound the result in Lemma~\ref{lem:rested-A} by replacing $\hiT^\xi$ by its upper bound in Lemma~\ref{lem:UB-OP-PD}
 \begin{align*}
-A_{\pi} &\leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi\sqrt{2\alpha\sigma^2\log(T)} \left( 1 + \sqrt{\hiT^+ - 1}\right) + L}\\
-& \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi\sqrt{2\alpha\sigma^2\log(T)} \left( 1 + \frac{C_\pi\sqrt{2\alpha\sigma^2\log(T)}}{\Delta_{i,\hiT^+-1}}\right) + L}. 
+A_{\pi} &\leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi \sigma\sqrt{\log(T)} \left( 1 + \sqrt{\hiT^+ - 1}\right) + L}\\
+& \leq \sum_{i\in \overpullSet_\xi} \pa{C_\pi \sigma\sqrt{\log(T)} \left( 1 + \frac{C_\pi \sigma\sqrt{\log(T)}}{\Delta_{i,\hiT^+-1}}\right) + L}. 
 \end{align*}
 Notice that the quantity $\overpullSet_\xi \subset \arms$. Therefore, we have 
 \begin{equation}
 \label{eq:Abound-PD}
-A_{\pi} \leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +L }. 
+A_{\pi} \leq \sum_{i\in \arms} \pa{\frac{C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + C_\pi \sigma \sqrt{\log\pa{T}} +L }. 
 \end{equation}
 Using Lemmas~\ref{lem:regret-decompo}, \ref{lem:rested-B}, and Equation~\ref{eq:Abound-PD} we get
 \begin{align*}
 \EE{\regret(\pi)} &=\EE{A_{\pi}} + \EE B 
 \\&
-\leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +L } + 2KL \\
-&\leq \sum_{i\in \arms} \pa{\frac{2\alpha C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + \sqrt{2\alpha C_\pi^2\sigma^2\log\pa{T}} +3L } \cdot
+\leq \sum_{i\in \arms} \pa{\frac{C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + C_\pi \sigma \sqrt{\log\pa{T}} +L } + 2KL \\
+&\leq \sum_{i\in \arms} \pa{\frac{C_\pi^2\sigma^2\log\pa{T}}{\Delta_{i,\hiT^+-1}} + C_\pi \sigma \sqrt{\log\pa{T}} +3L } \cdot
 \end{align*}
 \end{proof}
-
-
-%TODO General Lemma 

@@ -1,120 +1,223 @@
 %!TEX root = ../main.tex 
 
 \section{Linear rotting bandits are impossible to learn}
+\label{sec:linear-rotting}
+\subsection{Linear bandits}
+\label{ss:linear}
+In Section~\ref{sec:contextual}, we presented the contextual bandit, a line of work in which the learner is given a context on which depends the action's reward. The linear bandit is a special case where the reward is a noisy linear form of a context-action vector.
+
+Unlike the classical multi-armed bandits, the feedback associated with one action can be used to learn the other actions' efficiency. In fact, the number of actions can be very large or even potentially infinite, as soon as the representation has a finite dimension. 
+
+This shared knowledge is interesting in the context of education. Indeed, a popular model to predict a student's answer is the Item Response Theory \citep{hambleton2013item}. It models the answer with a logistic function filled with a student and question-related parameters. In its most simple form, it can be seen as logistic regression, a generalized linear model. Generalized linear bandits were studied by \citep{filippi2010parametric} as an extension of the linear bandit.  
+
+In the following, we will introduce formally the linear bandit. We will then discuss the possibility of extending our multi-armed rested rotting bandits result in the linear case. 
 
 
+
+\subsubsection{Model} At each round, the learner receives a set of embedded actions $\mathcal{A}_t \subset \R^d$, chooses $A_t \in \mathcal{A}_t$ and receives,
+ \begin{equation*}
+\label{eq:linear-feedback}
+o_{t} \triangleq \langle \mu | A_t \rangle + \noise_t
+ \;\; \text{with}\; \EE{ \noise_t | \historyt }= 0 \;\; \text{and} \; \forall \lambda \in \R, \; \EE{ e^{\lambda\noise_t}} \leq e^{\frac{\subgaussian\lambda^2}{2}},
+\end{equation*}
+with $\mu \in \R^d$ a reward vector unknown to the learner. In this model, the learner might face a huge number of actions (or even infinite), but they only has $d$ independent parameters to estimate to take the right decision.  The goal of the learner is still to maximize the cumulative reward, 
+\begin{equation*}
+J_T(\pi) = \sum_{t=1}^T \langle \mu | \pi(t) \rangle. 
+\end{equation*}
+The optimal oracle strategy selects $\pi^\star(t) = A^\star_t \triangleq \argmax_{A_t \in \mathcal{A}_t} \langle \mu | A_t \rangle$. Thus, we can define the regret, 
+\[R_T(\pi) = J_T(\pi^\star) - J_T(\pi) = \langle \mu | \sum_{t=1}^T A^\star_t - \pi(t) \rangle. \]
 
 \subsection{Linear rested rotting bandits}
-In this section, we present our rotting linear bandit framework which recovers 1) the linear model of %TODO name paper
- as soon as the reward is stationnary; and 2) the rotting multi-armed bandits model as soon as $\mathcal{X}$ contains exclusively canonical basis vectors. 
-
-We introduce $d$ non-increasing and $L$-Lipschitz functions $\mu_i : \realset \rightarrow \realset$. These functions satisfies Assumption~ %TODO
- but while there were $K$ reward functions defined on $\NN$ in the rotting MAB model, we now have $d$ functions defined on $\realset$. Indeed, in the linear setup the number of reward parameter is $d$ and we expect this value to replace $K$ in the regret bound.
-
-We call $N_{i,t} \triangleq \sum_{t'=0}^t (X_{t'})_i$, which quantifies the amount of pull of direction $i$. We then define the reward : 
+We want to extend the rested rotting bandit to actions with a linear embedding. We introduce $d$ non-increasing and $L$-Lipschitz functions $\mu_i : \R^+ \rightarrow \R$. While there were $K$ reward functions defined on $\NN$ in the rotting MAB model, we now have $d$ functions defined on $\R^+$. Indeed, we now have $d$ (and not $K$) reward parameters. Moreover, for the rested rotting MAB, the reward is evolving according to the number (in $\NN$) of pulls of arm $i$. In the linear model, we cannot simply count the number of pulls along each direction because $A_t$ has possibly components along all the directions. We will need to find a quantifier of the pulling intensity along direction $i$. This is not surprising that this quantifier will have value in $\R^+$ because we select direction $i$ with intensity $A_{t,i} \in \R$. We suggest using, 
 \[
-o_t(X) = \sum_{i\leq d} \int_{N_{i,t}}^{N_{i,t+1}} \mu_i(x)dx. +\eta_t 
- = \int_{\bm{N_{t}}}^{\bm{N_{t+1}}} \bm{\mu}(\bm{n})^\intercal  d\bm{n} + \eta_t\]
-
-The total reward can thus be writen:  
-\[ J(\pi, T) = \int_{\bm{0}}^{\bm{N_{T}}} \bm{\mu}(\bm{n})^\intercal d\bm{n} .\]
-
-Hence, we found a model which extends both rotting MAB model (when the actions are encoded by canonical vectors) and linear bandit model (when the reward is stationnary, i.e. $\bm{\mu}$ is a constant vector function). Moreover, for any vector $\bm{X}$, the reward associated to $\bm{X}$ is decreasing along the pulls while the cumulative reward is totally determined by the number of pull $\bm{N_T}$ and the knowledge of $\bm{\mu}$.
-
-However, one can note that the number of pulls $N_{i,t}$ in the rotting MAB setup has two meaningfull equivalent in the rotting linear setup : $\sum_t x_{i,t}$ and $\sum_t x_{i,t}^2$. The first one is useful in the integral to have linear dependence of the reward with X. The second is usefull from an information theoretic point of view (least square regression) to quantify how much we pulled each direction.
-
-Bandits problems are often considered as the RL problems without state. However, in this setup we do have a state as the next reward depends on the matrix $A_T$. In the  rotting MAB framework, we overcome this issue by showing that the greedy oracle strategy is optimal. Hence, there is no need for planning and the stochastic learning problem is reduced to a pure exploration-exploitation problem where one needs to determine the action which currently performs the best. Therefore, we would like to show that the greedy oracle policy (ie. the policy which selects $\int_{\bm{N_{t}}}^{\bm{N_{t+1}}} \bm{\mu}(\bm{n})^\intercal  d\bm{n}$) is optimal in the rotting linear bandit problem. In the next section, we will show that the greedy oracle policy is not optimal and hence that there is no anytime optimal policy. 
-
-\section{The non-optimality of the greedy oracle policy }
-\label{Optimal}
-\begin{theorem}
-The greedy oracle strategy $\pi_G$ is not optimal. More precisely, for any horizon $T$, there exists a reward vector function $\vec{\mu}$ such as the performance compared to the optimal policy for horizon $T \geq 2$ $\pi_{O_T}$ is :
-\[
-J(\pi_{O_T}, T) - J(\pi_G, T) \geq \frac{L(T-1)}{8}
-\]
-\end{theorem}
-\begin{proof}
-We consider $d = 2$, $\mathcal{X} = \left\{ X_1, X_2 \right\}$ with $X_1 = (1,0)^\intercal$ and $X_2 = (\frac{1}{\sqrt{2}},\frac{1}{\sqrt{2}})^\intercal$. For any horizon $T$, we consider the following reward functions :
-
-\[\mu_1(x) = L \text{ if } x < \frac{T}{2} \text{ else } 0 \qquad \text{and} \qquad  \mu_2(x) = \frac{L}{2}.
+N_{t,i} \triangleq \sum_{t'=1}^t A_{t',i}.
 \]
 
-The greedy strategy will therefore select $X_1$ until $\floor{\frac{T}{2}}$ and then $X_2$ untill the end of the game. Hence  :
-\[J(\pi_G, T) = \int_0^{\floor{\frac{T}{2}} + \ceil{\frac{T}{2}}/2} \mu_1(x)dx + \int_0^{\ceil{\frac{T}{2}}/2}  \mu_2(x)dx = \frac{T}{2}  L + \ceil{\frac{T}{2}} \frac{L}{4} \leq \frac{5LT + L }{8}.\]
-We now consider the policy $\pi_2$ which always selects arm 2. At the end of the game, it gathers the reward : 
+Hence, we define the feedback as, 
 \[
-J(\pi_2, T) = \int_0^{\frac{T}{2}} \mu_1(x)dx + \int_0^{\frac{T}{2}} \mu_2(x)dx = \frac{T}{2} L + \frac{T}{2} \frac{L}{2} = \frac{3LT}{4}
+o_t = \sum_{i\leq d} \int_{N_{t-1,i}}^{N_{t,i}} \mu_i(x)dx +\noise_t  = \int_{N_{t-1}}^{N_{t}} \langle \mu(n) |   dn \rangle  + \noise_t,
+\]
+with $\{\noise_t\}$ a sequence of independent $\sigma$-subgaussian random variables. We also define the cumulative reward, 
+\[
+ J_T(\pi) = \int_{0}^{N_{T}} \langle \mu(n) |  dn \rangle.
+ \]
+
+Like in the rotting MAB model, the total reward depends only on the cumulative pulling intensity $N_{T}$. This property is very useful, as it allows to compare the performance of two policies only with their pulling differences (the overpulled/underpulled arms) and not with the specific order of the pulls, \ie, 
+\[
+ J_T(\pi_2) - J_T(\pi_1) = \int_{N_T^{\pi_1}}^{N_{T}^{\pi_2}} \langle \mu(n) |  dn \rangle.
 \]
 
-Hence, since optimal policy $\policy_T^\star$ has larger reward than  $\policy_2$ at horizon $T$ (by definition), we have that 
+Last, we restrain the action vector to be in the positive quadrant, \ie $\mathcal{A}_t \subset \R^{+d}$. Indeed, we want the pulling intensity to be non-decreasing with time $t$ such that the reward associated to a vector $A\in \R^{+d} $ is non-increasing, 
+
 \[
-J(\policy_T^\star, T) - J(\pi_G, T) \geq J(\policy_2, T) - J(\pi_G, T) \geq \frac{L(T-1)}{8}
+t_1 < t_2 \implies  N_{t_1-1} \leq N_{t_2-1}  \implies \int_{N_{t_1-1}}^{N_{t_1-1} + A} \langle \mu(n) |   dn \rangle \geq \int_{N_{t_2-1}}^{N_{t_2-1} + A} \langle \mu(n) |   dn \rangle.
 \]
 
-\end{proof}
+This model correctly extends linear bandits and rested rotting bandits. On the first hand, when reward functions are constant, we recover the linear bandit model of Subsection~\ref{ss:linear}. Indeed, we have,
+\begin{align*}
+&o_t =  \int_{N_{t-1}}^{N_{t}} \langle \mu |   dn \rangle  + \noise_t =  \langle \mu | N_t - N_{t-1} \rangle  + \noise_t = \langle \mu | A_t \rangle  + \noise_t,\\
+& J_T(\pi) = \int_{0}^{N_{T}} \langle \mu |  dn \rangle = \langle \mu | N_T\rangle =  \sum_{t=1}^T \langle \mu | A_t \rangle .
+\end{align*}
 
-Hence the greedy policy can be as bad as 8th the regret of the worst performance possible on the problem sets. This is surprising as the greedy oracle strategy was optimal for the rotting MAB problem.  One can note that the vectors used in the proof have the same $L_2$-norm and that the vector function $\vec{\mu}$ is bounded in $[0, L]^2$. The overall setup is simple. We do not need complex decays nor vectors with different "pulling amount" to have a suboptimal performance of the greedy policy. The suboptimality comes from the fact that we do not have access to all the canonical vectors. Hence, when the greedy algorithm has collected all the reward it can get from direction 1, it will start focusing on collecting reward in the second direction. When it pulls the second vector to take advantage of the second direction it also pulls the first direction which is now useless. Here comes some "regret" : the algorithm could have started directly collecting direction 2 as it would have got all the direction 1 benefits anyway. The following corollary underlines that the failure of the greedy oracle strategy implies the necessity of planning.
 
-\begin{lemma}
-For a cumulative reward exploration exploitation problem, the only possible anytime optimal oracle strategy is the greedy oracle one.
-\end{lemma}
-\begin{proof}
-Let's assume $\pi_{O_a}$ an anytime optimal strategy which does not select the greedy action at time $T$.
-Let's consider $\pi_{G_T}$ a strategy which copies $\pi_{O_a}$ for the $T-1$ round and is greedy at round $T$.
+On the other hand, when the actions sets $\mathcal{A}_t$ are the $d$ canonical basis vectors at every round, we recover the rested rotting bandits setting of Section~\ref{sec:rested-model}. Indeed, if we call $\mu_i^{MAB}(n) \triangleq \int_{n}^{n+1} \mu_i(n) dn$, we have,
+\begin{align*}
+&N_{t,i} = \sum_{t=1}^T \mathbbm{1}(\pi(t) = i),\\
+&o_t =  \int_{N_{t-1}}^{N_{t}} \langle \mu(n) |   dn \rangle  + \noise_t = \mu_{i_t}^{MAB}(N_{t-1, i_t}) + \noise_t,\\
+& J_T(\pi) = \int_{0}^{N_{T}} \langle \mu(n) |  dn \rangle = \sum_{i\leq d} \sum_{n=0}^{N_{T, i}-1} \mu_{i}^{MAB}(n).
+\end{align*}
+
+To conclude the argument, we notice that the constructed functions $\mu_i^{MAB}$ are in $\rewardSet$ (see Definition~\ref{def:rew-bounded-decay}). Indeed, 
+\begin{align*}
+&\mu_i^{MAB}(n) -\mu_i^{MAB}(n+1) = \int_{n}^{n+1} \pa{\mu_i(x) - \mu_i(x+1)} dx \geq 0,\\
+&\mu_i^{MAB}(n) -\mu_i^{MAB}(n+1) = \int_{n}^{n+1} \pa{\mu_i(x) - \mu_i(x+1)} dx \leq L.
+\end{align*}
+The first line follows by the non-increasing property of $\mu_i$. The second line is justified because $\mu_i$ is $L$-lipschitz.
+ 
+\begin{remark}
+We choose to measure the pulling intensity as $N_{t,i} \triangleq \sum_{t'=1}^t A_{t',i}$. In the (stationary) linear bandit problem, the number of pulls is replaced by the matrix $\sum_{t'=1}^t A_{t'}A_{t'}^\intercal$ which is used in the least-square regression and in the confidence ellipsoid computation. Hence, from an information-theoretic point of view, the natural identification is $N_{t,i} \triangleq \sum_{t'=1}^t A_{t',i}^2 $  (which follows when the actions embeddings are the canonical basis vectors). Yet, our choice is motivated because we want a linear dependence between  $N_{t,i}$ and the collected reward along direction $i$ in the stationary case.
+\end{remark}
+
+In the following, we will focus on the simpler case where the arms set is fixed $\mathcal{A}_t = \mathcal{A}$. 
+
+\subsection{The offline problem}
+\label{ss:linear-rotting-offline}
+In the rested rotting bandits model, \citet{heidari2016tight} show that the greedy oracle policy which selects the arm with the highest upcoming reward is anytime optimal. Unfortunately, this result does not hold in the linear rotting bandit model. 
+
+\begin{proposition}
+\label{prop:linear-rotting-greedy}
+Let's consider the simple $d=2$ case. For any horizon $T\geq 2$, there exists an $L$-lipschitz reward vector function $\mu$ bounded in $[0,L]$, a fix vector arms set $\mathcal{A}$, and a strategy $\pi$ such that the greedy oracle $\GO$ suffers,
 \[
-J(\pi_{O_a}, T) - J(\pi_{G_T},T) = r_T(\pi_{O_a}(T)) - r_T(\pi_{G_T}(T)) < 0
+J_T(\pi) - J_T(\GO) \geq \frac{L(T-2)}{8}\cdot 
 \]
-where the last inequality comes from the fact that $r_T(\pi_{O_a}(T))$ is below the best reward available for that time. 
-\end{proof}
+\end{proposition}
 
+We notice that the worst regret for reward values in $[0,L]$ and arms in $[0,1]^d$ is $LT$. Hence, Proposition~\ref{prop:linear-rotting-greedy} shows that $\GO$ is unable to learn as its problem-independent performance is at a constant ratio of the worst possible rate. We will prove precisely this statement in Subsection~\ref{ss:linear-rotting-proofs} but we give here the main intuition. Let's consider a vector reward function such that the first direction decays from $L$ to $0$ in the middle of the game and the second one has a constant reward value $L/2$. In the MAB case - when arms are orthogonal - the greedy oracle $\GO$ stops pulling the first direction when the associated reward decreases. However, when arms are not orthogonal (e.g. $(1,0)$ and $(\nicefrac{1}{2}, \nicefrac{1}{2})$), the greedy policy will collect quickly all the reward associated with the first direction by selecting the first arm. Then, it selects arm $2$ which still pulls a fraction of the first direction, even though the reward has decayed. A better oracle strategy would be to notice that the good reward associated with the first direction will be gathered at the end of the game anyway, and focus on maximizing the reward associated with the other direction.
+
+Notice that this better strategy needs to see at least up to the middle of the game to see that the reward will decay. Otherwise, it will not behave consistently on the problems on which the reward does not decay. Refining this argument, we can show in Proposition~\ref{prop:linear-rotting-short-sighted} that any short-sighted oracle - \ie a policy that can only see the next $T_O$ rewards for any combination of $T_O$ arms - suffers a regret which scales at least with $T-T_O$. It means that the offline problem is a planning problem where we need full knowledge of the reward function and the horizon $T$.
+
+\begin{proposition}
+\label{prop:linear-rotting-short-sighted}
+Let $\pi$ a short-sighted policy which sees the future rewards associated to any combination of $T_O$ arms. For $T \geq T_O + 23$, there exists a problem $\mu$ and a policy $\pi'$ such that,
+\[
+J_T(\pi') - J_T(\pi) \geq \frac{L\pa{T-T_O}}{20}\cdot
+\]
+\end{proposition}
+
+\subsection{The noise-free online problem}
+A direct consequence of Proposition~\ref{prop:linear-rotting-short-sighted} is that any learning policy - a special case of short-sighted policies with $T_O =0$ - suffers a worst-case linear regret, even in the absence of noise. Hence, we conclude that the rotting linear setup is not learnable. 
 \begin{corollary}
-There is no anytime optimal oracle strategy for the rotting linear bandit model. 
+For any learning policy $\pi$ and $T\geq 23$, there exists a problem $\mu$ and a policy $\pi'$
+\[
+J_T(\pi') - J_T(\pi)  \geq  \frac{LT}{20}\cdot
+\]
 \end{corollary}
 
-What is the regret of a short-sighted oracle strategy which sees F steps in the future (ie . knows $\mu_i$ from $0$ up to $a_{ii,t}^2 + F \max_d X_{d,i}^2$?)
-\begin{theorem}
-Any strategy which can anticipate the future up to $F$ steps in advance has a worst case regret which scales at least with $O(T-2F)$. More precisely : 
+Again, we highlight the deep contrast with the MAB setting, where a simple greedy policy is guaranteed to make at most $K-1$ mistakes. The key argument is that when a direction decreases we need to be able to stop pulling that direction and focus on other directions.  
+
+\subsection{Proofs}
+\label{ss:linear-rotting-proofs}
+\label{ss:linear-rotting-proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:linear-rotting-greedy}]
+For $d\! =\! 2$, $\mathcal{A} \!=\! \left\{ A_1, A_2 \right\}$ with $A_1 \!=\! (1,0)^\intercal$ and $A_2 \!=\! (\nicefrac{1}{2},\nicefrac{1}{2})^\intercal$. For any horizon $T\geq2$, we consider the following $L$-lipschitz reward functions,
 \[
-\max_\mu R(\pi, T) \geq  \frac{L(T-2F)}{12} - \frac{L}{6}
+\mu_1(x) = \begin{cases}
+L &\text{ if } x < \frac{T-1}{2} \\
+L(1- x + \frac{T-1}{2}) &\text{ if }  \frac{T-1}{2} \leq x \leq \frac{T+1}{2}\\
+0 &\text{ else}
+\end{cases}
+\qquad \text{and} \qquad  \mu_2(x) = \frac{L}{2}\cdot
 \]
-\end{theorem}
-\begin{proof}
-We still consider $d = 2$, $\mathcal{X} = \left\{ X_1, X_2 \right\}$ with $X_1 = (1,0)^\intercal$ and $X_2 = (\frac{1}{\sqrt{2}},\frac{1}{\sqrt{2}})^\intercal$. For any horizon $T$, we consider the following reward functions :
 
-\[\mu_1^1(x) = L \quad \text{and} \quad\mu_1^2(x) = L \text{ if } x < \frac{T}{2} \text{ else } 0 \quad \text{and} \quad  \mu_2(x) = \frac{L}{2}.
-\]
-
-The optimal strategy associated to $\mu_1^1$ (respectively $\mu_1^2$) is $\pi_O \triangleq \pi_1$  (resp. $\pi_O \triangleq\pi_2$), the policy which always pulls the first (resp. second) arm, and it gathers the cumulative reward $J_1(\pi_O, T)$ (resp. $J_2(\pi_O, T)$). We have by simple calculations:
+The greedy oracle strategy first selects $A_1$ for $\floor{\frac{T}{2}}$ rounds and then $A_2$ for the remaining $\ceil{\frac{T}{2}}$. Hence,
+\begin{align*}
+&N_{T,1} = \floor{\frac{T}{2}} + \frac{1}{2} \ceil{\frac{T}{2}}\CommaBin \\
+&N_{T,2} = \frac{1}{2} \ceil{\frac{T}{2}} \geq \frac{T+1}{2}\cdot
+\end{align*} 
+For $T \geq 2$, $N_{T,1} \geq \frac{T+1}{2}$, which means that the greedy policy collects all the $\nicefrac{LT}{2}$ reward along the first direction. We also notice that $N_{T,2} \leq \frac{T+1}{4}$, which means that the total reward is bounded by, 
 \[
-J_1(\pi_O, T) = LT \quad \text{and} \quad J_2(\pi_O, T) = \frac{3TL}{4} 
+J_T(\GO) = \int_0^{N_{T,1}} \mu_1(x)dx + \int_0^{N_{T,2}} \mu_2(x)dx  \leq \frac{LT}{2} + \frac{L\pa{T+1}}{8}\cdot
+\]
+We now consider the policy $\pi_2$ which always selects arm 2. At the end of the game, it gathers the reward,
+\[
+J_T(\pi_2) = \int_0^{\frac{T}{2}} \mu_1(x)dx + \int_0^{\frac{T}{2}} \mu_2(x)dx = \frac{L\pa{T-\nicefrac{1}{4}} }{2} + \frac{LT}{4}\cdot
 \]
 
-Depending on whether $\mu_1$ is $\mu_1^1$ or $\mu_1^2$, we can express the regret as a function of $N_{1,T}$ or $N_{2,t}$.
-\begin{align}
-R_1(\pi, T) \triangleq J_1(\pi_O, T) - J_1(\pi_{t_f},T) = LT -  L (T- N_{2,T}) -  N_{2,T} \frac{3L}{4}  = \frac{LN_{2,T}}{4}\\
-R_2(\pi, T) \triangleq J_2(\pi_O, T) - J_2(\pi_{t_f},T) = \frac{3LT}{4} -  \frac{LT}{2}  -  (T- N_{1,T}) \frac{L}{4}  = \frac{LN_{1,T}}{4}
-\end{align}
-
-
- 
-We call $t_f$ the first time such that $||\epsilon_1 ||_{A_{t_f}} \geq \frac{T}{2} - F$. After $t_f$ the learner entirely knows which reward functions she faced and before $t_f$ the two reward functions are undistinguishable to the learner.  Note that for any policy, $||\epsilon_1 ||_{A_{T}} \geq \frac{T}{2}  > \frac{T}{2} - F$, hence $t_f$ exists for any policy.  We have that
-\begin{align}
-& N_{1, t_f} + \frac{N_{2, t_f}}{2} \geq \frac{T}{2} - F  \\
-& N_{1, t_f} + \frac{N_{2, t_f}}{2} \leq \frac{T}{2} - F + 1 \\
-& N_{1, t_f} + N_{2, t_f} = t_f
-\end{align}
-
-Hence, we have the following lowerbound for $N_{i,T}$:
-\begin{align}
-& N_{1,T} \geq N_{1, t_f} \geq T - t_f - 2F  \\
-& N_{2,T} \geq N_{2, t_f} \geq 2 t_f - T + 2(F-1) 
-\end{align}
-
-Hence, worst case regret is :
+Hence, we have that,
 \[
-\max_\mu R(\pi, T) \geq \max( R_1(\pi,T), R_2(\pi, T)) = \frac{L}{4} \max_{0 \leq t_f \leq T}(T - t_f - 2F, 2 t_f - T + 2(F-1) ) \geq  \frac{L(T-2F)}{12} - \frac{L}{6}
+J_T(\policy_2) - J_T(\GO) \geq \frac{L(T-2)}{8}\cdot 
 \]
 
 \end{proof}
 
-Note we can slightly modify the proof to get $O(T -\alpha F)$ for $\alpha >1$.
+\begin{proof}[Proof of Proposition~\ref{prop:linear-rotting-short-sighted}]
+We still consider $d = 2$, $\mathcal{A} = \left\{ A_1, A_2 \right\}$ with $A_1 = (1,0)^\intercal$ and $A_2 = (\nicefrac{1}{2},\nicefrac{1}{2})^\intercal$. For any horizon $T$, we consider the ($L$-lipschitz) two reward vector functions $\mu^1$ and $\mu^2$,
+\begin{align*}
+&\mu^1_1(x) = L  & \text{and} \;  \mu^1_2(x) = \frac{L}{2} \CommaBin\\
+&\mu^2_1(x) = \begin{cases}
+L &\text{ if } x <\frac{T+T_O-1}{2} \\
+L(1- x +  \frac{T +T_O -1}{2}) &\text{ if }  \frac{T +T_O-1}{2} \leq x \leq \frac{T +T_O+1}{2}\\
+0 &\text{ else}
+\end{cases}
+ & \text{and} \; \mu^2_2(x) = \frac{L}{2}\cdot
+\end{align*}
+
+Notice that it is not possible to tell the difference between the two setups for the short-sighted oracle $\pi$ before round $t$ such that $ N_{t,1} \geq \frac{T -T_O -1}{2}$. Notice that this round always exists because $N_{T,1} \geq \frac{T}{2}$.
+
+On problem $\mu^1$, we will compare $\pi$ to $\pi_1$ which selects always arm $1$. On problem $\mu^2$, we will compare $\pi$ to $\pi_2$ which selects always arm $2$. We give the cumulative reward of the different policies on the two problems,
+\begin{align}
+&J^1_T(\pi_1) = LT, \label{eq:linear-J1Tpi1}\\ 
+&J^2_T(\pi_2) = \frac{L\pa{T -\nicefrac{1}{4}}}{2} + \frac{LT}{4}\CommaBin\label{eq:linear-J2Tpi2}\\
+&J^1_T(\pi) = L\pa{T - N^1_{T,2}}, \label{eq:linear-J1Tpi} \\
+&J^2_T(\pi) \leq \frac{L\pa{T + N^2_{T,2}}}{2}\CommaBin\label{eq:linear-J2Tpi}
+\end{align}
+with $N^k_{T,2}$ the pulling intensity in direction $2$ of $\pi$ on problem $k$. The inequality upper-bounds the reward collected in direction $1$ by its maximum $\nicefrac{LT}{2}$. Since we cannot distinguish between the two problems until $N_{t,1} \geq \frac{T - T_O -1}{2} $, we will show that $N^1_{T,2}$ and $N^2_{T,2}$ are loosely related. 
+
+We call $t_u$ the last round such that the two problems are indistinguishable. Therefore, we have that, 
+\[
+N_{t_u,1}^1 = N_{t_u,1}^2 \triangleq  N_{t_u,1} \text{ and } N_{t_u,2}^1 = N_{t_u,2}^2\triangleq  N_{t_u,2} .
+\]
+
+Problems are indistinguishable until,
+\[ N_{t_u,1} < \frac{T - T_O -1}{2} \cdot\]
+
+We also know that the problems can be distinguished at the round $t_u+1$, \ie 
+\[  \frac{T - T_O -1}{2} \leq N_{t_u+1,1} \leq N_{t_u,1} +1.\] 
+
+The second inequality is because $N_{t_u+1,1} - N_{t_u,1} \leq \max_{i \leq 2} A_{i,1} = 1$. We have bounded $N_{t_u,1}$ but we use $N_{T,2}^k$  in Equations~\ref{eq:linear-J1Tpi} and~\ref{eq:linear-J2Tpi}. We will start by relating $N_{t_u,2}$ to $N_{t_u,1}$, and then we will relate $N_{T,2}^k$ to $N_{t_u,2}$. We call $n_{t,i}$, the number of pulls of arm $i$ at the round $t$. We have that 
+\begin{align*}
+&N_{t,1} = n_{t,1} + \frac{n_{t,2}}{2}\CommaBin \\
+&N_{t,2} = \frac{n_{t,2}}{2}\CommaBin\\\
+&n_{t,1} + n_{t,2} = t.
+\end{align*}
+
+We can rewrite $N_{t,1} = t - N_{t,2}$. Hence, the above inequations on $N_{t_u,1}$ can be translated for $N_{t_u,2}$. 
+\begin{align}
+&N_{t_u,2} > \frac{2t_u - T + T_O+1}{2}\CommaBin \nonumber\\
+&N_{t_u,2} \leq \frac{2t_u - T +T_O +3}{2} \cdot\label{eq:ntu2}
+\end{align}
+
+We can now bound $N_{t_u,2}^k$ for all $k$,
+\[
+ \frac{2t_u - T + T_O+1}{2} <N_{t_u,2} \leq N_{T,2} ^k \leq \frac{T-t_u}{2} + N_{t_u,2} \leq \frac{t_u +T_O +3}{2}. 
+\]
+
+The first and fourth inequality use Equation~\ref{eq:ntu2}. The second uses that $t_u\leq T$ and that the pulling intensity can only grow through the rounds. The third inequality uses that with $N_{t_u,2}$ pulling intensity at the round $t_u$, the learner cannot reach more than $N_{t_u,2} + \pa{T-t_u} \max_{j}A_{j,2} =N_{t_u,2} + \frac{T-t_u}{2}$ (by selecting arm $2$ until the end of the game).
+
+We can use Equations~\ref{eq:linear-J1Tpi1} and~\ref{eq:linear-J1Tpi} (respectively~\ref{eq:linear-J2Tpi2} and~\ref{eq:linear-J2Tpi}) to lower-bound the difference of performance with respect to policy $\pi_1$ (respectively $\pi_2$) on problem $1$ (respectively $2$). 
+\begin{align*}
+&J_T^1(\pi_1)- J_T^1(\pi) = LN_{T,2}^1 \geq \frac{L}{2} \pa{2t_u - \pa{T - T_O} +1}\\
+&J_T^2(\pi_2)- J_T^2(\pi) \geq  \frac{L}{4} \pa{T - 2N_{T,2}^2- \nicefrac{1}{2}} \geq\frac{L}{4} \pa{T -t_u - T_O - 3.5 } .
+\end{align*}
+
+The only quantity which depends on the algorithm $\pi$ is $t_u\in \left\{1, \dots, T\right\}$. In a minimax perspective, we lower bound the maximum of these two bounds,
+\[
+\max\pa{J_T^1(\pi_1)- J_T^1(\pi), J_T^2(\pi_2)- J_T^2(\pi)} \geq \frac{L\pa{T-T_O}}{10} -1.15L.
+\]
+We conclude the proof by noticing that when $T-T_O\geq 23$, 
+\[
+\frac{L\pa{T-T_O}}{10} -1.15L \geq \frac{L\pa{T-T_O}}{20}\cdot
+\]
+\end{proof}
+
