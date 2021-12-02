@@ -1,3 +1,4 @@
+not_on_github/
 **.aux
 **.bak
 **.bbl
@@ -11,4 +12,9 @@
 **.run.xml
 **.synctex.gz
 .DS_STORE
-MichalHDR/
+**.toc
+**.lof
+**.lot
+**.loa
+
+

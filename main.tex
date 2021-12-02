@@ -1,17 +1,11 @@
 \documentclass[12pt,fleqn]{book} % Default font size and left-justified equations
-
-\input{structure}
-\usepackage{amsthm}
-\usepackage{amsmath}
-\usepackage{amssymb}
+\input{other_tex_files/structure}
 \usepackage{bbm}
-\usepackage{thm-restate}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.x
 \usepackage[htt]{hyphenat}
-\AfterEndEnvironment{restatable}{\noindent\ignorespaces}
 \usepackage{bm}
 \usepackage{dsfont}
-\input{szsymbols}
+\input{other_tex_files/szsymbols}
 \usepackage{algorithmicx}
 \usepackage{algorithm,algpseudocode}
 \usepackage{footnote}
@@ -34,6 +28,12 @@
 \newcommand{\citet}{\textcite}
 \hypersetup{pdftitle={Thèse de Doctorat, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
 
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
 
 \begin{document}
 \newpage
@@ -74,7 +74,7 @@
 
 \vspace{.2cm}
 
-\hspace{-.5cm}{\bf \Large \sffamily{Sequential Machine Learning for Adaptive Educational Systems}}
+\hspace{-.5cm}{\bf \Large \sffamily{Apprentissage automatique séquentiel pour les systèmes éducatifs intelligents}}
 
 \vspace{-.1cm}
 
@@ -104,14 +104,14 @@ compos{\'e} de}
 
 \bigskip
 
-%\hspace{-1.5cm}
+\hspace{-1.cm}
 {\sffamily
 \begin{tabular}{llllll}
  {M.}   & Gilles & {\bf\sffamily STOLTZ}     & Univ. Paris Saclay \& CNRS & Rapporteur\\
 {M.}   & Aur\' elien & {\bf\sffamily GARIVIER} & ENS de Lyon & Rapporteur \\
 {M.}   & Steffen & {\bf\sffamily GRÜNEWÄLDER}     &  University of Lancaster & Examinateur\\
 {M.}   & Manuel & {\bf\sffamily LOPES}     &  Instituto Superior Tecnico & Examinateur\\
-{Mme}   & Mathilde & {\bf\sffamily MOUGEOT}     & Univ. Paris Saclay \& ENSIEE & Examinatrice\\
+{Mme}   & Mathilde & {\bf\sffamily MOUGEOT}     & Univ. Paris Saclay \& ENSIIE & Présidente du jury\\
 {M.}   & Michal & {\bf\sffamily VALKO}     &  INRIA Lille \& Deepmind & Directeur\\
 {M.}   & Alessandro & {\bf\sffamily LAZARIC}     &  INRIA Lille \& FAIR  & Co-Directeur\\
 {M.}   & Jonathan & {\bf\sffamily BANON}     &  Lelivrescolaire.fr & Encadrant\\
@@ -127,12 +127,15 @@ UMR 9189 Équipe SequeL, 59650, Villeneuve d’Ascq, France}
 \includegraphics[width=0.264\columnwidth]{fig/logo_cristal.pdf}
 \includegraphics[width=0.288\columnwidth]{fig/logo_inria.pdf}
 }
-\input{94e_couverture}
+\input{other_tex_files/4e_couverture}
 \chapterimage{chapter_head/0_content.jpg} % Table of contents heading image
+
 
 \pagestyle{empty} % Disable headers and footers for the following pages
 
 \tableofcontents % Print the table of contents itself
+\blfootnote{Chapter header: Giorgio de Chirico, \emph{Edipo e la Sfinge}, 1968, olio su tela, cm 90x70, \copyright Fondazione Giorgio e Isa de Chirico, Roma.}
+%\listofalgorithms
 \chapterimage{chapter_head/0_figures.jpg}
 % list of items
 \begingroup
@@ -141,37 +144,29 @@ UMR 9189 Équipe SequeL, 59650, Villeneuve d’Ascq, France}
 \section*{Figures}
 \@starttoc{lof}
 \let\clearpage\relax
-%\listoftables
 \section*{Tables}
 \@starttoc{lot}
 \section*{Algorithms}
 \@starttoc{loa}
 \makeatother
 \endgroup
+\blfootnote{Chapter header: \emph{Portrait of Luca Pacioli}, traditionally attributed to Jacopo de' Barbari, 1495}
+
 
 
 \cleardoublepage % Forces the first chapter to start on an odd page so it is not on the right side of the book
 
 \pagestyle{fancy} % Enable headers and footers again
 
-%%----------------------------------------------------------------------------------------
-%%	GLOSSARY
-%%----------------------------------------------------------------------------------------
-%\clearpage
-%
-%\printglossary[numberedsection,type=symbols,style=list,nogroupskip]
-%
-%%\printglossary[type=\acronymtype, style=myList]
-%\printglossary[type=\acronymtype]
-%\printglossaries
 \clearpage
-\input{2Literature/main}
-\input{3Rested/main}
-\input{4Restless/main}
-\input{5Bandits/main}
+\input{1Literature/main}
+\input{2.1Rested/main}
+\input{2.2Restless/main}
+\input{3Bandits/main}
 \chapterimage{chapter_head/7_782phare.jpg} 
 \part{References}
 \chapter*{References}
+
 \vspace{-3cm}
 \emph{– Tu n’as même pas appris le métier de tailleur ? dit-elle.\\
 – Jamais, répondit K.\\
