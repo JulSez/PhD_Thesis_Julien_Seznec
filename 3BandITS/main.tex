@@ -1,0 +1,780 @@
+ %!TEX root = ../main.tex
+\part{Beyond rotting bandits}
+\chapterimage{chapter_head/6_546ours.jpg} 
+\chapter{Master topics as soon as possible}
+\label{ch:pomdp}
+\vspace{-2.8cm}
+\begin{flushright}
+\emph{Turn your head left and blink twice. You'll see a bandit in a POMDP.}
+\end{flushright}
+\vspace{0.85cm}
+\blfootnote{Chapter header: \emph{Fiat 500 - Reveal your darkside}, \copyright Marc da Cunha Lopes, Agence Leo Burnett.}
+\section{Beyond rotting bandits: some motivations}
+\label{sec:beyond}
+Our motivation for studying the rested rotting bandits was the ability to target the least known topic. This educational strategy can be interesting before an exam, when we assume that all the topics should be at least understandable by the student. However, during the curriculum, targeting the most difficult subject can demotivate the student and could result in no learning (the wheel-spinning effect, \cite{beck2013wheel}).
+
+\RAWUCB (or \FEWA)  keeps switching between topics either because the confidence intervals are reduced through the pulls or because the student gains proficiency on the topics. On Afterclasse, a student before the exam needs to study $\sim10$ chapters divided into $\sim3$ topics. It makes up to 30 potential arms. If the student answers two hundreds of exercises (which is a lot compared to the average student), \RAWUCB is barely different than round-robin. 
+
+Moreover, rotting bandits do not take into account the difficulty levels. If we consider that each difficulty level is a different arm, then \RAWUCB will focus on difficult questions before focusing on the easiest questions. Arguably, this is not a good educational strategy. If we consider that different difficulty levels are in the same arm, then we should select the difficulty uniformly at random to not bias the averages that \RAWUCB constructs. Another possibility is to choose the difficulty with a subroutine and correct the bias with specific computations (e.g. importance sampling). 
+
+For all these reasons, \RAWUCB is hard to test on students in a relevant educational scenario. However, \RAWUCB does not have only disadvantages: it is quite interesting to take educational decisions based on pessimistic estimates of the student's proficiencies. Indeed, if we stop learning a topic because its estimate is high enough, it is important to be sure that this estimate is not high just by chance. 
+
+In this chapter, we describe a setup where the goal is to validate topics as soon as possible. We show that, under relevant assumptions, the best thing to do is to first focus on the simplest topic and then switch to the more difficult ones promptly. In an online setting, we don't know which topic is the simplest, so we design an exploration strategy that outputs a topic among the easiest and then we focus on this arm until we are sure the topic is validated. This algorithm makes good use of the aforementioned pessimistic estimates to both select a simple topic and to be sure that the topic is validated at the end of the session. Finally, we discuss design improvements to switch our theoretical algorithm in a practical Intelligent Tutoring System (ITS). 
+
+\section{Setup}
+\label{sec:setup}
+We model the student-ITS interaction as a formal Partially Observable Markov Decision Process (POMDP). 
+\paragraph{State, actions and feedback}
+The agent faces a set of $K$ tasks. Each task $i$ has a state $\mu_{i,t}\in \R$ at the round $t$ with initial value $\mu_{i,1}$. At each round $t$, the agent selects a task $i_t$ to allocate resource (e.g. time). He receives a noisy observation of its current state,
+\[ 
+o_{t} \triangleq \mu_{i,t} + \noise_t,
+\]
+where $\left\{\noise_t\right\}_{t\leq T}$ is an independent sequence of $\sigma$-subgaussian variables, \ie
+
+\[
+\EE{ \noise_t | \historyt }= 0 \;\; \text{and} \; \forall \lambda \in \R, \; \EE{ e^{\lambda\noise_t}} \leq e^{\frac{\subgaussian\lambda^2}{2}},
+\]
+
+with $\mathcal{H}_t \triangleq \left\{ \left\{i_s,o_s   \right\}\right\}_{s < t}$, the history of the agent at the beginning of the round $t$. We call $\statet \triangleq \ev{\mu_{i,t}}_{i \in \arms}$.
+
+In the context of Intelligent Tutoring Systems, a task is to learn a topic. The state is the average level of the student on that topic. The action is to give a student a question related to that topic, and the observation is the grade associated with the answer to that question.
+
+\paragraph{Transition.}
+Between consecutive rounds, the state $\statet$ is randomly modified following transition probabilities which depend on the selected arm and the current state. It contrasts with the rotting bandits we studied so far where the evolution was deterministic. We discuss the meaning of this random evolution concerning our ITS application at the end of the section.  We use two assumptions that we already studied in the rested rotting bandits framework (Chapter~\ref{ch:rested}): the rested and monotone evolution of the arms' states.
+\begin{assumption}
+\label{assum:rested}
+The transitions are rested, which means that selecting a task only modifies the state of this particular task. Hence, we have that,
+\[
+\mu_{i,t} = \mu_i(N_{i,t-1}),
+\]
+with $\left\{\mu_i(n)\right\}_{n\in \NN}$ a Markov Chain with transition operator $\Tp_i$ and $N_{i,t}\triangleq \sum_{s\!=\!1}^{t} \mathbb{I}\{i_s \!=\! i\}$.
+\end{assumption}
+\begin{assumption}
+\label{assum:increase}
+The state of a task can only increase with pulls. Hence, the transition operators $\ev{\Tp_i}_{i \in \arms}$ are triangular inferior.
+\end{assumption}
+Rotting bandits were considering non-increasing sequences of rewards while we consider now non-decreasing sequences of states. Yet, it can correspond to the same situation where the reward is the opposite of the state. This is not only a formal remark. It is indeed the case for Intelligent Tutoring System motivation: the student is progressing so the associated need to learn the topic is decreasing.
+
+We now make two Assumptions on the transition operators $\ev{\Tp_i}_{i \in \arms}$.
+
+\begin{assumption}
+\label{assum:symmetric}
+The transition operator is the same for all the tasks,
+\[ \forall i \in \arms, \Tp_i = \Tp.\]
+\end{assumption}
+
+For a random variable $X$ with density $p$, we call $F_{p}(z) \triangleq \PP{X\leq z}$ the cumulative distribution function. We define the first-order stochastic dominance of a variable X (drawn with probability $p_x$) over a random variable $Y$ (drawn with probability $p_y$),
+\begin{equation}
+\label{eq:stoch-dominance}
+   X \succeq Y \iff p_x \succeq p_y \iff \forall z \in \R,\  F_{p_x}(z) \leq F_{p_y}(z). 
+\end{equation}
+
+\begin{assumption}
+\label{assum:stochastic-monotone}
+The transition operator $\Tp$ is stochastically monotone, \ie \ with $(\Tp\delta_x)(y) \triangleq \Tp(x,y)$,
+\[
+\forall (x_1,x_2)\in \R^2, x_1 \leq x_2 \implies  \Tp\delta_{x_1} \preceq \Tp\delta_{x_2}.
+\]
+\end{assumption}
+
+In other words, the larger the starting point, the larger the probability to reach any threshold at the next step. This assumption was first studied by \citet{daley1968stochastically}. We restate their two main results,
+
+\begin{lemma}[\citet{daley1968stochastically}]
+\label{lem:daley}
+Assumption~\ref{assum:stochastic-monotone} is equivalent with 
+\[
+\forall (p,q), p \preceq q \implies  \Tp p \preceq \Tp q.
+\]
+\end{lemma}
+
+\begin{corollary}[\citet{daley1968stochastically}]
+\label{cor:daley}
+The larger the starting state, the larger the probability of reaching any threshold after a given number of steps $n\in \NN$, \ie, 
+\[
+\forall (x_1,x_2)\in \R^2, x_1 \leq x_2 \implies  \Tp^n\delta_{x_1} \preceq \Tp^n\delta_{x_2}.
+\]
+\end{corollary}
+For Intelligent Tutoring Systems, Assumption~\ref{assum:symmetric} means that the student progresses in the same way for all the topics. It may not be true if the topics are completely different subjects (e.g. maths and history) but if it is two topics in the same chapter (e.g. Pythagore and Thales theorems), it is likely that the progression of the student will be similar. Assumption~\ref{assum:stochastic-monotone} assumes that the progression on the different topics is monotonic. If a student is quite good on a first topic and quite bad on another one, it is unlikely (yet possible) that after a single question on each topic, s/he masters the second one and not the first one. 
+
+\paragraph{Objective}
+We consider a task as being completed when
+$\mu_{i,t} \geq \mu$ for a given threshold $\mu$. We will consider two related objectives. First, the \textit{simple} objective is to maximize the number of completed tasks after the horizon $T$, 
+\[
+r_T(\pi) \triangleq \sum_{i \in \arms} \mathbbm{1}\left[\mu_{i,T+1} \geq \mu \right].
+\]
+
+With respect to this objective, we can define a reward for our POMDP associated to the transition from state $x$ to $y$,  \[\rho(x, y) \triangleq \mathbbm{1}\left[x<\mu \land y \geq \mu\right].\]
+ $r_T(\pi)$ is the sum of the reward,
+\begin{equation}
+\label{eq:link-r-rho}
+r_T(\pi) = \sum_{t=1}^T \rho(\mu_{\pi(t), t},\mu_{\pi(t), t+1}) + \sum_{i\in \arms} \mathbbm{1}\left[\mu_{i,1} \geq \mu \right].
+\end{equation}
+
+Notice that the second sum is the sum of the arms which are initially above the threshold: it does not depend on the agent's action. Second, the \textit{cumulative} objective is to optimize,
+\[
+J_T(\pi) = \sum_{t=1}^T r_t(\pi).
+\]
+
+The reward at each round is $r_t(\pi)$. Thus, a validated task at the round $t$ yields cumulatively a reward equal to the remaining number of rounds $T-t$. For Intelligent Tutoring Systems, a completed topic may trigger new teaching actions such as starting new topics. The sooner we can trigger these actions, the better it is. It suggests that it is not only important to master topics at the end of the studying session, but also to master them as fast as possible. 
+
+\begin{remark}
+For both objectives, the reward at any round $t$ is a function of the state (current or previous) which is itself partially observable. One can hardly reconstruct the reward at the round $t$ from the unique observation sample at this same round. Indeed, if a student answers correctly to a question, we may have chosen a topic which is already mastered by the student (no reward for the action) or we may have chosen a topic which will be mastered very soon (good reward for the action). It contrasts with the cumulative reward in the multi-armed bandits paradigm, where the relationship between observation and reward is more straightforward.
+\end{remark}
+
+\begin{remark}
+Our objectives $r_T$ and $J_T$ are random quantities. In the following, we will aim at maximizing their expected values, where the expectation is on the random evolution of the Markov Chains, the random noise in the observation, and the potential randomization of the agent's strategy. In particular, we highlighted that Assumption~\ref{assum:stochastic-monotone} is a "smooth in probability" assumption. Hence, even if abrupt progression is possible, these paths will weigh little in the expected regret compared to smooth ones.
+\end{remark}
+We give a consequence of Assumption~\ref{assum:stochastic-monotone} in terms of the number of rounds to reach the threshold $\mu$,
+
+\begin{definition}
+Let $\pa{\mu_i\pa{n}}_{ n \in \NN}$ a Markov chain with transition probabilities $\Tp$. We define the stopping time,
+\[
+\tau_{i}  \triangleq \min\left\{\tau \in \NN \, | \, \mu_i\pa{\tau} \geq \mu \right\},
+\]
+the number of pulls to reach the threshold $\mu$. We also define, 
+\[
+\tau_{i,t}  \triangleq \max\pa{\tau_{i} - \Nitmone, 0}.
+\]
+the remaining number of pulls at a round $t$ after $\Nit$ pulls. We notice that $\tau_{i} = \tau_{i,0}$.
+
+Let $(X_n)_{n\in \NN}$ a Markov Chain with $X_0=x$ a transition probabilities $\Tp$. We call, 
+\[
+\tau(x) \triangleq \min\left\{\tau \in \NN \, | \, X_\tau \geq \mu \right\}.
+\]
+\end{definition}
+\begin{lemma}
+\label{lem:taux-taui}
+For any arm $i$, $k\in \NN$ and $t\in \ev{1, \dots, T}$, 
+\[\PP{\tau_{i,t} = k| \Ft} =  \PP{\tau\pa{\mu_{i,t}}=k|\mu_{i,t}}.\]
+\end{lemma}
+\begin{proof}
+It is equivalent to show that for all $k$, 
+\[\PP{\tau_{i,t} \geq k| \Ft} =  \PP{\tau\pa{\mu_{i,t}}\geq k|\mu_{i,t}}.\]
+Notice that $\ind{\tau_{i,t} \geq k} \iff \mu_i(\Nitmone +k)< \mu $. Hence, 
+\[\PP{\tau_{i,t} \geq k| \Ft}  = \PP{\mu_i(\Nitmone +k)< \mu| \Ft} = F_{\Tp^k\delta_{\mu_{i,t}}}(\mu)  .
+\]
+We also have, 
+\[ \PP{\tau\pa{\mu_{i,t}}\geq k|\mu_{i,t}}= \PP{X_k <\mu | X_0 = \mu_{i,t}} = F_{\Tp^k\delta_{\mu_{i,t}}}(\mu).  \]
+\end{proof}
+\begin{lemma}
+\label{lem:stopping-time}
+If $x \leq y$, $\tau(x) \succeq \tau(y)$.
+
+It further implies $\EE{\tau\pa{x}} \geq \EE{\tau\pa{y}}$.
+\end{lemma}
+\begin{proof}
+For any $x\in \R$, 
+\begin{equation}
+\label{eq:cdf-tau}
+\PP{\tau(x) \geq n} = \PP{X_{n-1} < \mu| X_0=x} = F_{\Tp^{n-1}\delta_{x}}(\mu)
+\end{equation}
+where the first equality is justified by the definition of $\tau(x)$ and Assumption~\ref{assum:increase}. Using Corollary~\ref{cor:daley}, we show the stochastic dominance,  
+\[
+x \leq y \implies \Tp^{n-1}\delta_{x} \preceq \Tp^{n-1}\delta_{y} \implies \tau(x) \succeq \tau(y).
+\]
+The last implication uses that $\PP{\tau(x) \geq n} = 1-F_{\tau(x)}(n) \geq \PP{\tau(y) \geq n} = 1-F_{\tau(y)}(n)$, where the inequality comes from Equation~\ref{eq:cdf-tau}. It implies that $F_{\tau(x)}(n) \leq F_{\tau(xy}(n)$ which is the definition of stochastic dominance. 
+
+For the expectation, we use the layer-cake representation together with Equation~\ref{eq:cdf-tau}, 
+\begin{align*}
+\EE{\tau(x)} &=  \sum_{n=1}^{+\infty} \PP{\tau(x) \geq n} = \sum_{n=0}^{+ \infty} F_{\Tp^{n}\delta_{x}}(\mu).
+\end{align*}
+Hence, if $x \leq y$, then $\forall n \in \NN, \ F_{\Tp^{n}\delta_{x}}(\mu) \geq F_{\Tp^{n}\delta_{y}}(\mu)$. Therefore,
+\[
+\EE{\tau(x)}\geq \EE{\tau(y)} 
+\]
+where we used Corollary~\ref{cor:daley}. 
+\end{proof}
+\section{Optimal Oracle: Focus on the largest under the threshold}
+\label{sec:oracle}
+
+\subsection{The {\FLUT} oracle }
+An oracle policy $\Tilde{\pi}$ is a policy which has access to the current and past values of all arms $\left\{\mu_{i,s}\right\}_{i \in \arms, s \leq t}$ and to the transition matrix $\Tp$. More precisely, we define the set of states at any round $t$ $\statet = \ev{\mu_{i,t}}_{i \in \possibleArms}$ and the random variables known by an oracle at $t$, 
+\[\Ft = \ev{\ev{\state_{\boldsymbol{s}}}_{1 \leq s\leq t}, \ev{i_s}_{1 \leq s \leq t-1}}.\]
+ Notice that the oracle does not have access to the future of the Markov Chain, and can only make projections based on $\Tp$ and $\Ft$.
+
+We define the sets of arms under and above the threshold before the round $t$: 
+\begin{align*}
+\armsbelow \triangleq \left\{i \in \arms | \mu_{i,t} < \mu \right\}\\
+\armsabove\triangleq \left\{i \in \arms | \mu_{i,t} \geq \mu \right\}.
+\end{align*}
+
+We describe Focus on the Largest Under the Threshold (\FLUT) in Algorithm~\ref{alg:flut}, an oracle policy $\oracle$ which selects at each round the arm with the largest state below the threshold $\mu$.
+\begin{minipage}{\textwidth}
+\renewcommand*\footnoterule{}
+\begin{savenotes}
+\begin{algorithm}[H]
+\caption{Focus on the Largest Under the Threshold ({\FLUT} or $\oracle$)}
+\label{alg:flut}
+\begin{algorithmic}[1]
+\Require $\mu$
+	\For{$t \gets 1, 2, \dots \do $}
+		\State \textsc{Receive} $\statet \leftarrow \ev{\mu_{i,t}}_{i \in \arms}$
+		\State $\armsbelow \leftarrow \left\{i \in \arms | \mu_{i,t} < \mu \right\}$
+		\If {$\armsbelow \neq \ev{}$}
+		\textsc{Pull}\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.} $i_t \in \argmax_{i \in \armsbelow} \mu_{i,t}$; 
+		\Else {\textsc{ Pull at random} $i_t \in \arms$}
+		\EndIf
+	\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{savenotes}
+\end{minipage}
+\begin{remark}
+We note that $\oracle$ is an oracle policy which does not use the knowledge of $\Tp$. It is similar to the optimal oracle for rotting bandits. It is an interesting feature as one can hope to approximate $\Tp$ by simply estimating the state of the arms like in bandits, and without caring about the transitions.
+\end{remark}
+
+\subsection{Optimality}
+\begin{theorem}
+\label{th:FLUT-opt}
+For any oracle policy $\Tilde{\pi}$ and any round $t$, 
+\[
+r_t(\oracle) \succeq r_t(\Tilde{\pi}).
+\]
+\end{theorem}
+
+\begin{corollary}
+$\oracle$ maximizes $\EE{r_t(\pi)}$ without the knowledge of the round $t$. Therefore, it maximizes $\EE{J_T(\pi)}$ for any horizon $T$.
+\end{corollary}
+
+%TODO
+
+\subsection{Proof of Theorem~\ref{th:FLUT-opt}}
+\subsubsection{Sketch}
+The proof is quite technical. We give here a sketch highlighting the main difficulties. In the spirit of the Bellman Equation \citep{bellman1966dynamic}, our proof shows recursively from the end that selecting the largest arm under the threshold is the best thing to do concerning $r_{t:T}$, the future reward collected from the round $t$. More precisely, "the best thing to do" means that $\oracle$ maximizes 
+$\PP{r_{t:T}(\Tpi) \geq r| \Ft}$ for any reward objective $r$.
+
+The initialization at the last round is rather straightforward given our assumptions. Indeed, according to Assumption~\ref{assum:symmetric}, all the arms have the same transition operator. Moreover, according to Assumption~\ref{assum:stochastic-monotone}, the probability to reach any threshold in one step increases with the value of the starting point.  Hence, following \FLUT maximizes the probability to reach the threshold for the selected arm. Because the transitions are rested, we cannot bring more than $r=1$ arm above the threshold. Hence, \FLUT maximizes $\PP{r_{T:T}(\cdot) \geq 1| \FT}= \PP{r_{T:T}(\cdot) = 1| \FT}$.
+
+Then, we consider a round $t$ such that \FLUT is the best thing to do from $t+1$. Hence, we compare \FLUT which policies which follow any rule at $t$ and then \FLUT from $t+1$.  We split the possibilities in three: (1) either $i_t \in \armsabove$, or (2) $i_t$ is in the $r$ largest value below the threshold at the round $t$, or (3) $i_t$ is below this $r$-th value.
+
+(1) Arguably, selecting an arm $i_t \in \armsabove$ is totally useless because this arm is already above the threshold and the transitions are rested (Assumption~\ref{assum:rested}). 
+
+(2) In order to pass $r$ arms above the threshold until the end of the game, $\oracle$ first selects repetitively the largest arm in $\armsbelow$ until it reaches the threshold, then the second largest, etc., until the $r$-th.  Hence, $\PP{r_{t:T}(\oracle) \geq r| \Ft}$ is equal to $\PP{\!\sum_{x \in \Ort} \!\tau(x) \leq T - t + 1 \Bigg| \Ft}$, that is, the probability that the sum of the remaining pulls to reach the threshold for the $r$ largest arms below the threshold\footnote{$\Ort$ is the set of $r$ largest values below the threshold at any round $t$.} is smaller than the remaining rounds (Lemma~\ref{lem:r-tau}). Since the transitions are rested and Markov, the order of the pulls does not matter: it is necessary to advance the $r$ Markov chains to get at least $r$ rewards. Hence, selecting any arm among the $r$ largest values below the threshold and then follow $\oracle$ from $t+1$ achieves the same $\PP{r_{t:T}(\cdot) \geq r| \Ft}$ than $\oracle$.
+
+(3) Comparing \FLUT with the case where we pull an arm below the $r$-th value of $\armsbelow$ is the most difficult part of the proof. However, it seems quite intuitive with our Assumption~\ref{assum:stochastic-monotone} that pulling an arm that is among the furthest to the threshold is not optimal.
+
+According to Lemma~\ref{lem:r-tau} and Corollary~\ref{cor:f-non-decreasing}, if we follow \FLUT after $t+1$, the only thing that matter with respect to $\PP{r_{t:T}(\cdot) \geq r| \Ft}$ is the $r$ largest states of $\arms^-_{t+1}$ (or the $r-1$ largest states of $\arms^-_{t+1}$ if the arm that we select at the round $t$ reaches the threshold). The larger are those states, the higher is $\PP{r_{t+1:T}(\cdot) \geq r| \Ftpone}$. After the $t$-th round, we move two different values below the threshold if we follow \FLUT or if we take an other arm. It is hard to compare these two states in terms of potential reward. The trick is to use the last result: $\oracle$ performs the same than the policy which selects the $r$-th value of $\armsbelow$ (with respect to $\PP{r_{t:T}(\cdot) \geq r| \Ft}$).  
+
+If we compare to this policy instead of \FLUT, the $r$ largest states of $\arms^-_{t+1}$ are the $r-1$ largest states of $\armsbelow$ and an other value. If we pull an arm $i_r$ with the $r$-th value below the threshold at the round $t$, then this other value is $\mu_{i_r,t+1}$. If we pull an arm $i_t$ below $\mu_{i_r,t}$,  then the other value is $\max(\mu_{i_r,t}, \mu_{i_t, t+1})$. We can compare the distributions associated to these two random variables, and see that the first one stochastically dominates the other one (thanks to Assumption~\ref{assum:stochastic-monotone}). 
+
+In the two cases, $\PP{r_{t:T}(\cdot) \geq r| \Ft}$ is the expectation of $\PP{r_{t+1:T}(\oracle) \geq r| \Ftpone}$ over these random variables. Since $\PP{r_{t+1:T}(\oracle) \geq r| \Ftpone}$ is non-decreasing with the $r$ largest values in $\armsbelow$, we can show that $\PP{r_{t:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi) \geq r| \Ft}$ thanks to Lemma~\ref{lem:stoch-dom-monotone}. 
+
+It concludes the induction as it shows that for any arm choice at the round $t$, $\oracle$ maximizes $\PP{r_{t:T}(\cdot) \geq r| \Ft}$ for any $r$. 
+\begin{proof}
+\subsubsection{Introduction}
+According to the definition of the first order stochastic dominance (Equation~\ref{eq:stoch-dominance}), we want to show that for all $r\in \NN$ and for any oracle policy $\Tpi$, 
+\[
+\PP{r_T(\oracle) \geq r| \F_1} \geq \PP{r_T(\Tpi) \geq r|\F_1}.
+\]
+
+$\F_1$ represents indeed the information available to the oracle at the beginning of the game. We recall the definition of $\rho(x, y) \triangleq \mathbbm{1}\left[x<\mu \land y \geq \mu\right]$. We define,
+\[
+r_{s:t}(\pi) =  \sum_{t'=s}^t \rho(\mu_{\pi(t'), t'},\mu_{\pi(t'), t'+1}). 
+\]
+Using Equation~\ref{eq:link-r-rho}, we can write, 
+\[
+r_T(\Tpi) =  r_{1:T}(\Tpi) + \sum_{i \in \arms} \ind{ \mu_{i,1} \geq \mu}.
+\]
+Since the above sum does not depend on the policy $\Tpi$, we will show recursively from the end $t=T$ that for all $r\in \NN$ that, 
+\[
+\PP{r_{t:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi) \geq r| \Ft}.
+\]
+
+\subsubsection{Last round}
+At the last round $t=T$, the $r_{T:T}$ is equal to 1 if the selected arm is above the threshold and else to 0. For $r > 1$ and $r=0$, we have the trivial equalities,
+\begin{align*}
+    &\PP{r_{T:T}(\Tpi) \geq 0| \FT} = 1,\\
+    &\PP{r_{T:T}(\Tpi) \geq 2| \FT} = 0.
+\end{align*}
+
+For $r=1$, if $\Tpi(T) = i_T \in \arms_T^+$, the probability of reaching $\mu$ with a new arm is null because the arm is already above the threshold. Hence, 
+\[\PP{r_{T:T}(\Tpi) \geq 1| \FT \land i_T \in \arms_T^+} = 0 \leq \PP{r_{T:T}(\oracle) \geq 1| \FT}.\]
+
+If $\Tpi(T) = i_T \in \arms_T^-$, we can use Assumption~\ref{assum:stochastic-monotone},
+\begin{align*}
+    \PP{r_{T:T}(\Tpi) \geq 1| \FT \land i_T \in \arms_T^-} &= \PP{\mu_{i_T,T+1}\geq \mu |\FT \land i_T \in \arms_T^-} \\
+    &\leq \PP{\mu_{\isT,T+1}\geq \mu |  \FT \land i_T = \isT}\\
+    &= \PP{r_{T:T}(\oracle) \geq 1| \FT}.
+\end{align*}
+
+Indeed, by definition of $\isT$, $\mu_{\isT,T} \geq \mu_{i_T,T}$ if $i_T \in \arms_T^-$. Therefore, we do have for all $r$ and any oracle policy $\Tpi$, 
+\[
+\PP{r_{T:T}(\oracle) \geq r| \FT} \geq \PP{r_{T:T}(\Tpi) \geq r| \FT}.
+\]
+\subsubsection{Backward induction}
+Now, we consider a round $t$ such that, for any $\Tpi$ and $r$,
+\begin{equation}
+\label{eq:recursivity}
+  \PP{r_{t+1:T}(\oracle) \geq r| \Ftpone} \geq \PP{r_{t+1:T}(\Tpi) \geq r| \Ftpone}.  
+\end{equation}
+
+We want to show that this relation is still true at the round $t$, 
+\begin{equation*}
+  \PP{r_{t:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi) \geq r| \Ft}.  
+\end{equation*}
+
+
+We consider the policy $\Tpi_{t}$ which follows $\oracle$ except at the round $t$ where it follows $\Tpi$. Thus, for any $r \in \NN$,
+\begin{equation}
+\label{eq:optimal-oracle-t+1}
+    \PP{r_{t+1:T}(\Tpi_{t}) \geq r| \Ftpone} = \PP{r_{t+1:T}(\oracle) \geq r| \Ftpone} \geq \PP{r_{t+1:T}(\Tpi) \geq r| \Ftpone}.
+\end{equation}
+The first equality is justified by the fact that the two policies behave the same from $t+1$, hence they collect the same reward. The inequality follows from Equation~\ref{eq:recursivity}. 
+\begin{align}
+ \PP{r_{t:T}(\Tpi) \geq r| \Ft} = &\EE{ \ind{\mu_{i_t,t+1}\geq \mu}\PP{r_{t+1:T}(\Tpi) \geq r-1| \Ftpone}|\Ft \land i_t \sim \Tpi(t)} \nonumber\\
+ &+ \EE{ \ind{\mu_{i_t,t+1}< \mu}\PP{r_{t+1:T}(\Tpi) \geq r| \Ftpone}|\Ft \land i_t \sim \Tpi(t)} \nonumber    \\
+ \leq& \EE{ \ind{\mu_{i_t,t+1}\geq \mu}\PP{r_{t+1:T}(\Tpi_{t}) \geq r-1| \Ftpone}|\Ft \land i_t \sim \Tpi(t)} \nonumber\\
+ &+ \EE{ \ind{\mu_{i_t,t+1}< \mu}\PP{r_{t+1:T}(\Tpi_{t}) \geq r| \Ftpone}|\Ft \land i_t \sim \Tpi(t) }\nonumber\\
+ =  &\PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft}.
+ \label{eq:Tpit-Tpi}
+\end{align}
+
+The inequality follows from Equation~\ref{eq:optimal-oracle-t+1}: following the $\oracle$ (or equivalently $\Tpi_{t}$) is optimal after round $t$. The equalities mean that either arm $i_t$ reaches the threshold at the round $t$ and we still need $r-1$ arms to reach the threshold after the round $t$, or arm $i_t$ do not reach the threshold and we need $r$ arms to reach the threshold after $t$. To conclude the proof, we need to show that,
+\[
+\PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft} \leq \PP{r_{t:T}(\oracle) \geq r| \Ft}.\]  
+
+We call $\Ort$ the $r$ largest states below the threshold at the round $t$ (for $r\leq |\armsbelow|$). We call $\mu^r_{t} \triangleq \min {\Ort}$, the $r$-th largest value below the threshold. We call $\statet^{\boldsymbol{i}}$, the set of states at $t$ excluding the state of $i$. Hence, $\Or\pa{\statet^{\boldsymbol{i}}}$ is the set of the $r$ largest states below the threshold excluding the state of $i$.   We  distinguish three cases: when $\mu_{i_t, t} \in \left] - \infty,  \mu^r_{t}\right[$, $ \mu_{i_t, t} \in \left[ \mu^r_{t}, \mu \right[$ and $\mu_{i_t, t} \in \left[ \mu, + \infty\right[$. We call $\Krt \triangleq \ev{i\in \arms | \mu_{i,t} \in \Ort} \subset \armsbelow$ such that the three aforementioned cases corresponds to respectively $i_t\in \armsbelow \setminus \Krt$, $i_t\in \Krt$ and $i_t \in \armsabove$.
+
+
+\subsubsection{Backward induction: the selected arm is in the $r$ largest values below the threshold}
+We will start by considering the case $i_t \in \Krt$. It is equivalent to $\mu_{i_t, t-1}\in \Ort$. Lemma~\ref{lem:r-tau} becomes, 
+\begin{equation*}
+\PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft \land i_t \in \Krt} = \PP{ \sum_{x \in \Ort} \tau(x) \leq T - t +1 \Bigg| \Ft}.
+\end{equation*}
+%The first equality uses that $\mu_{i_t, t-1} \geq \mu^r_{t-1}$ together with Lemma~\ref{lem:r-tau}. The second equality uses that, since $\mu_{i_t, t-1} \in  \Ortmone$ and the transitions are rested, $\Ortmone = \Ormonetmoneit \cup \left\{ \mu_{i_t, t-1} \right\} $. The third equality follows from Lemma~\ref{lem:tau+1}. 
+Notice that this expression is independent of $i_t \in \Krt$. Therefore, since $\ist \in \Krt$ for any $r$, we have that,
+\begin{equation}
+\PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft \land i_t \in \Krt}  = \PP{r_{t:T}(\oracle) \geq r| \Ft }.  \label{eq:muitt-middle}
+\end{equation}
+
+\subsubsection{Backward induction: the selected arm is below the $r$-th largest value below the threshold}
+We consider the case $i_t \in \armsbelow \setminus \Krt$. Hence, $\mu_{i_t, t} \notin \Ormonet$, which implies $\Ormonetit = \Ormonet$.  Moreover, since the setup is rested, $\Ormonetponeit = \Ormonetit$ if $i_t$ is selected at the round $t$.  Hence, $\Ormonetponeit =\Ormonet$. Thus, we can rewrite Lemma~\ref{lem:r-tau}, 
+\begin{multline}
+     \PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft \land i_t \in \armsbelow \setminus \Krt} \\
+     = \PP{\tau(\max\pa{\mu^r_{t}, \mu_{i_t, t+1}}) +\!  \sum_{x \in \Ormonet}\! \tau(x) \leq T - t \Bigg| \Ft \land i_t \in \armsbelow \setminus \Krt}.\label{eq:suboptimal-f}
+\end{multline}
+
+Let $i_r\in \arms$, an arm with value $\mu^r_{t-1}$ at the beginning of the round $t$. We have that,  
+\begin{align}
+\label{eq:optimal-f}
+    \PP{r_{t:T}(\oracle) \geq r| \Ft } &= \PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft \land i_t =i_r } \nonumber\\
+    &= \PP{\tau(\mu_{i_r, t+1}) +  \sum_{x \in \Ormonet} \tau(x) \leq T - t \Bigg| \Ft \land i_t = i_r}.
+\end{align}
+
+The first equation follows from Equation~\ref{eq:muitt-middle}. The second uses Lemma~\ref{lem:r-tau} with $\mu_{i_r,t+1} \geq \mu_{i_r, t} =\mu^{r}_{t}$. We also use that  with the same argument $\Ormonetir =\Ormonet$ because $i_r$ corresponds to the $r$-th value below the threshold. Hence, both $\PP{r_{t:T}(\oracle) \geq r| \Ft}$ and $\PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft}$ can be written as the mean of the function, 
+\[
+f(y) = \PP{\tau(y) +  \sum_{x \in \Ormonet} \tau(x) \leq T - t
+\Bigg | \Ft }, \]
+
+according to different probability densities. Because $f$ is non-decreasing (Corollary~\ref{cor:f-non-decreasing}), we only have to show that the probability density associated to $\oracle$ stochastically dominates the probability density associated $\Tpi_{t}$ (Lemma~\ref{lem:stoch-dom-monotone}). The probability density associated to $\oracle$ in Equation~\ref{eq:optimal-f} is,
+\[
+p_\star(y) =  \PP{\mu_{i_r,t+1} = y | \Ft \land i_t = i_r } = \Tp \delta_{\mu_{i_r,t}}.
+\]
+
+The probability density associated to arm $i_t$ in 
+Equation~\ref{eq:suboptimal-f} is,
+\[
+p_{i_t}(y) =  \PP{\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}} = y | \Ft \land i_t \in \armsbelow \setminus \Krt }.
+\]
+
+In order to prove the stochastic dominance,  we want to show that $F_{p_\star} \leq  F_{p_{i_t}}$. Notice that $p_{i_t}$ is the rectified probability density of $\mu_{i_t,t+1}$, where the mass below $\mu^r_{t}$ is transferred at $\mu^r_{t}$. Hence, we can write its CDF as,
+\begin{equation}
+\label{eq:Fpit}
+F_{p_{i_t}}(x) = \begin{cases}
+      0, & \text{if}\ x < \mu^{r}_{t} \\
+      F_{\Tp\delta_{\mu_{i_t,t}}}(x), & \text{otherwise}.
+    \end{cases}
+\end{equation}
+
+For $x < \mu^r_{t}$, 
+\begin{equation}
+\label{eq:dominance-small-x}
+F_{p_{\star}}(x) = 0 = F_{p_{i_t}}(x).
+\end{equation}
+
+The first equality comes from Assumption~\ref{assum:increase}: since the reward is non-decreasing we have  $\PP{\mu_{i_r, t+1} < \mu_{i_r,t} | \Ft \land i_t =i_r} =0 $. The second equality comes from Equation~\ref{eq:Fpit}. For $x \geq \mu^r_{t}$, 
+\begin{equation}
+\label{eq:dominance-large-x}
+\forall x \geq \mu^r_{t}, F_{p_{\star}}(x) = F_{\Tp\delta_{\mu_{i_r,t}}}(x) \leq F_{\Tp\delta_{\mu_{i_t,t}}}(x) =  F_{p_{i_t}}(x).
+\end{equation}
+where we use Assumption~\ref{assum:stochastic-monotone} and the fact that $\mu_{i_t,t} \leq \mu^r_{t}$. According to Equations~\ref{eq:dominance-small-x} and~\ref{eq:dominance-large-x}, we do have $F_{p_\star}(x) \leq  F_{p_{i_t}}(x)$ for all $x$ which is the definition of stochastic dominance: $p_\star \succeq  p_{i_t}$. Therefore, because $f$ is non decreasing (see Corollary~\ref{cor:f-non-decreasing} and Lemma~\ref{lem:stoch-dom-monotone}), we conclude,
+\begin{equation}
+    \PP{r_{t:T}(\oracle) \geq r| \Ft} = \E_{p_\star}\left[f\right] \geq \E_{p_{i_t}}\left[f\right] = \PP{r_{t:T}(\Tpi_t) \geq r| \Ft \land i_t\in \armsbelow \setminus \Krt }.
+    \label{eq:muitt-low}
+\end{equation}
+
+\subsubsection{Backward induction: the selected arm is above the threshold}
+We consider the case $\mu_{i_t,1} > \mu$. Intuitively, selecting such arm is useless, because it does not bring any new arm above or closer to the threshold. We write formally this argument,
+\begin{align}
+    \PP{r_{t:T}(\Tpi_{t}) \geq r| \Ft \land i_t \in \armsabove} &= \PP{\PP{r_{t+1: T}\left(\Tpi_{t}\right) \geq r | \Ftpone}|\Ft} \nonumber\\
+    &=\PP{\PP{\sum_{x \in \Ortpone} \tau(x) \leq T-t | \Ftpone}|\Ft}\nonumber\\
+    &=\PP{\sum_{x \in \Ort} \tau(x) \leq T-t | \Ft}\nonumber\\
+    &\leq  \PP{\sum_{x \in \Ort} \tau(x) \leq T-t+1 | \Ft}\nonumber \\
+    &=    \PP{r_{t:T}(\oracle) \geq r| \Ft } .
+    \label{eq:muitt-high}
+\end{align}
+The first equation means that no arm goes above the threshold at the round $t$. The second equation follows from Lemma~\ref{lem:r-tau}. The third equation follows because by the rested assumption all the arm $i \in \armsbelow$ keep their value between $t$ and $t+1$. Hence, $\Ort = \Ortpone$ for all $r$. The inequation follows because the event in the RHS probability include the event in the LHS probability. Finally, we use again Lemma~\ref{lem:r-tau}.
+\subsubsection{Conclusion}
+Putting together Equations~\ref{eq:muitt-middle}, \ref{eq:muitt-low} and~\ref{eq:muitt-high}, we can write,
+\[
+  \PP{r_{t:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi_t) \geq r| \Ft \land i_t}. 
+\]
+Hence, if we average the RHS on $i_t \sim \Tpi_t(t)$ (notice that $\Tpi_t(t)$ is a $\Ft$-measurable distribution by definition of $\Ft$, we have,
+\[
+  \PP{r_{t:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi_t) \geq r| \Ft }. 
+\]
+Now, we can use Equation~\ref{eq:Tpit-Tpi} to conclude the induction, 
+\[
+  \PP{r_{1:T}(\oracle) \geq r| \Ft} \geq \PP{r_{t:T}(\Tpi) \geq r | \Ft }. 
+\]
+
+Hence, using the induction,
+\[
+  \PP{r_{1:T}(\oracle) \geq r| \F_1} \geq \PP{r_{1:T}(\Tpi) \geq r | \F_1 }. 
+\]
+This statement concludes the proof, as we noticed in the Introduction.
+\end{proof}
+
+\subsection{Technical Lemmas}
+\begin{lemma}
+\label{lem:tau+1}
+Let $A$ a random variable $\pa{\Ft \land i_t}$-measurable. Let $i_t$ the selected arm by $\Tpi$ at a round $t$. Then,
+\[
+\PP{ \tau\pa{\mu_{i_t,t+1}} \leq A| \Ft \land i_t}  = \PP{\tau\pa{\mu_{i_t,t}} \leq A + 1| \Ft\land i_t}.
+\]
+\end{lemma}
+\begin{proof}
+According to Lemma~\ref{lem:taux-taui},
+\[
+\PP{ \tau\pa{\mu_{i_t,t+1}} \leq A| \Ft \land i_t} = \PP{ \tau_{i_t,t+1} \leq A| \Ft \land  i_t}.
+\]
+If arm $i_t$ is selected at a round $t$, 
+\[\tau_{i_t,t+1} \triangleq \tau_{i_t} - N_{i_t,t+1} = \tau_{i_t} - \pa{N_{i_t,t} + 1} = \tau_{i_t,t}-1 .\]
+
+Hence, we can write, 
+\begin{align*}
+\PP{ \tau_{i_t,t+1} \leq A| \Ft \land i_t} &= \PP{ \tau_{i_t,t} \leq A+1| \Ft \land  i_t}\\
+&=\PP{ \tau\pa{\mu_{i_t,t}} \leq A+1| \Ft \land i_t}.
+\end{align*}
+\end{proof}
+\begin{lemma}
+\label{lem:r-tau}
+We define the number of arms which passes the threshold between rounds $t$ and $T$ (included) when we follow policy $\pi$, 
+\begin{equation}
+\label{eq:def-rtT}
+r_{t:T}(\pi) \triangleq \sum_{i \in \arms} \mathbbm{1} \left[\mu_{i,T+1} \geq \mu \land \mu_{i,t} < \mu\right].
+\end{equation}
+Let $\Tpi_{t}$ the policy which follows $\oracle$ except at the round $t$ where it uses any decision rule such that $i_t \in \armsbelow$. We call $\Ort$, the set of the $r \in \left\{1, \dots, |\armsbelow| \right\}$ largest arm below the threshold at the round $t$.  We call $\mu^{r}_{t} = \min \mathcal{O}_r(\statet)$, the $r$-th value below the threshold. We call $\Ormonetit$, the set of the $r-1$ largest values below $\mu$ at the round $t$ excluding $\mu_{i_t,t}$. Then,
+ \begin{multline*}
+ \PP{r_{t:T}(\Tpi_t) \geq r| \Ft\land i_t \in \armsbelow} \\= \PP{\tau(\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}})+\!\sum_{x \in \Ormonetit} \!\tau(x) \leq T - t  \Bigg| \Ft\land i_t \in \armsbelow}.
+ \end{multline*}
+Let $\Krt \triangleq \ev{i\in \arms | \mu_{i,t-1} \in \Ort} \subset \armsbelow$, the set of arms below the threshold with a state larger or equal than $\mu^{r}_{t-1}$. In the special case where $i_t \in \Krt$ (e.g. $\oracle$), we have, 
+  \begin{equation*}
+ \PP{r_{t:T}(\Tpi_t) \geq r| \Ft\land i_t \in \Krt} = \PP{\!\sum_{x \in \Ort} \!\tau(x) \leq T - t + 1 \Bigg| \Ft}.
+ \end{equation*}
+\end{lemma}
+\begin{proof}
+We will prove this claim by induction from $t=T$. For $r=1$, we have,
+\begin{align*}
+&\PP{r_{T:T}(\Tpi_{T}) \geq 1| \FT \land i_T \in \arms_T^-} \\
+&\qquad\qquad= \PP{r_{T:T}(\Tpi_{T}) = 1| \FT\land i_T \in \arms_T^-} \\
+&\qquad\qquad= \PP{\mu_{i_T,T+1} \geq \mu | \FT \land i_T \in \arms_T^-} \\
+&\qquad\qquad= \PP{\tau\pa{\max\pa{\mu_{i_T,T+1}, \mu^1_{T}}} = 0  | \FT \land i_T \in \arms_T^-} \\
+&\qquad\qquad= \PP{ \tau\pa{\max\pa{\mu_{i_T,T+1}, \mu^1_{T}}} + \sum_{x \in \OO_{0}\pa{\state_{\boldsymbol{T}}^{\boldsymbol{i_T}}}} \tau(x)\leq 0 \Bigg | \FT \land i_T \in \arms_T^-}. 
+\end{align*}
+The first equality is justified because, by the rested Assumption~\ref{assum:rested}, at most one arm can pass above the threshold during a single round. The only arm which can go above the threshold is the selected one, that is $i_T$, which leads to the second equation. The third equation uses that $\tau\pa{\max\pa{\mu_{i_T,T+1}, \mu^1_{T}}}=0 \iff \max\pa{\mu_{i_T,T+1}, \mu^1_{T}}\geq \mu \iff \mu_{i_T,T+1} \geq \mu$ because $\mu^1_{T} < \mu$ by definition of $\mu^r_t$.  Last, we use that $\OO_{0}\pa{\state_{\boldsymbol{T}}^{\boldsymbol{i_T}}}  = \left\{ \right\}$ and that $\tau(\cdot) \geq 0$ by definition of $\tau$.
+
+For $\oracle$, which is the special case where $i_T = \isT \in \arms^1_T$, we can write,
+\begin{align*}
+\PP{r_{T:T}(\oracle) \geq 1| \FT }& = \PP{r_{T:T}(\Tpi_{T}) \geq 1| \FT \land i_T = \isT} \\
+&=  \PP{\sum_{x \in \OO_{1}\pa{\state_{\boldsymbol{T+1}}}} \tau(x)\leq 0 \Bigg | \FT \land i_T=\isT} \\
+& = \PP{\sum_{x \in \OO_{1}\pa{\state_{\boldsymbol{T}}}} \tau(x)\leq 1 \Bigg | \FT }. 
+\end{align*}
+The second equation follows from $\OO_{1}\pa{\state_{\boldsymbol{T+1}}} = \ev{\mu_{\isT,T}}$. The third equation uses Lemma~\ref{lem:tau+1} since there is only one element in the sum. 
+
+Last, we notice that for $r>1$, 
+\begin{align*}
+&\PP{r_{T:T}(\Tpi_{T}) > 1| \FT \land i_T \in \arms_T^-} = 0,\\
+& \PP{ \tau\pa{\max\pa{\mu_{i_T,T+1}, \mu^1_{T}}} + \sum_{x \in \OO_{r-1}\pa{\state_{\boldsymbol{T}}^{\boldsymbol{i_T}}}} \tau(x)\leq 0 \Bigg | \FT \land i_T \in \arms_T^-} =0,\\
+ &\PP{\sum_{x \in \OO_{r}\pa{\state_{\boldsymbol{T}}}} \tau(x)\leq 1 \Bigg | \FT }=0.
+\end{align*}
+First, because $\Tpi_T$ cannot bring more than one arm above the threshold in one round. The second and third equations follows because $r>1$ and, for any $r'$ and $\bX$,
+\[\sum_{x \in \OO_{r'}\pa{\bX}} \tau(x) \geq | \OO_{r'}\pa{\bX}| = r' .\] 
+ Indeed, notice that $\tau(x) \geq 1$ when $x<\mu$, which is the case by definition of $\Or(\cdot)$. Therefore, we have the desired equations for all $r\leq | \arms^-_T|$ at the round $T$.
+
+
+By induction, we assume a round $t$ such that $\oracle$ verifies for all $r\leq |\arms_{t+1}^-|$, 
+\begin{equation*}
+\PP{r_{t+1:T}(\oracle) \geq r| \Ftpone} =  \PP{\sum_{x \in \Ortpone} \tau(x) \leq T - t  \Bigg| \Ftpone}. 
+\end{equation*}
+
+Since $\Tpi_{t}$ follows the oracle after the round $t$, we have,
+\begin{equation}
+\label{eq:induction-lemma}
+\PP{r_{t+1:T}(\Tpi_t) \geq r| \Ftpone} =  \PP{\sum_{x \in \Ortpone} \tau(x) \leq T - t  \Bigg| \Ftpone}. 
+\end{equation} 
+
+We decompose the probability at the round $t$ on either arm $i_t$ reaches the threshold at the round $t$ or not, 
+ \begin{align}
+ &\PP{r_{t:T}(\Tpi_t) \geq r| \Ft\land i_t \in \armsbelow} \nonumber\\
+ &\qquad \quad = \EE{ \ind{\mu_{i_t,t+1} \geq \mu} \PP{r_{t+1:T}(\Tpi_t) \geq r-1| \Ftpone}| \Ft \land i_t\in \armsbelow}\nonumber \\
+& \qquad \qquad + \EE{ \ind{\mu_{i_t,t+1} < \mu} \PP{r_{t+1:T}(\Tpi_t) \geq r| \Ftpone} | \Ft\land i_t\in \armsbelow}. 
+\label{eq:split-on-muit}
+ \end{align}
+%
+We start with the first term in the sum. When $\mu_{i_t,t+1} \geq \mu$, we can write,
+\begin{align}
+&\PP{r_{t+1:T}(\Tpi_t) \geq r-1| \Ftpone} \\
+&\qquad \qquad= \PP{\sum_{x \in \Ormonetpone} \tau(x) \leq T - t \Bigg| \Ftpone}\nonumber\\
+&\qquad \qquad=  \PP{ \tau(\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}})+ \sum_{x \in \Ormonetpone} \tau(x) \leq T -t \Bigg| \Ftpone}\nonumber \\
+&\qquad \qquad=  \PP{ \tau(\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}})+ \sum_{x \in \Ormonetit} \tau(x) \leq T - t \Bigg| \Ftpone}.
+\label{eq:muit-above-mu}
+\end{align}
+The first equality follows from Equation~\ref{eq:induction-lemma}. The second equality follows because $\tau(\max{\mu_{i_t,t+1}, \mu^{r}_{t}}) = \tau(\mu_{i_t,t+1}) = 0$ when $\mu_{i_t,t+1} \geq \mu > \mu^{r}_{t}$. The last equality follows because since $\mu_{i_t,t+1} \geq \mu \implies \mu_{i_t,t+1} \notin\Ormonetpone$. Hence,  $\Ormonetpone = \Ormonetponeit$. Moreover, because the transitions are rested, $\Ormonetponeit = \Ormonetit$. 
+
+For the second term in the sum - when $\mu_{i_t, t+1} < \mu$ - we can write, 
+\begin{align}
+&\PP{r_{t+1:T}(\Tpi_t) \geq r| \Ftpone}\nonumber \\
+&\qquad \qquad = \PP{\sum_{x \in \Ortpone} \tau(x) \leq T - t \Bigg| \Ftpone} \nonumber \\
+&\qquad \qquad= \PP{\tau(\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}})+\sum_{x \in \Ormonetit} \tau(x) \leq T - t \Bigg| \Ftpone}.
+\label{eq:muit-below-mu}
+\end{align}
+Again, we use Equation~\ref{eq:induction-lemma}. Then, we cut $\Ortpone$ in two: On the one hand, the $r-1$ largest values below the threshold excepted $\mu_{i_t,t}$, that is $\Ormonetponeit$. It is equal to $\Ormonetit$ by the rested assumption. On the other hand, the remaining value which is $\mu_{i_t,t+1}$ if $\mu_{i_t,t+1} \geq \mu^{r}_{t+1}$, or else $\mu^{r}_{t+1}$. In that second case, we have that $\mu^{r}_{t+1} > \mu_{i_t,t+1} \geq \mu_{i_t,t}$. Therefore, by the rested assumption, the $r$ largest values below the threshold remain the same between $t$ and $t+1$. Hence, we have that $\mu^{r}_{t+1} = \mu^r_{t}$.
+
+Notice that Equations~\ref{eq:muit-above-mu} and~\ref{eq:muit-below-mu} leads to the same result, independently on whether $\mu_{i_t,t+1} \geq \mu$ or not. Hence, we can rewrite Equation~\ref{eq:split-on-muit} to conclude the first part of the Lemma,
+ \begin{multline}
+ \PP{r_{t:T}(\Tpi_t) \geq r| \Ft\land i_t \in \armsbelow} \\= \PP{\tau(\max\pa{\mu_{i_t,t+1}, \mu^{r}_{t}})+\!\sum_{x \in \Ormonetit} \!\tau(x) \leq T - t \Bigg| \Ft\land i_t \in \armsbelow}.
+ \label{eq:conclusion-general}
+ \end{multline}
+
+Now, we look at the special case where $\Tpi_t$ selects an arm in $\Krt$. This is for instance the case of $\oracle$. We can rewrite Equation~\ref{eq:conclusion-general}, 
+ \begin{align*}
+ &\PP{r_{t:T}(\Tpi_t) \geq r| \Ft\land i_t \in \Krt} \\
+ &\qquad \qquad= \PP{\tau(\mu_{i_t,t+1})+\!\sum_{x \in \Ormonetit} \!\tau(x) \leq T - t \Bigg| \Ft\land i_t \in \Krt}\\
+ &\qquad \qquad= \PP{\tau(\mu_{i_t,t})+\!\sum_{x \in \Ormonetit} \!\tau(x) \leq T - t +1 \Bigg| \Ft\land i_t\in \Krt}\\
+ &\qquad \qquad= \PP{\!\sum_{x \in \Ort} \!\tau(x) \leq T - t +1 \Bigg| \Ft}.
+ \end{align*}
+ The first equation follows from Equation~\ref{eq:conclusion-general} with $i_t \in \Krt \implies \mu_{i_t,t+1} \geq \mu_{i_t,t} > \mu^r_{t}$. The second equation follows by Lemma~\ref{lem:tau+1}. Indeed, $T-(t+1)- \!\sum_{x \in \Ormonetit} \!\tau(x)$ is a $\pa{\Ft \land i_t}$-measurable random variable. The last equation is justified by $\mu_{i_t,t} \in \Ort \implies \Ort = \Ormonetit \cup \ev{\mu_{i_t,t}}$. Last, we notice that $\sum_{x \in \Ort} \tau(x)$ is $\Ft$-measurable and does not depend on which $i_t\in \Krt$, thus we drop the $i_t$ dependency.
+\end{proof}
+
+
+
+\begin{corollary}
+\label{cor:f-non-decreasing}
+$\PP{r_{t:T}(\oracle) \geq r| \Ft} = f(\Ort)$, with \\$f(\bx) \triangleq \PP{\!\sum_{j=1}^r \!\tau(x_j) \leq T-t+1}$ a non-decreasing function of its $r$ variables. 
+\end{corollary}
+\begin{proof}
+According to Lemma~\ref{lem:r-tau},
+  \begin{align*}
+ \PP{r_{t:T}(\oracle) \geq r| \Ft} &= \PP{\!\sum_{x \in \Ort} \!\tau(x) \leq T - t + 1 \Bigg| \Ft}\\
+ &= \PP{\!\sum_{x \in \Ort} \!\tau(x) \leq T - t + 1 \Bigg| \Ort}.
+ \end{align*}
+Indeed $\ind{\sum_{x \in \Ort} \!\tau(x) \leq T - t + 1}$ is independent of $\Ft$ given $\Ort$. Hence,  $\PP{r_{t:T}(\oracle) \geq r| \Ft} $ is a function of the $r$ largest states below $\mu$. We study the CDF of the random variable $\sum_{x \in \Ort} \!\tau(x)$ given $\Ort$ that is, 
+   \begin{align*}
+ f_m(x_1, \dots, x_r) &= \PP{\!\sum_{j=1}^r \!\tau(x_j) \leq m}.
+ \end{align*}
+ 
+Notice that $\PP{r_{t:T}(\oracle) \geq r| \Ft} = f_{T-t+1}(\Ort)$. We want to show that $f_m$ is non-decreasing with each variable. Let's consider the $i$-th variable. We use that the probability of the sum of independent variables is the convolution of probabilities,
+  \[
+  f_m(x_1, \dots, x_r)  = \sum_{k=0}^m \PP{\!\sum_{j\neq i}^r \!\tau(x_j) =k  } * \PP{\tau(x_i) \leq m-k}.
+  \]
+Hence, $f_m$ is the sum of non-decreasing functions of $x_i$. Hence, $\PP{r_{t:T}(\oracle) \geq r| \Ft}$ is non decreasing with respect to any variable $\mu_t^i \in \Ort$ (the others being fixed).
+\end{proof}
+\begin{lemma}
+\label{lem:stoch-dom-monotone}
+Let f a non-decreasing function. Let $X$ and $Y$ two random variables with probability densities $\ev{p_x, p_y}$ such that $p_x \succeq p_y$. Then, 
+\[
+\EE{f(X)} \geq \EE{f(Y)}.
+\]
+\end{lemma}
+\begin{proof}
+This is a standard result for stochastic dominance that we show for completion. The key argument is that stochastic dominance implies a monotone coupling between the two distributions. Indeed, let 
+$X(z)= F_{p_x}^{-1}(z)$ and $Y(z)= F_{p_y}^{-1}(z)$ with $z$ a random variable uniformly drawn in $\bra{0,1}$. We do have that $X$ and $Y$ are drawn with respective probability $p_x$ and $p_y$. Moreover, since $F_{p_x}\leq F_{p_y}$ (stochastic dominance), we can write that $X(z)\geq Y(z)$. 
+
+Now we consider the expectation of a non decreasing function $f$, 
+\[ \EE{f(X) -f(Y)} = \int_0^1 f(X(z)) - f(Y(z)) dz \geq 0.\]
+\end{proof}
+
+\section{What does random progression mean? }
+One of the main differences with rotting bandits is that evolution is not deterministic anymore. From the formal point of view, it is an extension of the setup, as deterministic evolution is a special case of stochastic evolution. Yet, it is not clear what is the meaning of a random progression of the student. In this section, we give different interpretations of the transition operator $\Tp$ and we discuss the possibility to measure it and test our different assumptions. 
+
+Uncertainty is often modeled with classical tools from the probability theory. As noticed by \citet{lavenant2019how}, this theory does not provide a meaning to what probabilities mean. In fact, it does not even provide a procedure to assign probabilities in practice. It is merely a theory of how we can compute together probabilities to determine other probabilities. \citet{lavenant2019how} review three ways to assign a probability: the classical one, the frequentist one, and the subjectivist one. 
+
+The classical conception uses the indifference principle, which assumes that there exist some base events - the issues - which are equiprobable, and hence, one should count the number of issues that realize an event and divide by the total number of issues to get its probability. A classical example is the throw of a dice where we assume that each outcome has a probability $\nicefrac{1}{6}$. Notice that the characterization of what are the equiprobable issues does \emph{not} come from the probability theory. For instance, we can assume that the 11 outcomes of the sum of two dices are equiprobable and accurately use the probability theory. Yet, such theory will lead to wrong predictions when we compare to what happens in the real world \footnote{It is not clear what is a "wrong prediction" in an uncertain world. Indeed, when we try to relate probabilities to facts, the probability theory always says that facts are possible. Hence, to make a probabilistic theory testable (or refutable), it is philosophically necessary to interpret very likely / unlikely events as certain / uncertain. This is what Emile Borel calls the "loi unique du hasard" (unique law of chance).}. The fact that the correct equiprobable issues for two dices are the product ensemble of the ensembles of issues of each dice comes from external considerations: the symmetry in the geometry of one dice, the chaotic movement of rolling dices which "compensates" the fact that the dices are thrown together, etc. Can we use this classical conception to assign our probabilities $\Tp$? The example of the sum of two dices tells us that it is not because we don't know that we should assume uniform probability. The power of the classical method comes from the potential power of the indifference principle for the specific setup. It is not because physicists have no idea about how atoms in a gas are dispatched that they can make accurate predictions. It is in fact because they have a very accurate idea - all the micro configurations of atoms in a gas are equally likely -  that statistical physics can make accurate predictions. 
+
+The frequentist conception - arguably the most well known in the bandits' community - defines the probability empirically as the limit of the observed frequency of the outcome of a given protocol. Notice that this is a definition, not a Theorem (we refer to the discussion about the status of the law of large numbers with respect to the frequentist interpretation by \citet{lavenant2019how}). It is only the repetition of the protocol which gives a sense - and value - to a probability. 
+
+In our context, we do have a protocol: each incoming student on the website is a new realization of the protocol. In the frequentist interpretation, the transition probabilities $\Tp(x,x')$ should be interpreted as the fraction of students that reach level $x'$ after one question on the topic where there were at level $x$. Hence, maximizing our objectives in \emph{expectation} means that we maximize the objective on average across the population of students.
+
+The frequentist interpretation is often believed to be the most scientific due to the elegant way it arranges facts, experimental setup, and theory. However, relating probabilistic models to objective reality is not always straightforward. Assuming that the states $x$ and $x'$ is observable (they are not) and that we do have many students at each level $x$ (we don't, since there is an infinite number of $x$), we would be able to estimate $\Tp(x,x')$ by simply measuring the fraction of incoming students. If we want to actually test our assumptions on $\Tp$ for the frequentist interpretation, one should be able to evaluate the transition model under partial observability and continuous state space. This is not a straightforward operation \citep{shani2005model}. In fact, before the listed Assumptions~\ref{assum:rested} to~\ref{assum:stochastic-monotone}, we assume that the future is independent of the past given the present (the Markov property). While this assumption is popular, it is rarely tested \citep{bickenbach2001markov}, and, again, partial observability and continuous state space make tests more challenging.
+
+There also exist subjective interpretations of probabilities. For instance, \citet{lavenant2019how} advertise the interpretation of \citet{definetti1972probability}: probabilities are the amount an individual is ready to bet on an event if they are rewarded by one if the event occurs. This interpretation is \emph{antirealistic} as a probability does not have to match the facts in any way: there is no need for the gambler to be good. The interest of this interpretation is that we can recover the rules of probability calculus by assuming rational gambler. For instance, the fact that probabilities are normalized to one is a consequence that no one wants to accept a bet where he or she is sure to lose (for a well-chosen weighting scheme on the different bets). In this interpretation, probability theory is a way to enforce coherence in one's system of belief. For instance, our Theorem~\ref{th:FLUT-opt} states that if the bets we are ready to accept on the student progression satisfies our different assumptions then we should accept a better odds for the bet "policy $\oracle$ will achieve at least $r$ rewards" than for "any other policy $\Tpi$ will achieve at least $r$ rewards". 
+\section{Learning Perspectives}
+\subsection{Regret}
+Like in the previous chapters, we define the cumulative regret with respect to the optimal policy, 
+\[
+R^c_T(\pi) \triangleq \EE{J_T(\oracle)} - J_T(\pi).
+\]
+We also define the simple regret, 
+\[
+R^s_T(\pi) \triangleq \EE{r_T(\oracle)} - r_T(\pi).
+\]
+\subsection{Counter-examples and a new learning assumption}
+We present two counter-examples which shows that the regret can scale linearly with $T$ when the arms are allowed to stagnate.
+\subsubsection{Counter-example 1: Stagnating arms near the threshold}
+We consider a two-arm game with deterministic transitions: each pull add a quantity $\epsilon>0$ to the arm's state, 
+\[
+\forall i \in \arms,\  \forall n \in \ev{1, \dots, T},\ \mu_i(n+1) = \mu_i(n) + \epsilon.
+\]
+It verifies all our Assumptions~\ref{assum:rested} to~\ref{assum:stochastic-monotone}. We consider two sets of initial conditions, 
+\begin{align}
+&\mu_1^1(0) = \mu, \qquad &\mu_2^1(0) = \mu - \frac{2T\epsilon}{3} \CommaBin\label{eq:pb1}\\
+&\mu_1^2(0) = \mu - \frac{(T+1)\epsilon}{3}\CommaBin \qquad &\mu_2^2(0) = \mu - \frac{2T\epsilon}{3}\cdot\label{eq:pb2}
+\end{align}
+On the problem 1 (Eq.~\ref{eq:pb1}), $\oracle$ pulls arm 2 $\ceil{\nicefrac{2T}{3}}$ times. Then, all the arms are above the threshold and $\oracle$ plays randomly. Hence, $r_T(\oracle)=2$ and $J_T(\oracle) = T +  \floor{\nicefrac{T}{3}}$. On the problem 2 (Eq.~\ref{eq:pb2}), $\oracle$ pulls arm 1 $\ceil{\nicefrac{T+1}{3}}$ times and then arm $2$ until the end of the game. Hence, $r_T(\oracle)=1$ and $J_T(\oracle) = T -  \floor{\nicefrac{T+1}{3}}$.
+
+We consider the case $\epsilon \rightarrow 0$.  If $N_{1,T} \geq \ceil{\nicefrac{T+1}{3}}$ on problem 1, $R^c_T(\pi)= \floor{\nicefrac{T}{3}}$ and $R^s_T(\pi)= 1$. Moreover, if $N_{1,T} < \ceil{\nicefrac{T+1}{3}}$ on problem 2, $R^c_T(\pi)\geq \ceil{\nicefrac{2T}{3}} - \ceil{\nicefrac{T+1}{3}}$ ($R^s_T(\pi)$ can take the value $0$ or $1$). For $\epsilon$ small enough, the two problems cannot be distinguished in the presence of noise ($\sigma >0$) and hence, any algorithm would suffer linear regret in the worst-case.
+
+\subsubsection{Counter-example 2: Infinitely close arms with diverging behaviors}
+We consider a two-arm game with deterministic transitions:
+\[
+\forall i \in \arms,\  \forall n \in \ev{1, \dots, T},\ \mu_i(n+1) = f(\mu_i(n)) \text{ with } f(x) = \begin{cases}
+0 &\text{if } x = 0\\
+x +\epsilon &\text{if } x \leq \frac{3T\epsilon}{4} \\
+\mu &\text{otherwise}
+\end{cases}\cdot
+\]
+We consider the following initial states,
+\[
+\mu_1(0) = 0, \qquad \mu_2(0) = \epsilon.
+\]
+Hence, arm 1 is stationary and arm 2 will need $\ceil{\frac{3T}{4}}-1$ pulls to reach the threshold. Hence, $J_T(\oracle) \sim \nicefrac{T}{4}$ and $r_T(\oracle) =1$. 
+
+For $\epsilon$ small enough, the two arms cannot be distinguished with reasonable confidence before arm 2 reaches the threshold. Since we cannot pull both arms $\sim \nicefrac{3T}{4}$, we cannot do much better than betting on one of the arms, and suffering $R_T(\pi) \sim \nicefrac{T}{4}$ in half of the cases.
+
+
+\subsubsection{A new assumption}
+The two counter-examples show that stagnation is a problem for learning. We make a new assumption to limit this kind of behavior,
+
+\begin{assumption}
+\label{assum:min-increase}
+Let $\epsilon>0$. Let $y \leq x +\epsilon$. Then, $\Tp(x,y) =0$.
+\end{assumption}
+
+Notice that this assumption is quite strong as it assumes that the selected state is always progressing by at least $\epsilon$. Instead, we could assume that the state progresses by at least $\epsilon$ in expectation. 
+
+We hope to derive an $\epsilon$-dependent lower bound by adapting the previous counter-examples. However, we can already state that small values of $\epsilon$ correspond to the hardest cases. For $\epsilon \sim T^{\nicefrac{-3}{2}}$, the worst-case regret is linear. 
+
+\subsection{Focus on the Largest Under the Threshold with Exploration ({\FLUTE})}
+\subsubsection{Upper and lower confidence bounds on an increasing sequence }
+In Subsection~\ref{ss:rawucb}, we use the fact that the rewards were decreasing in rotting bandits to compute an upper-confidence bound on the value of the next pull. Following the same idea, we use the increasing Assumption~\ref{assum:increase} to derive a lower-confidence bound on the value of the last pull at a round $t$, and an upper-confidence bound on the value of the first pull of each arm.
+\paragraph{Estimators}
+As in Subsection~\ref{ss:SWA}, we define the average of the last $h$ observations of arm $i$ at time $t$ for learning policy $\pi$ as
+\begin{equation*}
+\widehat{\mu}_i^h(t,\pi) \triangleq \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,s}\!>\! N_{i,t-1}\! -\! h } o_{s},
+\end{equation*}
+and the average of the associated means as
+\begin{equation*}
+\bar{\mu}_i^h(t,\pi) \!\triangleq\! \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,\,s}\!>\! N_{i,\,t-1}\! -\! h } \mu_{i}(N_{i,s-1})\,.
+\end{equation*}
+ 
+Similarly, we also define the average of the first $h$ observations of arm $i$ at time $t$ for policy $\pi$ as,
+\begin{equation*}
+\widehat{\mu}_i^{1:h}(t,\pi) \triangleq \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,s} \!\leq\! h } o_{s},
+\end{equation*}
+and the average of the associated means as
+\begin{equation*}
+\bar{\mu}_i^{1:h}(t,\pi) \!\triangleq\! \frac{1}{h}\sum_{s=1}^{t-1} \mathbbm{1}\pa{\pi\pa{s}\! =\! i \land N_{i,s} \!\leq\! h} \mu_{i}(N_{i,s-1})\,.
+\end{equation*}
+
+
+We recall that $c(h,\delta) = \sqrt{2\sigma^2\log\pa{2/\delta}/h}$. We define the $\ucb$ and $\lcb$ statistics,
+\begin{align}
+&\ucb(i,\delta) = \min_{h\leq N_{i,t-1}} \widehat{\mu}_i^{1:h}(t,\pi) +c (h, \delta),\nonumber\\
+&\lcb(i,\delta) = \max_{h\leq N_{i,t-1}} \widehat{\mu}_i^{h}(t,\pi) - c (h, \delta).\label{eq:lcbucb}
+\end{align}
+
+\subsubsection{{\FLUTE} algorithm}
+We present the Focus on the Largest Under the Threshold with Exploration (\FLUTE) in Algorithm~\ref{alg:flute}. During each phase $p$, \FLUTE (1) explore to find a good (hopefully, the best) arm below the threshold; and (2) focus on this arm until we are sure enough that its value is above the threshold. 
+
+At Line~\ref{algline:flute-armsbelow}, the algorithm estimates $\armsbelow$. More precisely, it returns all the arms whose $\lcb$ on their last value is above $\mu$. It corresponds to the arms for which we are not sufficiently sure that they are in $\armsabove$. Since we want to stop pulling the arms in $\armsabove$, it is important to be confident that they indeed reach the threshold. That is why we discard $i_p$ if it is not in $\hat{\armsbelow}$ (Line~\ref{algline:flute-phase-cond}). We also increase the phase counter $p$ by the number of arms which are detected above the threshold between $t-1$ and $t$ (Line~\ref{algline:flute-phase-increase}).
+
+At Line~\ref{algline:flute-ip-select}, we select (if it exists) $i_p$, an arm whose $\lcb$ on the last value is at most at a distance $\Delta$ from the best $\ucb$  among arms in $\hat{\armsbelow}$. By doing so, we guarantee that the selected arm is not too far from the best arm under the threshold selected by \FLUT.
+
+When this arm does not exist, we continue our round-robin exploration (Line~\ref{algline:flute-pull-it}). In practice (or maybe in theory), it may be interesting to filter out the arms for which we are sure that they are not among the best ones. For instance, we suggest restricting the round-robin exploration to the arms in $\ev{i \in \hat{\armsbelow} | \ucb(i,\delta_T) \geq \max_{j \in \hat{\armsbelow}} \lcb(j, \delta_T )}$. Notice that when there are no arms in this set, then there is at least one candidate for arm $i_p$ (Line~\ref{algline:flute-ip-select}).
+
+\begin{figure*}[ht]
+\begin{minipage}{\textwidth}
+\renewcommand*\footnoterule{}
+\begin{savenotes}
+\begin{algorithm}[H]
+\caption{Focus on the Largest Under the Threshold with Exploration ({\FLUTE})}
+\label{alg:flute}
+\begin{algorithmic}[1]
+\Require $\mu$, $\Delta$, $\delta_T$
+\State $p \leftarrow 1$
+\State $i_p \leftarrow \Null$ 
+\State $\hat{\arms_{0}^-} \leftarrow \arms$
+\For{$t \gets 1, 2, \dots, K \do $}{\footnotesize \Comment{\emph{Pull each arm once}}}
+	\State \textsc{Pull}  $i_t \gets t$; \textsc{Receive} $o_{t}$
+\EndFor
+\For{$t \gets K+1, K+2, \dots \do $}
+		\State \textsc{Compute} $\ev{\lcb(i,\delta_T), \ucb(i,\delta_T)}_{i,\in \arms}$ {\footnotesize \Comment{\emph{Equation~\ref{eq:lcbucb}}}}
+		\State $\hat{\armsbelow} \leftarrow \left\{i \in \arms | \lcb(i,\delta_T) \leq \mu \right\}$\label{algline:flute-armsbelow}
+		\State $p \leftarrow p + | \hat{\arms_{t-1}^-} \setminus \hat{\armsbelow}|$ 	\label{algline:flute-phase-increase}
+		\If{$i_p$ is not \Null  {\bf{ and}} $i_p \notin \armsbelow$}\label{algline:flute-phase-cond}
+		\State $i_p \leftarrow \Null$ 
+	\EndIf
+	\If{$i_p$ is \Null}
+	\State $i_p \in \ev{i \in \hat{\armsbelow} | \max_{j \in \hat{\armsbelow}} \ucb(j,\delta_T) - \lcb(i,\delta_T) \leq \Delta}$\footnote{One can choose the tie break selection rule arbitrarily, e.g. by selecting the arm with the smallest index.};\label{algline:flute-ip-select}
+	\EndIf
+	\If{$i_p$ is \Null}
+	\State $i_t \in \argmin_{i \in \hat{\armsbelow}} N_{i,t}$\label{algline:flute-pull-it}
+	\Else 
+	\State $i_t \leftarrow i_p$ \label{algline:flute-pull-ip}
+	\EndIf
+	\State \textsc{Pull} $i_t $ \textsc{Receive} $o_{t}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{savenotes}
+\end{minipage}
+\end{figure*}
+
+
+
+\subsection{Regret upper bound perspectives}
+For simplicity, we consider the case where all the arms are below the threshold at the beginning. Without loss of generality, we assume that arms are ordered by their starting value. 
+
+Like in the previous chapters, we can design a high probability event such that our estimators are well concentrated. On this high probability event, we know that arms which are not in $\hat{\armsbelow}$ are above the threshold. It can be interesting to upper-bound the expected duration of the phases of \FLUTE compared to the ones of \FLUT. The phase $p$ of \FLUT is simply the number of rounds it takes to reach the threshold from $\mu_{p}(0)$. There are three sources of overhead for the duration of the phase $p$ of \FLUTE. 
+
+First, \FLUTE spends pulls in its exploration phase. The exploration stops when an arm $i_p$ is found. Even in the case where the arms are near-stationary, the condition at Line~\ref{algline:flute-ip-select} will be fulfilled when the confidence bound $c(N_{expl},\delta_T)$ becomes comparable with $\Delta$. (We conjecture : $4c(N_{expl}, \delta_T) \leq \Delta$). It gives an upper-bound on the number of exploration pulls $N_{expl}$ and finally on the delay $KN_{expl}$.
+
+Second, the arm $i_p$ which is selected is not the best below the threshold as in \FLUT. Yet, we conjecture that $\mu_{i_p}(\Nit) \geq \mu_{p}(0) -\Delta$. With the Assumption~\ref{assum:min-increase}, an imprecision of size $\Delta$ costs $\nicefrac{\Delta}{\epsilon}$ in number of pulls. Notice that $\Delta$ is a parameter of our algorithm, and we should tune its value to balance the two aforementioned costs.
+
+Third, in the learning setup, there is a delay to detect when an arm is above the threshold. Thanks to our Assumption~\ref{assum:min-increase}, the state cannot stay near $\mu$ for too long. After $N_{detect}$ pulls, we conjecture that
+$\mu +\nicefrac{N_{detect}\epsilon}{2} - 2c(N_{detect}, \delta_T) \leq \lcb(i, \delta_T)$ due to this minimal increase. Hence, the condition at Line~\ref{algline:flute-phase-cond} will be necessary fulfilled when $N_{detect}\epsilon$ has the same order of magnitude than $c(N_{detect}, \delta_T)$.
+
+We are still quite far to get an upper bound on $R^{c}_T$ (or $R^{s}_T$). Indeed, we need to characterize precisely how these overheads add together when we evaluate the total reward at round $T$.
+
+\section{Practical considerations for ITS applications}
+The fact that \FLUTE focuses on a given topic after the exploration phase is an interesting feature for ITS applications. Yet, the initial exploration phase may be very long if we try to learn from scratch for each student. 
+
+\subsection{Including prior knowledge}
+If one topic is often easier than the others for students, we would like to use this prior information to speed up the exploration. Using Bayesian statistics instead of frequentist tools is a natural way to work with prior information (see Subsection~\ref{ss:bayes} for the stationary bandits case).
+
+How can we learn the prior? Knowledge Tracing \citep{desmarais2012review} is the application of (often online) supervised learning to the prediction of the student's answer given the question and past interactions. \citet{wilson2016back}  design shallow models which outperform deep networks \citep{piech2015deep, khajah2016how, xiong2016going} in their experiments. These models use some variations of a classical student model - the item response theory - with a Bayesian learning method. In its simplest form, Item Response Theory \citep{hambleton2013item} associates to each student a proficiency $\theta_s$ and to each exercise a difficulty $d_i$ such that the difference $\theta_s - d_i$ is fed in a logistic model to output the probability of success. \citet{wilson2016back} add a hierarchical Bayesian structure: each item difficulty have a prior which depends on the topic difficulty which is a parameter drawn from an uninformative Gaussian prior.
+
+We could replace the frequentist confidence levels in \FLUTE by Bayesian credible intervals on the parameters of a similar model. Indeed, we can estimate credible intervals with MCMC sampling, which is often used in Bayesian learning \citep{andrieu2003introduction}. This approach would incorporate prior knowledge (learned from the other students' data) and enable shared knowledge between arms.
+
+
+\subsection{The exercises population is finite}
+On Afterclasse, there are roughly 20 questions per couple topic-difficulty. Notice that our confidence band is quite large for this number of samples: $c(h=20,\delta_t = 10\%)\sim 0.16$. Hence, even if a student answers the 20 questions correctly, its $\lcb$ on the topic will be smaller than $0.85$. It is a problem if the targeted $\mu$ is above 0.85. We suggest using the ratio of answered questions as a multiplicative factor in front of the confidence band in the $\lcb$ / $\ucb$ definition (Equation~\ref{eq:lcbucb}). Hence, when a window $h$ includes all the questions, the associated confidence level becomes the empirical average (no uncertainty). 
+
+\subsection{Tuning $\Delta$ with $\epsilon$}
+We have already noticed that $\Delta$ should be tuned theoretically according to $\epsilon$: the smaller the $\epsilon$, the more accurate we need to be in the exploration phase. However, in practice, we do not know $\epsilon$. We can estimate from data the average progression of students per question, but (1) it is not the minimum progression, and (2) it is not student-specific. 
+
+We suggest to overestimate $\epsilon$ (and, hence, $\Delta$) at the beginning of the game. It would reduce the exploration phase and with the usage of prior information, it is even possible that the algorithm directly starts to exploit an arm. We can decrease the value of $\Delta$ if the student starts to wheel-spin, that is when a phase lasts for too long. We believe that for an ITS application it is indeed better to take a guess and start focusing on a topic, and explore only if the student shows unexpected difficulties.
+
+\subsection{Managing difficulty with a Zone of Proximal Development}
+In Section~\ref{sec:beyond}, we mention that the Rotting Bandits framework can hardly take different difficulties into account. In the current framework, we can use \FLUTE together with the Zone of Proximal Development paradigm \citep{luckin2001designing, clement2015multi}. The arms are the different topic-difficulty pairs, but we locked the advanced difficulties at the beginning. We unlock them when the student validates the easier difficulty associated with that topic, that is when the easier arm is not in $\hat{\armsbelow}$.

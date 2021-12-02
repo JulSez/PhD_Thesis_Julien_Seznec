@@ -1,0 +1,583 @@
+% !TEX root = main.tex
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\arginf}{arg\,inf}
+\DeclareMathOperator*{\sgn}{sgn}
+%\DeclareMathOperator{\regret}{regret}
+\DeclareMathOperator{\polylog}{polylog}
+\DeclareMathOperator{\logloglog}{logloglog}
+\DeclareMathOperator{\polyloglog}{polyloglog}
+
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\renewcommand{\d}[1]{\ensuremath{\operatorname{d}\!{#1}}}
+
+\newcommand{\set}[1]{\left\{#1\right\}}
+%\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+%\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\newcommand{\ceil}[1]{\left\lceil#1\right\rceil}
+\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+
+%\newcommand{\ceil}[1]{\lceil#1\rceil}
+
+\newcommand{\II}[1]{\mathds{1}_{\left\{#1\right\}}}
+\newcommand{\I}{{\mathds{1}}}
+
+
+%arrows 
+\newcommand{\ra}{\rightarrow}
+
+%distributions 
+\newcommand{\Bernoulli}{\mathrm{Bernoulli}}
+
+
+\newcommand{\specialcell}[2][c]{%
+ \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+%\newtheorem{assumption}{Assumption}
+%\newtheorem{lemma}{Lemma}
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{definition}{Definition}
+%\newtheorem{corollary}{Corollary}
+%\newtheorem{remark}{Remark}
+
+
+% \newcommand{\R}{I\!\! R}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\realset}{\mathbb{R}}
+
+\newcommand{\NN}{{\mathbb N}}
+\newcommand{\1}{\mathds{1}}
+\newcommand{\bOne}{{\bf 1}}
+\newcommand{\bZero}{{\bf 0}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\EE}[1]{\mathbb{E}\left[#1\right]}
+\newcommand{\EEt}[1]{\mathbb{E}_t\left[#1\right]}
+\newcommand{\EEs}[2]{\mathbb{E}_{#1}\left[#2\right]}
+\newcommand{\EEc}[2]{\mathbb{E}\left[#1\left|#2\right.\right]}
+\newcommand{\EEcc}[2]{\mathbb{E}\left[\left.#1\right|#2\right]}
+\newcommand{\EEcct}[2]{\mathbb{E}_t\left[\left.#1\right|#2\right]}
+\newcommand{\PP}[1]{\mathbb{P}\left[#1\right]}
+\newcommand{\PPt}[1]{\mathbb{P}_t\left[#1\right]}
+ \newcommand{\PPc}[2]{\mathbb{P}\left[#1\left|#2\right.\right]}
+\newcommand{\PPcc}[2]{\mathbb{P}\left[\left.#1\right|#2\right]}
+\newcommand{\PPct}[2]{\mathbb{P}_t\left[#1\left|#2\right.\right]}
+\newcommand{\PPcct}[2]{\mathbb{P}_t\left[\left.#1\right|#2\right]}
+\newcommand{\EEempty}{\mathbb{E}}
+\newcommand{\PPempty}{\mathbb{P}}
+%parens
+\newcommand{\pa}[1]{\left(#1\right)}
+\newcommand{\sqpa}[1]{\left[#1\right]}
+\newcommand{\bra}[1]{\left[#1\right]}
+\newcommand{\ac}[1]{\left\{#1\right\}}
+\newcommand{\ev}[1]{\left\{#1\right\}}
+\newcommand{\card}[1]{\left|#1\right|}
+
+
+\newcommand{\normtwo}[1]{\|#1\|_2}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\onenorm}[1]{\norm{#1}_1}
+\newcommand{\infnorm}[1]{\norm{#1}_\infty}
+
+\newcommand{\abs}[1]{\left|#1\right|}
+
+\newcommand*{\MyDef}{\mathrm{\tiny def}}
+\newcommand*{\eqdefU}{\ensuremath{\mathop{\overset{\MyDef}{=}}}}% Unscaled version
+\newcommand*{\eqdef}{\mathop{\overset{\MyDef}{\resizebox{\widthof{\eqdefU}}{\heightof{=}}{=}}}}
+%\newcommand{\eqdef}{\stackrel{{\rm def}}{=}}
+%\newcommand{\eqdef}{\stackrel{{\rm \tiny def}}{=}}
+\newcommand{\transpose}{^\mathsf{\scriptscriptstyle T}}
+
+%Calligraphic Shorthands
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\Ft}{\mathcal{F}_t}
+\newcommand{\Ftmone}{\mathcal{F}_{t-1}}
+\newcommand{\Ftpone}{\mathcal{F}_{t+1}}
+\newcommand{\FT}{\mathcal{F}_T}
+\newcommand{\FTmone}{\mathcal{F}_{T-1}}
+\newcommand{\FTpone}{\mathcal{F}_{T+1}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cI}{\mathcal{I}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\cK}{\mathcal{K}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\calL}{\cL}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\tcO}{\widetilde{\cO}}
+\newcommand{\OO}{\mathcal{O}}
+\newcommand{\tOO}{\wt{\OO}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\Sw}{\mathcal{S}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\T}{\cT}
+\newcommand{\cU}{\mathcal{U}}
+\newcommand{\cV}{\mathcal{V}}
+\newcommand{\cW}{\mathcal{W}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\X}{\cX}
+\newcommand{\cY}{\mathcal{Y}}
+\newcommand{\cZ}{\mathcal{Z}}
+
+%Bolds Shorthands
+\newcommand{\bA}{{\bf A}}
+\newcommand{\bb}{{\bf b}}
+\newcommand{\bB}{{\bf B}}
+\newcommand{\bc}{{\bf c}}
+\newcommand{\bC}{{\bf C}}
+\newcommand{\bD}{{\bf D}}
+\newcommand{\bg}{{\bf g}}
+\newcommand{\bG}{{\bf G}}
+\newcommand{\bI}{{\bf I}}
+\newcommand{\bM}{{\bf M}}
+\newcommand{\bO}{\boldsymbol{O}}
+\newcommand{\bp}{\boldsymbol{p}}
+\newcommand{\bP}{{\bf P}}
+\newcommand{\br}{{\bf r}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bQ}{{\bf Q}}
+\newcommand{\be}{{\bf e}}
+\newcommand{\bff}{{\bf f}}
+\newcommand{\bi}{{\bf i}}
+\newcommand{\bk}{{\bf k}}
+\newcommand{\bK}{{\bf K}}
+\newcommand{\bL}{{\bf L}}
+\newcommand{\bs}{{\bf s}}
+\newcommand{\bq}{{\bf q}}
+\newcommand{\bu}{{\bf u}}
+\newcommand{\bU}{{\bf U}}
+\newcommand{\bv}{{\bf v}}
+\newcommand{\bV}{{\bf V}}
+\newcommand{\bw}{{\bf w}}
+\newcommand{\bW}{{\bf W}}
+\newcommand{\by}{{\bf y}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bX}{{\bf X}}
+\newcommand{\bZ}{{\bf Z}}
+
+\newcommand{\eps}{\varepsilon}
+\renewcommand{\epsilon}{\varepsilon}
+\renewcommand{\hat}{\widehat}
+\renewcommand{\tilde}{\widetilde}
+\renewcommand{\bar}{\overline}
+
+\newcommand{\balpha}{{\boldsymbol \alpha}}
+\newcommand{\talpha}{\widetilde{\indn}}
+\newcommand{\btheta}{{\boldsymbol \theta}}
+\newcommand{\tTheta}{{\widetilde\Theta}}
+\newcommand{\bdelta}{{\boldsymbol \delta}}
+\newcommand{\bDelta}{{\boldsymbol \Delta}}
+\newcommand{\bLambda}{{\boldsymbol \Lambda}}
+\newcommand{\bSigma}{{\boldsymbol \Sigma}}
+\newcommand{\Bmu}{{\boldsymbol \mu}}
+\newcommand{\bxi}{{\boldsymbol \xi}}
+\newcommand{\bell}{\boldsymbol \ell}
+
+\newcommand{\nothere}[1]{}
+\newcommand{\moveb}{\\ \bigskip}
+
+% bandits
+\newcommand{\hloss}{\hat\ell}
+\newcommand{\bloss}{\boldsymbol  \ell}
+\newcommand{\hbl}{\hat{\bloss}}
+\newcommand{\hbL}{\wh{\bL}}
+\newcommand{\wh}{\widehat}
+\newcommand{\ti}{_{t,i}}
+\newcommand{\wt}{\widetilde}
+
+
+
+%% from single papers, but merged here
+% algo names
+\usepackage{xspace}
+\renewcommand{\ttdefault}{lmtt}
+%other algos
+\newcommand{\LP}{\texttt{LP}\xspace}
+\newcommand{\CMG}{\texttt{CMG}\xspace}
+%bandits
+\newcommand{\FPL}{\texttt{FPL}\xspace}
+\newcommand{\FTL}{\texttt{FTL}\xspace}
+\newcommand{\OMD}{\texttt{OMD}\xspace}
+\newcommand{\FTRL}{\texttt{FTRL}\xspace}
+\newcommand{\TS}{\texttt{TS}\xspace}
+\newcommand{\UCB}{\texttt{UCB}\xspace}
+\newcommand{\UCRLtwo}{\texttt{UCRL2}\xspace}
+\newcommand{\ADAUCB}{\texttt{ADA-UCB}\xspace}
+\newcommand{\BayesUCB}{\texttt{Bayes-UCB}\xspace}
+\newcommand{\MOSS}{\texttt{MOSS}\xspace}
+\newcommand{\MOSSa}{\texttt{MOSS-anytime}\xspace}
+\newcommand{\MOTS}{\texttt{MOTS}\xspace}
+\newcommand{\UCBE}{\texttt{UCB-E}\xspace}
+\newcommand{\UCBV}{\texttt{UCB-V}\xspace}
+\newcommand{\ImprovedUCB}{\texttt{ImprovedUCB}\xspace}
+\newcommand{\KLUCB}{\texttt{KL-UCB}\xspace}
+\newcommand{\KLUCBswitch}{\texttt{KL-UCB-switch}\xspace}
+\newcommand{\klUCB}{\texttt{kl-UCB}\xspace}
+\newcommand{\KLUCBpp}{\texttt{KL-UCB++}\xspace}
+\newcommand{\klucb}{\texttt{KL-UCB}\xspace}
+\newcommand{\CUCB}{\texttt{CUCB}\xspace}
+\newcommand{\EXP}{\texttt{Exp3}\xspace}
+\newcommand{\REXP}{\texttt{Rexp3}\xspace}
+\newcommand{\EXPfour}{\texttt{Exp4}\xspace}
+\newcommand{\INF}{\texttt{INF}\xspace}
+\newcommand{\TsallisINF}{\texttt{Tsallis-INF}\xspace}
+\newcommand{\exph}{\EXP}
+%linear bandits
+\newcommand{\LinearTS}{\texttt{LinearTS}\xspace}
+\newcommand{\ThompsonSampling}{\texttt{ThompsonSampling}\xspace}
+\newcommand{\SpectralEliminator}{\texttt{\textcolor[rgb]{0.5,0.2,0}{SpectralEliminator}}\xspace}
+\newcommand{\LinearEliminator}{\texttt{\textcolor[rgb]{0.5,0.2,0}{LinearEliminator}}\xspace}
+\newcommand{\LinUCB}{\texttt{LinUCB}\xspace}
+\newcommand{\LinRel}{\texttt{LinRel}\xspace}
+\newcommand{\KernelUCB}{\texttt{\textcolor[rgb]{0.5,0.2,0}{KernelUCB}}\xspace}
+\newcommand{\SupKernelUCB}{\texttt{\textcolor[rgb]{0.5,0.2,0}{SupKernelUCB}}\xspace}
+\newcommand{\GPUCB}{\texttt{GP-UCB}\xspace}
+\newcommand{\OFUL}{\texttt{OFUL}\xspace}
+\newcommand{\OPM}{\texttt{\textcolor[rgb]{0.5,0.2,0}{OPM}}\xspace}
+%graph bandits
+\newcommand{\CLUB}{\texttt{CLUB}\xspace}
+\newcommand{\GOBLin}{\texttt{GOB.Lin}\xspace}
+\newcommand{\UCBN}{\texttt{UCB-N}\xspace}
+\newcommand{\UCBmaxN}{\texttt{UCB-MaxN}\xspace}
+\newcommand{\GraphMOSS}{\texttt{\textcolor[rgb]{0.5,0.2,0}{GraphMOSS}}\xspace}
+\newcommand{\SpectralUCB}{\texttt{\textcolor[rgb]{0.5,0.2,0}{SpectralUCB}}\xspace}
+\newcommand{\CheapUCB}{\texttt{\textcolor[rgb]{0.5,0.2,0}{CheapUCB}}\xspace}
+\newcommand{\SpectralTS}{\texttt{\textcolor[rgb]{0.5,0.2,0}{SpectralTS}}\xspace}
+\newcommand{\SupLinRel}{\texttt{SupLinRel}\xspace}
+\newcommand{\SupLinUCB}{\texttt{SupLinUCB}\xspace}
+\newcommand{\imb}{\texttt{\textcolor[rgb]{0.5,0.2,0}{IMLinUCB}}\xspace}
+\newcommand{\NetBandits}{\texttt{NetBandits}\xspace}
+\newcommand{\BARE}{\texttt{\textcolor[rgb]{0.5,0.2,0}{BARE}}\xspace}
+\newcommand{\ELP}{\texttt{ELP}\xspace}
+\newcommand{\ELPP}{\texttt{ELP.P}\xspace}
+\newcommand{\expix}{\texttt{\textcolor[rgb]{0.5,0.2,0}{Exp3-IX}}\xspace}
+\newcommand{\expset}{\texttt{Exp3-SET}\xspace}
+\newcommand{\expdom}{\texttt{Exp3-DOM}\xspace}
+\newcommand{\expg}{\texttt{Exp3.G}\xspace}
+\newcommand{\fplbgr}{\texttt{FPL-BGR}\xspace}
+\newcommand{\fplix}{\texttt{\textcolor[rgb]{0.5,0.2,0}{FPL-IX}}\xspace}
+\newcommand{\comphedge}{\texttt{Component\-Hedge}\xspace}
+\newcommand{\hedge}{\texttt{Hedge}\xspace}
+\newcommand{\expxxx}{\texttt{\textcolor[rgb]{0.5,0.2,0}{Exp3-WIX}}\xspace}
+\newcommand{\expwix}{\texttt{\textcolor[rgb]{0.5,0.2,0}{Exp3-WIX}}\xspace}
+\newcommand{\expixa}{\texttt{Exp3-IXa}\xspace}
+\newcommand{\expixb}{\texttt{Exp3-IXb}\xspace}
+\newcommand{\expixt}{\texttt{Exp3-IXt}\xspace}
+\newcommand{\expcoop}{\texttt{Exp3-Coop}\xspace}
+\newcommand{\expres}{\texttt{\textcolor[rgb]{0.5,0.2,0}{Exp3-Res}}\xspace}
+
+%continuous bandits
+\newcommand{\StoSOO}{\texttt{\textcolor[rgb]{0.5,0.2,0}{StoSOO}}\xspace}
+\newcommand{\POO}{\texttt{\textcolor[rgb]{0.5,0.2,0}{POO}}\xspace}
+\newcommand{\DOO}{\texttt{DOO}\xspace}
+\newcommand{\SOO}{\texttt{SOO}\xspace}
+\newcommand{\Zooming}{\texttt{Zooming}\xspace}
+\newcommand{\UCT}{\texttt{UCT}\xspace}
+\newcommand{\HCT}{\texttt{HCT}\xspace}
+\newcommand{\SHOO}{\POO}
+\newcommand{\HOO}{\texttt{HOO}\xspace}
+\newcommand{\ATB}{\texttt{ATB}\xspace}
+\newcommand{\TZ}{\texttt{TaxonomyZoom}\xspace}
+\newcommand{\Direct}{\texttt{DiRect}\xspace}
+%extreme bandits
+\newcommand{\SiRI}{\texttt{\textcolor[rgb]{0.5,0.2,0}{SiRI}}\xspace}
+%planning "bandits"
+\newcommand{\olop}{\texttt{OLOP}\xspace}
+\newcommand{\stopalgo}{\texttt{StOP}\xspace}
+\newcommand{\metagrill}{\texttt{\textcolor[rgb]{0.5,0.2,0}{TrailBlazer}}\xspace}
+%polymatroid bandits
+\newcommand{\greedy}{\texttt{Greedy}\xspace}
+\newcommand{\epsilongreedy}{\texttt{$\epsilon$-Greedy}\xspace}
+\newcommand{\opm}{\texttt{\textcolor[rgb]{0.5,0.2,0}{OPM}}\xspace}
+
+\newcommand{\ForcingBalance}{\texttt{ForcingBalance}\xspace}
+\newcommand{\maxn}{\texttt{max}\xspace}
+\newcommand{\avgn}{\texttt{avg}\xspace}
+
+
+%kernelUCB
+\newcommand{\reg}{\gamma}
+\newcommand{\hmu}{\hat{\mu}}
+\newcommand{\bmu}{\bar{\mu}}
+%\newcommand{\hm}{\hat{\mu}}
+\newcommand{\hw}{\hat{w}}
+\newcommand{\hth}{\hat{\theta}}
+\newcommand{\hs}{\hat{\sigma}}
+\newcommand{\hepsilon}{\hat{\epsilon}}
+
+%RL
+\newcommand{\QLearning}{\normalfont\texttt{Q-Learning}\xspace}
+
+%graph bandit notation
+\newcommand{\etat}{\eta_t}
+\newcommand{\gammat}{\gamma_t}
+\newcommand{\nodes}{{\textcolor[rgb]{0.3,0.8,0.0}{N}}}
+\newcommand{\rounds}{T}
+\newcommand{\td}{{\textcolor[rgb]{0.6,0.0,0.6}{\tilde{d}}}}
+\newcommand{\matL}{{\textcolor[rgb]{0.6,0.0,0.6}{L}}}
+\newcommand{\matK}{{\textcolor[rgb]{0.6,0.0,0.6}{K}}}
+\newcommand{\effd}{{\textcolor[rgb]{0.6,0.0,0.6}{d}}}
+\newcommand{\effD}{{\textcolor[rgb]{0.6,0.0,0.6}{D}}}
+\newcommand{\indn}{{\textcolor[rgb]{0.6,0.0,0.6}{\alpha}}}
+\newcommand{\indnstar}{{\textcolor[rgb]{0.6,0.0,0.6}{\alpha^\star}}}
+\newcommand{\cliquen}{{\textcolor[rgb]{0.6,0.0,0.6}{\chi}}}
+\newcommand{\erdosr}{{\textcolor[rgb]{0.6,0.0,0.6}{r}}}
+\newcommand{\detD}{{\textcolor[rgb]{0.6,0.0,0.6}{D}}}
+\newcommand{\detDstar}{{\textcolor[rgb]{0.6,0.0,0.6}{D_\star}}}
+\newcommand{\infibeta}{{\textcolor[rgb]{0.6,0.0,0.6}{\beta}}}
+\newcommand{\mas}{{\textcolor[rgb]{0.6,0.0,0.6}{\texttt{mas}}}}
+\newcommand{\nodeset}{\cV}
+\newcommand{\edgeset}{\cE}
+\newcommand{\regret}{R_\rounds}
+\newcommand{\cgamma}{c_\gamma}
+\newcommand{\cgammat}{c_{\gamma_t}}
+\newcommand{\sumT}{\sum_{t = 1}^\rounds}
+\newcommand{\sumt}{\sum_{t=1}^\rounds}
+\newcommand{\sumtl}{\sum\limits_{t=1}^\rounds}
+\newcommand{\sumj}{\sum_{j\in \nodes_i^-}}
+\newcommand{\sumtj}{\sum_{j\in \nodes_{t,i}^-}}
+\newcommand{\sumi}{\sum_{i=1}^{\nodes}}
+\newcommand{\sumji}{\sum_{j\in \{\nodes_i^-\cup\{i\}\}}}
+\newcommand{\sumtji}{\sum_{j\in \{\nodes_{t,i}^-\cup\{i\}\}}}
+\newcommand{\dti}{d_{t,i}^-}
+\newcommand{\hdi}{\hat{d}_i^-}
+\newcommand{\hdk}{\hat{d}_k^-}
+\newcommand{\hd}{\hat{d}^-}
+\newcommand{\tti}{_{t+1,i}}
+\newcommand{\tj}{_{t,j}}
+\newcommand{\ji}{_{j,i}}
+\newcommand{\Ii}{_{I_t,i}}
+\newcommand{\pti}{p\ti}
+\newcommand{\pta}{p_{t,a}}
+\newcommand{\qti}{q\ti}
+\newcommand{\hpti}{\hat{p}\ti}
+\newcommand{\hpi}{\hat{p}_i}
+\newcommand{\hp}{\hat{p}}
+\newcommand{\hqti}{\hat{q}\ti}
+\newcommand{\ptj}{p_{t,j}}
+\newcommand{\qtj}{q_{t,j}}
+\newcommand{\hptj}{\hat{p}_{t,j}}
+\newcommand{\hqtj}{\hat{q}_{t,j}}
+\newcommand{\oti}{o\ti}
+\newcommand{\Oti}{O\ti}
+\newcommand{\loss}{\ell}
+\newcommand{\hLoss}{\hat{L}}
+\newcommand{\hL}{\wh{L}}
+\newcommand{\noise}{\epsilon}
+%spectral
+\newcommand{\dold}{\effd_{\scriptsize\mbox{old}}}
+\newcommand{\dnew}{\effd_{\scriptsize\mbox{new}}}
+%wix
+\newcommand{\gweight}{s}
+\newcommand{\avgalpha}{\indnstar_{\text{avg}}}
+%bare
+\newcommand{\rkdual}{r_k^{\circ}}
+\newcommand{\rktdual}{r_{k,t}^{\circ}}
+\newcommand{\rkprimetdual}{r_{k',t}^{\circ}}
+\newcommand{\rkttdual}{r_{k,t+1}^{\circ}}
+\newcommand{\rkprimettdual}{r_{k',t+1}^{\circ}}
+\newcommand{\ridual}{r_i^{\circ}}
+\newcommand{\rstardual}{r_\star^{\circ}}
+\newcommand{\Ddual}{D^{\circ}}
+\newcommand{\Ddualset}{\mathcal D^{\circ}}
+%continuous bandit notation
+%\newcommand{\node}[2]{\circ[#1,#2]}
+\newcommand{\node}[2]{(#1,#2)}
+\newcommand{\CommaBin}{\mathbin{\raisebox{0.5ex}{,}}}
+
+
+%%% todos
+\usepackage[colorinlistoftodos, textwidth=30mm, shadow, textsize=small,disable]{todonotes}
+\definecolor{blued}{rgb}{0.54, 0.81, 0.94}
+\definecolor{citrine}{rgb}{0.89, 0.82, 0.04}
+\definecolor{misocolor}{rgb}{0.16,0.27,0.86}
+\newcommand{\todom}[1]{\todo[color=misocolor!30]{#1}\xspace}
+\newcommand{\todomi}[1]{\todo[inline,color=misocolor!30]{#1}}
+\newcommand{\wb}[1]{\overline{#1}}
+\newcommand\todoju[1]{\todo[color=blued,inline]{#1}}
+\newcommand{\todoj}[1]{\todo[color=blued]{\tiny#1}}
+\newcommand{\todoa}[1]{\todo[color=yellow, inline]{#1}}
+\newcommand{\todoaout}[1]{\todo[color=yellow]{\tiny#1}}
+
+
+
+
+\newcommand{\ind}[1]{\mathbbm{1}\left[#1\right]}
+\newcommand{\narms}{K}
+\newcommand{\currentTime}{t}
+\newcommand{\lipschitz}{L}
+\newcommand{\timeEnd}{T}
+\newcommand{\currentNumPull}{N_{\pi(t)}(t)}
+\newcommand{\numPullEnd}{N_{\pi(T}(T)}
+\newcommand{\rewardFunction}{r^i}
+\newcommand{\subgaussian}{\sigma}
+\newcommand{\arm}{i}
+\newcommand{\armCount}{N}
+\newcommand{\policy}{\pi}
+\newcommand{\reward}{\mu}
+\newcommand{\obs}{o}
+\newcommand{\totalReward}{J}
+\newcommand{\expectation}{\mathop{\mathbb{E}}}
+\newcommand{\possibleArms}{\mathcal{K}}
+\newcommand{\arms}{\mathcal{K}}
+\newcommand{\window}{h}
+\newcommand{\estReward}{\hat{\reward}}
+\newcommand{\expestReward}{\bar{\reward}}
+\newcommand{\historyt}{\mathcal{H}_\currentTime}
+\newcommand{\history}{\mathbf{H}}
+\newcommand{\historyn}{\mathcal{H}_\timeEnd}
+\newcommand{\underpullSet}{\textsc{up}}
+\newcommand{\overpullSet}{\textsc{op}}
+\newcommand{\HPevent}{\xi^\alpha_t}
+\newcommand{\HPt}[1]{\xi^\alpha_{{#1}}}
+\newcommand{\HPeff}{\xi^\alpha_{t,\, m}}
+\newcommand{\HPtwo}{\xi^\alpha_{t,\, 2}}
+\newcommand{\HPSWA}{\xi_{\rm SWA}}
+\newcommand{\policySet}{\Pi}
+\newcommand{\rewardSet}{\mathcal{L}_L}
+\newcommand{\BBxSet}{\mathcal{B}_{B,x}}
+\newcommand{\BBSet}{\mathcal{B}_{B}}
+\newcommand{\BSet}{\mathcal{B}}
+\newcommand{\stationarySet}{\mathcal{S}_L}
+\newcommand{\myAlgorithm}{\normalfont \texttt{FEWA}\xspace}
+
+\newcommand{\GO}{\pi_{\rm O}}
+\newcommand{\Azero}{\mathcal{A}_{\rm 0}}
+\newcommand{\Atwo}{\mathcal{A}_{\rm 2}}
+\newcommand{\GB}{\pi_{\rm G}}
+\newcommand{\FEWA}{\normalfont \texttt{FEWA}\xspace}
+\newcommand{\EWA}{\policy_{\rm F}}
+\newcommand{\piF}{\policy_{\rm F}}
+\newcommand{\wSWA}{\normalfont \texttt{wSWA}\xspace}
+\newcommand{\SWA}{\normalfont \texttt{SWA}\xspace}
+\newcommand{\piSWA}{\pi_{\rm SWA}}
+\newcommand{\piwSWA}{\pi_{\rm wSWA}}
+
+\newcommand{\DUCB}{\normalfont \texttt{D-UCB}\xspace}
+\newcommand{\SWUCB}{\normalfont \texttt{SW-UCB}\xspace}
+\newcommand{\UCBone}{\normalfont \texttt{UCB1}\xspace}
+\newcommand{\EFF}{\normalfont {\texttt{EFF\_UPDATE}}\xspace}
+\newcommand{\EFFP}{\policy_{\rm EFF-FEWA}}
+\newcommand{\FILTER}{\normalfont \texttt{FILTER}\xspace}
+\newcommand{\UPDATE}{\normalfont \texttt{UPDATE}\xspace}
+\newcommand{\EFFFEWA}{\normalfont \texttt{EFF-FEWA}\xspace}
+\newcommand{\RAWUCB}{\normalfont \texttt{RAW-UCB}\xspace}
+\newcommand{\RAWUCBpp}{\normalfont \texttt{RAW-UCB++}\xspace}
+\newcommand{\RUCB}{\normalfont \texttt{RAW-UCB}\xspace}
+\newcommand{\RAW}{\normalfont \texttt{RAW-UCB}\xspace}
+\newcommand{\piX}{\policy_{\rm R}}
+\newcommand{\piR}{\policy_{\rm R}}
+\newcommand{\EFFU}{\normalfont {\texttt{EFF\_UPDATE}}\xspace}
+\newcommand{\EFFRAW}{\normalfont \texttt{EFF-RAW-UCB}\xspace}
+\newcommand{\EFFRAWpp}{\normalfont \texttt{EFF-RAW-UCB++}\xspace}
+\newcommand{\piEFFE}{\normalfont \policy_{\rm ERUCB}\xspace}
+\newcommand{\piEXU}{\normalfont \policy_{\rm ERUCB}\xspace}
+\newcommand{\piEFFR}{\normalfont \policy_{\rm ERUCB}\xspace}
+\newcommand{\piER}{\normalfont \policy_{\rm ER}\xspace}
+\newcommand{\piEF}{\normalfont \policy_{\rm EF}\xspace}
+\newcommand{\EFFKLR}{\normalfont \texttt{EFF-kl-RAW-UCB}\xspace}
+\newcommand{\EXPS}{\normalfont \texttt{Exp3.S}\xspace}
+\newcommand{\EXPR}{\normalfont \texttt{Exp3.R}\xspace}
+\newcommand{\ADSWITCH}{\normalfont \texttt{AdSwitch}\xspace}
+\newcommand{\GLRKLUCB}{\normalfont \texttt{GLR-klUCB}\xspace}
+\newcommand{\GLRUCB}{\normalfont \texttt{GLR-UCB}\xspace}
+\newcommand{\MUCB}{\normalfont \texttt{M-UCB}\xspace}
+\newcommand{\CUSUMUCB}{\normalfont \texttt{CUSUM-UCB}\xspace}
+\newcommand{\ADAILTCBplus}{\normalfont \texttt{ADA-ILTCB+}\xspace}
+
+\newcommand{\ZPDES}{\normalfont \texttt{ZPDES}\xspace}
+\newcommand{\RiARiT}{\normalfont \texttt{RiARiT}\xspace}
+
+\newcommand{\PiO}{\Pi_{\rm O}}
+\newcommand{\PiL}{\Pi_{\rm L}}
+\newcommand{\Nit}{N_{i,\,t}}
+\newcommand{\Nitmone}{N_{i,\,t-1}}
+\newcommand{\Nisttmone}{N_{\ist,\,t-1}}
+\newcommand{\NiT}{N_{i,\,T}}
+\newcommand{\Njt}{N_{j,\,t}}
+\newcommand{\Njtmone}{N_{j,\,t-1}}
+\newcommand{\NjT}{N_{j,\,T}}
+\newcommand{\Nitpi}{N_{i,\,t}^\pi}
+\newcommand{\Nitmonepi}{N_{i,\,t-1}^\pi}
+\newcommand{\NiTpi}{N_{i,\,T}^\pi}
+\newcommand{\Njtpi}{N_{j,\,t}^\pi}
+\newcommand{\Njtmonepi}{N_{j,\,t-1}^\pi}
+\newcommand{\NjTpi}{N_{j,\,T}^\pi}
+\newcommand{\hit}{h_{i,\,t}}
+\newcommand{\hitmone}{h_{i,\,t-1}}
+\newcommand{\hiT}{h_{i,\,T}}
+\newcommand{\hjt}{h_{j,\,t}}
+\newcommand{\hjtmone}{h_{j,\,t-1}}
+\newcommand{\hjT}{h_{j,\,T}}
+\newcommand{\hitpi}{h_{i,\,t}^\pi}
+\newcommand{\hiTpi}{h_{i,\,T}^\pi}
+\newcommand{\hjtpi}{h_{j,\,t}^\pi}
+\newcommand{\hjTpi}{h_{j,\,T}^\pi}
+\newcommand{\PPv}{\mathbb{P}}
+\newcommand{\ie}{\emph{i.e.}\xspace} 
+\newcommand{\piFRSet}{\left\{\piF, \piR\right\}}
+\newcommand{\Him}{H_{i,\,m}}
+\newcommand{\Hitwo}{H_{i,\,2}}
+\newcommand{\Hitm}{H_{i_t,\,m}}
+\newcommand{\hmueff}{\hmu_{i,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\hmuiteff}{\hmu_{i_t,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\bmueff}{\bmu_{i,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\bmuiteff}{\bmu_{i_t,\texttt{\footnotesize{eff}}}^{h_j}}
+\newcommand{\neff}{n_i^{h_j}}
+\newcommand{\peff}{p_i^{h_j}}
+\newcommand{\ist}{i^\star_t}
+\newcommand{\tteff}{\normalfont{\texttt{eff}}}
+
+\newcommand{\Tp}{\mathcal{T}}
+\newcommand{\student}{\mathcal{S}}
+\newcommand{\oracle}{\Tilde{\pi}^\star}
+\newcommand{\armsbelow}{\arms_t^-}
+\newcommand{\armsabove}{\arms_t^+}
+\newcommand{\Krt}{\arms_t^r}
+\newcommand{\Krtpone}{\arms_{t+1}^r}
+\newcommand{\state}{\boldsymbol{\mu}}
+\newcommand{\statet}{\boldsymbol{\mu_t}}
+\newcommand{\statetit}{\statet^{\boldsymbol{i_t}}}
+\newcommand{\statetmone}{\state_{\boldsymbol{t-1}}}
+\newcommand{\statetpone}{\state_{\boldsymbol{t+1}}}
+\newcommand{\statetmoneit}{\statetmone^{\boldsymbol{i_t}}}
+\newcommand{\statetponeit}{\statetpone^{\boldsymbol{i_t}}}
+\newcommand{\Ort}{\Or(\statet)}
+\newcommand{\Ortmone}{\Or(\statetmone)}
+\newcommand{\Ortpone}{\Or(\statetpone)}
+\newcommand{\Ormonet}{\Ormone(\statet)}
+\newcommand{\Ormonetmone}{\Ormone(\statetmone)}
+\newcommand{\Ormonetpone}{\Ormone(\statetpone)}
+\newcommand{\Ortit}{\Or(\statetit)}
+\newcommand{\Ortmoneit}{\Or(\statetmoneit)}
+\newcommand{\Ortponeit}{\Or(\statetponeit)}
+\newcommand{\Ormonetit}{\Ormone(\statetit)}
+\newcommand{\Ormonetmoneir}{\Ormone(\statetmone^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetir}{\Ormone(\statet^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetponeir}{\Ormone(\statetpone^{\boldsymbol{i_r}})}
+\newcommand{\Ormonetmoneit}{\Ormone(\statetmoneit)}
+\newcommand{\Ormonetponeit}{\Ormone(\statetponeit)}
+\newcommand{\Or}{\OO_r}
+\newcommand{\Ormone}{\OO_{r-1}}
+\newcommand{\Tpi}{\Tilde{\pi}}
+\newcommand{\Tpikt}{\Tilde{\pi}_{k,t}}
+\newcommand{\TpikT}{\Tilde{\pi}_{k,T}}
+\newcommand{\isT}{i^\star_T}
+\newcommand{\FLUT}{\normalfont\texttt{FLUT}\xspace}
+\newcommand{\FLUTE}{\normalfont\texttt{FLUT-E}\xspace}
+\newcommand{\ucb}{\normalfont\operatorname{ucb}\xspace}
+\newcommand{\lcb}{\normalfont\operatorname{lcb}\xspace}
+\newcommand{\None}{\texttt{None}\xspace}
+\newcommand{\Null}{\texttt{Null}\xspace}

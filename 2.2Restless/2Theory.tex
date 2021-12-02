@@ -1,0 +1,385 @@
+%!TEX root = ../main.tex
+\section{Analysis of adaptive window policies on restless rotting bandits.} 
+\label{sec:restless-theory}
+In Chapter~\ref{ch:rested}, we presented four adaptive window policies (\FEWA, \RAWUCB, \EFFFEWA, \EFFRAW). In this section, we will show that the exact same policies are able to match interesting upper bounds on the restless problems.  The proof of the regret upper bounds in the rested case uses three main steps. First, we design one favorable event per round on which all the constructed statistics concentrate on a well-chosen confidence region, such that it holds with sufficiently high probability. This part does not use that we faced a rested non-stationary environment; it only uses the concentration of independent subgaussian variables which remains true in our restless problem due to Doob's optional skipping. Hence, we restate Propositions~\ref{prop:prb_favorable_event} and~\ref{prop:prb_favorable_event_eff},
+\begin{proposition}
+\label{prop:prb_favorable_event_full}
+We recall that, for any round $t$ and confidence $\delta_{t} \triangleq 2t^{-\alpha}$, we define
+%
+\begin{align*}
+&\!\HPevent\! \triangleq\! \Big\{ \forall i\!\in\!\arms,\ \forall n \!\leq\! t\!-\!1 ,\ \forall h \!\leq\! n, \big| \hmu^h_i(t, \pi) - \bmu^h_i(t, \pi) \big| \!\leq\! c(h, \delta_{t}) \!\Big\}\\
+&\!\HPeff\! \triangleq\! \Big\{ \forall i\!\in\!\arms, \forall n \!\leq\! t\!-\!1 , \forall h_j \!\in\! \Him(n), \big| \hmueff(t,\pi) - \bmueff(t,\pi) \big| \!\leq\! c(h_j, \delta_{t}) \!\Big\}
+\end{align*}
+with  $c(h,\delta_{t}) \triangleq \sqrt{2 \subgaussian^2\log(2/\delta_t)/h}$. Then, for a policy $\pi$ which pulls each arms once at the beginning, and for all $t>K$,
+\[
+\PPempty\Big[\bar{\HPevent}\Big] \leq \frac{Kt^2\delta_{t}}{2}=Kt^{2-\alpha} \text{ and } \PPempty\Big[\bar{\HPeff}\Big] \leq 3Kt\delta_t= 6Kt^{1-\alpha}.
+\]
+\end{proposition} 
+
+Then, we use the mechanics of the algorithms to relate the average past performance of the selected arm with the current best value of the arms. As we noticed in the proofs (see e.g. the proof of Lemma~\ref{lem:core-FEWA}), we do not use the rested aspect of the problem. In fact, these results hold for a more general reward function $\mu_i(t,n)$ which is non-increasing with both $t$ and $n$. Therefore, we also restate Lemmas~\ref{lem:core-FEWA}, \ref{lem:core-RAWUCB} and~\ref{lem:core-eff},
+\begin{lemma}
+\label{lem:core-full}
+At any round $t$ on favorable event $\HPevent$ (respectively, $\HPtwo$), if arm~$i_{t}$ is selected by $\pi \in \left\{\piF, \piR\right\}$ (respectively, $\pi \in \left\{\piEF, \piER\right\} $ tuned with $m=2$), for any $h \leq \Nitmone$,  the average of its $h$ last pulls cannot deviate significantly from the best available arm at that round, i.e.,
+\begin{equation*}
+\bmu^{h}_{i_t}(t,\pi) \geq \max_{i \in \arms} \mu_{i}(t)- \frac{C_\pi}{\sqrt{2\alpha}} c(h, \delta_t) \quad \text{with } 
+\begin{cases}
+C_{\piR} = 2\sqrt{2\alpha} \text{ and } C_{\piER} = \frac{4\sqrt{\alpha}}{\sqrt{2}-1}\\
+C_{\piF} = 4\sqrt{2\alpha} \text{ and }C_{\piEF} = \frac{8\sqrt{\alpha}}{\sqrt{2}-1}
+\end{cases}\cdot
+\end{equation*}
+\end{lemma}
+Last, we use a specific rested regret decomposition to show that our algorithms are near-optimal both problem-dependent and problem-independent wise on rested rotting bandits. Unfortunately, this part cannot be used for the restless analysis. However, with a specific restless regret decomposition (see the proof in Subsection~\ref{ss:restless-proof}), we can show that our policies matches the two aforementioned lower bounds up to poly-logarithmic terms without any knowledge of the horizon $T$ nor $\Upsilon_T$ or $V_T$.
+%
+\begin{tBox}
+\begin{restatable}{theoremeT}{restapiecewisetheorem}
+\label{th:piecewise-minimax}
+Let $\pi \in \left\{ \piF, \piR\right\}$ tuned with $\alpha \geq 4$ or $\pi \in \left\{ \piEF, \piER\right\}$ tuned with $\alpha \geq 3$ and $m=2$. For any piece-wise stationary bandit scenario with means $\{\mu_i(t)\}_{i,t}$ satisfying Assumptions~\ref{assum:piece-wise} and~\ref{assum:restless_rotting}  with $\Upsilon_T-1$ change-points, $\pi$  suffers an expected regret\,
+\[
+\EE{R_T(\pi)} \leq C_\pi \sigma \sqrt{\log{T}} \pa{ \sqrt{\Upsilon_T KT} + \Upsilon_T K} + 6KV.
+\]
+\end{restatable}
+\end{tBox}
+\vspace{-2em}
+\begin{tBox}
+\begin{restatable}{theoremeT}{restabudgettheorem}
+\label{th:variation-minimax}
+Let $\pi \in \left\{ \piF, \piR\right\}$ tuned with $\alpha \geq 4$ or $\pi \in \left\{ \piEF, \piER\right\}$ tuned with $\alpha \geq 3$ and $m=2$. For any variation budget bandit scenario with means $\{\mu_i(t)\}_{i,t}$ satisfying Assumptions~\ref{assum:variation} and~\ref{assum:restless_rotting}  with variation budget $V_T$, $\pi$ suffers an expected regret\,
+\[
+\mathbb{E}\left[R_T(\pi)\right] \leq 4\pa{C_\pi^2 \sigma^2 V_T K T^2\log{T}}^{\nicefrac{1}{3}} \!+ 2\Big(C_\pi \sigma V_T^2  K^2  T \sqrt{\log{T}}\Big)^{\nicefrac{1}{3}} \!+ 6 V_T K.
+\]
+\end{restatable}
+\end{tBox}
+%
+The remaining terms are of second-order when $KV_T \leq \cO{\pa{T}}$, which is a necessary condition for the problem to be learnable (see Proposition~\ref{prop:variation_lb2}). 
+%
+\paragraph{Are rotting restless bandits easier?} Learning at the minimax rate without knowing $\Upsilon_T$ or $V_T$ was achieved in the non-rotting setup by significantly more complex algorithms. For instance, \citet{auer2019adaptively} use a combination of filtering on the set of potentially good arms, forced exploration planning on identified bad arms, and full restart of the algorithm when a change is detected. This algorithmic complexity has a performance cost, as \ADSWITCH is guaranteed to achieve 56 times the leading term in Theorem~\ref{th:piecewise-minimax}. Moreover, these algorithms rely on doubling trick when the horizon is unknown, which also has a regret cost compared to intrinsically anytime algorithms \citep{besson2018doubling}.
+
+Yet, Proposition~\ref{prop:piecewise_lb2}  and~\ref{prop:variation_lb2} show that the rotting assumption do not improve the minimax rate for the two considered setups. Interestingly both these lower bounds are matched by (tuned) \EXPS \citep{auer2002nonstochastic}, an algorithm originally designed for switching best arm in adversarial sequences of rewards. This is comparable to the fixed best arm world:  adversarial and stochastic bandits share the same minimax rate which is matched in both setups by \EXP. The main interest of the stochastic assumption is to allow for \textit{problem dependent analysis}. For the stochastic stationary bandits, it leads to a stronger $\cO{\pa{\log\pa{T}}}$ bounds. In the (non-rotting) piece-wise stationary setting, we argued in Subsection~\ref{subsec:piecewise} that the learner has to maintain $\cO\pa{\sqrt{T}}$ exploratory pulls to shield against increase of currently suboptimal arm (see Proposition~\ref{prop:garivier-lb} and Corollary~\ref{cor:garivier-lb}).
+
+The decreasing Assumption~\ref{assum:restless_rotting} excludes the problems where suboptimal arms increases to become optimal from the set of possible problems. Theorem~\ref{th:piecewise_pd} shows that not only \RAWUCB is able to recover the $\cO\pa{\log\pa{T}}$ on stationary problems but also recovers the same rate on each batch of a rotting piece-wise stationary problem. 
+\begin{tBox}
+\begin{restatable}{theoremeT}{restapiecewisetheorempd}
+\label{th:piecewise_pd}
+Let $\pi \in \left\{ \piF, \piR\right\}$ tuned with $\alpha \geq 4$ or $\pi \in \left\{ \piEF, \piER\right\}$ tuned with $\alpha \geq 3$ and $m=2$. For any piece-wise stationary bandit scenario with means $\{\mu_i(t)\}_{i,t}$ satisfying Assumptions~\ref{assum:piece-wise} and~\ref{assum:restless_rotting}  with $\Upsilon_T-1$ change-points, $\pi$ suffers an expected regret\,
+\[
+    \mathbb{E}\left[R_T(\pi)\right] \leq \sum_{k=0}^{\Upsilon_T-1} \sum_{i\in\arms} \frac{C_\pi^2 \sigma^2\log{T}}{\Delta_{i,k}} +  C_\pi \sigma \Upsilon_T K \sqrt{ \log{T}} + 6KV. 
+\]
+\end{restatable}
+\end{tBox}
+%TODO talk about tuning ?
+%When $\Upsilon_T = 1$ (no changepoint), \RAWUCB recovers the same guarantee than \UCBone. However, \UCB with a more careful tuning $\delta_t \sim \frac{1}{t\log{t}^2}$ match \citet{lai1985asymptotically} asymptotic factor for Gaussian bandits \citep{lattimore2019bandit}. We leave the two following questions for future analysis: 1) Is there a tuning of $\delta_t$ such that \RAWUCB is asymptotic for stationary problems? 2) If yes, can \RAWUCB with this asymptotic tuning recovers some (rested or restless) non-stationary guarantees?
+
+Notice that \citet{mukherjee2019distribution} use a different assumption to recover a similar problem-dependent bound. Indeed, they assume that all the arms change at the same time. In the counter-example displayed on Figure~\ref{fig:garivier-lb}, it is important that the arm 1 changes its value while arm 2 is stationary. Indeed, in that case, the learner cannot infer the increase on arm 2 by sampling arm 1. Hence, the assumption of \citet{mukherjee2019distribution} excludes this counter-example of the set of possible problems. That is why they were able to provide a logarithmic problem-dependent bound.  
+
+%Therefore, \RAWUCB is near minimax optimal \emph{and} reaches the asymptotic rate for stationary bandits $O(\sum_{i \in \arms} \frac{\log(T)}{\Delta_i})$ (see Corollary~\ref{dependent_theorem}) without knowing the number of change points nor the horizon. 
+
+\subsection{Proofs}
+\label{ss:restless-proof}
+
+\subsubsection*{Sketch.} 
+
+We start by separating the regret on the bad events $\bar{\HPevent}$ from the good events $\HPevent$. According to Proposition~\ref{prop:prb_favorable_event}, the bad events $\bar{\xi}_t$ have low probability for appropriate $\alpha$. For $\alpha = 4$, they weigh at most $\cO{\pa{KV}}$ in the expected regret.  On the good events, we write:
+\vspace{-4pt}
+\begin{equation}
+\label{eq:restless-regret-decompo}
+R_T(\pi)= \sum_{t=1}^T \mu_{i_t^\star}(t) - \bar{\mu}_{i_t}^{h_t}(t, \pi) + \bar{\mu}_{i_t}^{h_t}(t, \pi) - \mu_{i_t}(t).   
+\end{equation}
+
+Notice that Lemma~\ref{lem:core-full} can bound the first difference for any $h_t$. When the reward is piece-wise stationary, we can select $h_t$ such that we include all the pulls of arm $i_t$ from the current stationary batch. If there is none, then it is the first pull of arm $i_t$ in this batch. We handle these $\cO{\pa{K\Upsilon_T}}$ rounds separately (see Lemma~\ref{lem:FP}). In the other cases, we note that the second difference is null because $\bar{\mu}_{i_t}^{h_t}(t, \pi) = \mu_{i_t}(t) = \mu_i^k$ by the piece-wise stationary assumption. The remaining of the proofs of Theorem~\ref{th:piecewise-minimax} and~\ref{th:piecewise_pd} are then very similar to the analysis of \cite{auer2002finite} on each stationary batch. Indeed, Lemma~\ref{lem:core-full} is similar to the two confidence bounds guarantee of \UCBone's guarantee.
+
+In the variation budget setting, there is no stationary batches. Hence, we cannot choose an $h_t$ which cancels the second difference in Equation~\ref{eq:restless-regret-decompo}. Yet, we still decompose the rounds in $\Upsilon$ batches of equal length for the analysis. We choose $h_t$ such that we include all the pulls of arm $i_t$ from the current batch. For the sum of the first differences in Equation~\ref{eq:restless-regret-decompo}, there is no difference with the piece-wise stationary case and we can bound
+\vspace{-4pt}
+\begin{equation}
+\label{eq:variance_bound}
+    \sum_{t=1}^T \mu_{i_t^\star}(t) - \bar{\mu}_{i_t}^{h_t}(t, \pi)\leq \tcO{\pa{\sqrt{K\Upsilon T}}}.
+\end{equation}
+We call $\Delta_i^k \triangleq \mu_i(t_k) - \mu_i(t_{k+1})$, the total variation of arm $i$ in batch $k$. The sum of second differences in Equation~\ref{eq:restless-regret-decompo} can be bounded as follows: on each batch of $T\Upsilon^{-1}$ rounds, each second difference is bounded by $\max_{i\in \arms} \Delta_i^k$. When we sum over the batches, we get
+\vspace{-4pt}
+\begin{equation}
+\label{eq:bias_bound}
+  \sum_{t=1}^T  \bar{\mu}_{i_t}^{h_t}(t, \pi) - \mu_{i_t}(t)\leq \frac{T}{\Upsilon}\sum_{k=0}^{\Upsilon-1}\max_{i \in \arms}\Delta_i^k  \leq \frac{TV_T}{\Upsilon}\, .  
+\end{equation}
+Indeed, in the middle term, we have a maximum on the summed variation of arm $i$ in batch $k$. On the right-hand side, we have $V_T$ which bounds the sum over the rounds of maximal variation of the arms (see Equation~\ref{eq:defbudget}). Thus, the right-hand side is larger because the maximum of sums is smaller than the sum of maximums. We can then choose $\Upsilon = \tcO{\pa{T^{\nicefrac{1}{3}}V_T^{\nicefrac{2}{3}}K^{\nicefrac{-1}{3}}}}$ to minimise the sum of Equations~\ref{eq:variance_bound} and ~\ref{eq:bias_bound}. It leads to the leading term of our Theorem~\ref{th:variation-minimax}. Notice that we still have to handle the first pull of each arm in each batch. If we bound roughly each first pull by $V_T$, we would get $K\Upsilon V_T \sim \tcO{\pa{V_T^{\nicefrac{5}{3}}}}$ which would be the leading term for large $V_T$. Our Lemma~\ref{lem:FP} is more careful such that it leads to a second order term when $KV_T \leq o\pa{T}$.
+
+\subsubsection*{Full proof}
+\begin{lemma}[Bound on unfavorable events. Decomposition in unspecified batches. Bound on the first pull of each arm in each batch] %TODO
+\label{lem:FP}
+Let an integer $\Upsilon \in\left\{ 1, \dots,T\right\}$.\\
+Let $\mu_i : \NN^\star \rightarrow \left[0, -V\right]$, the $K$ decreasing reward functions.\\ 
+Let $\left\{t_k\in\left\{ 1, \dots,T\right\} \right.\allowbreak\left. |\, t_k > t_{k-1}\right\}_{k\in \left\{ 1, \dots,\Upsilon-1\right\}}$ a set of $\Upsilon - 1$ distinct rounds delimiting $\Upsilon$ batches. We set $t_0=0$ and $t_\Upsilon = T$. \\
+We call $h_{i}^{k} \triangleq \sum_{t=t_k +1}^{t_{k+1}} \mathbbm{1}\left(i_{t} = i\right)$ the number of pulls of arm $i$ in batch $k$ and $t_i^k(h)$ the time at which arm $i$ is pulled for the $h$-th time since $t_k + 1$. We also call $\arms_k \triangleq  \left\{ i \in \arms | h_i^k \geq 1\right\}$ the set of pulled arms in batch $k$. 
+
+Then, $\pi \in \left\{\piR, \piF \right\}$ run with $\alpha \geq 4$, or $\pi \in \left\{\piER, \piEF \right\}$ run with $m=2$ and $\alpha \geq 3$, suffers an expected regret of
+\begin{align*}
+\EE{R_T(\pi)} \leq &  \, \EE{\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{t=t_k +1 }^{t_{k+1}}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\pa{ t = t_i^k(h) \land \HPevent} \Big(\mu_{\star}(t) - \mu_{i}(t)\Big)} \\
+&+   C_\pi \sigma \Upsilon K\sqrt{\log{T}} + 6KV.
+\end{align*}
+\end{lemma}
+\begin{proof}
+We start by separating the favorable events from the unfavorable events:
+\begin{equation}
+\label{eq:event_sep}
+    R_T(\pi) = \underbrace{\sum_{t=1}^T \mathbbm{1}\pa{\HPevent} \pa{\mu_{\star}(t) - \mu_{i_t}(t)}}_{R_T(\pi | \HPevent)} + \underbrace{\sum_{t=1}^T \mathbbm{1}\big(\bar{\HPevent}\big) \pa{\mu_{\star}(t) - \mu_{i_t}(t)}}_{{R_T(\pi | \bar{\HPevent})}} \,,
+\end{equation}
+with $\mu_\star(t) \triangleq \max_{i\in\arms}\mu_i(t)$. For $\alpha \geq 4$, we can bound the cost of the unfavorable events thanks to Proposition~\ref{prop:prb_favorable_event_full},
+\begin{equation}
+\label{eq:bad_event}
+    \EE {R_T(\pi | \bar{\HPevent})} \leq \sum_{t=1}^T \PP{\bar{\HPevent}} V  \leq \sum_{t=1}^T \frac{KV}{t^2} = \frac{KV\pi^2}{6} \leq 2KV.
+\end{equation}
+
+On the favorable events, given any ordered set of $\Upsilon -1$ breakpoints $\left\{t_k\right\}$, we divide the horizon in $\Upsilon$ batches $\left\{t_k+1, \dots, t_{k+1} \right\}_{k \leq \Upsilon-1}$, 
+\[
+R_T(\pi | \HPevent) \leq \sum_{k=0}^{\Upsilon-1} \sum_{t=t_{k} +1 }^{t_{k+1}} \mathbbm{1}\pa{\HPevent} \big(\mu_{\star}(t) - \mu_{i_t}(t)\big).
+\]
+We define $h_{i}^{k}$ the number of pulls of arm $i$ in batch $k$, \textit{i.e.}  $h_{i}^{k} = \sum_{t=t_k +1}^{t_{k+1}} \mathbbm{1}\left(i_{t} = i\right)$. We use $t_i^k(h)$ to designate the time at which arm $i$ is pulled for the $h$-th time since $t_k$.
+\[
+R_T(\pi | \HPevent) \leq \sum_{k=0}^{\Upsilon-1} \sum_{t=t_k +1 }^{t_{k+1}} \sum_{i\in\arms_k} \sum_{h=1}^{h^k_{i}} \mathbbm{1}\pa{t_i^k(h) = t \land \HPevent} \Big(\mu_{\star}(t) - \mu_{i}(t)\Big).
+\]
+We split the regret on the first pulls of each batch,
+\begin{align}
+\label{eq:fp_op}
+\begin{split}
+    R_T(\pi | \HPevent) = & \underbrace{\sum_{k=0}^{\Upsilon-1}\sum_{t=t_{k} +1 }^{t_{k+1}} \sum_{i\in\arms_k} \mathbbm{1}\pa{t = t_i^k(1) \land \HPevent}\Big(\mu_{\star}(t) - \mu_{i}(t)\Big)}_{FP} \\ & +  \underbrace{\sum_{k=0}^{\Upsilon-1}\sum_{t=t_{k} +1 }^{t_{k+1}} \sum_{i\in\arms_k} \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left( t = t_i^k(h) \land \HPevent \right)\Big( \mu_{\star}(t) - \mu_{i}(t)\Big)}_{OP} .
+\end{split}
+\end{align}
+
+\paragraph{Analysis of the first pulls.}
+
+We call $k_i^1$, the index of the batch at which arm $i$ is pulled for the first time (we assume that $T\geq K$).  We call $\arms_k^2 \triangleq \left\{ i \in \arms_k | k > k_i^1\right\}$, the set of arms pulled at least once during batch $k$ and at least once in a batch before $k$. We split the regret due to the very first pull each arm from the other first pulls in each batch,
+\begin{align*}
+FP  = &\sum_{k=0}^{\Upsilon-1}\sum_{i\in\arms_k}\sum_{t=t_{k} +1 }^{t_{k+1}}  \mathbbm{1}\pa{ t = t_i^k(1) \land \HPevent}\Big(\mu_{\star}(t) - \mu_{i}(t)\Big)\\
+\leq& \sum_{i \in \arms}  \Big(0- \mu_i(t_i^{k_i^1}(1))\Big) +  \sum_{k=1}^{\Upsilon -1} \sum_{i\in \arms_k^2}\sum_{t=t_k +1 }^{t_{k+1}}  \mathbbm{1}\pa{t = t_i^k(1) \land \HPevent}\Big(\mu_{\star}(t) - \mu_{i}(t)\Big)\\
+ =& \sum_{i \in \arms} \Big(0- \mu_i(t_i^{k_i^1}(1))\Big) \\
+& + \sum_{k=1}^{\Upsilon -1} \sum_{i\in \arms_k^2} \sum_{t=t_k +1 }^{t_{k+1}}  \mathbbm{1}\pa{ t = t_i^k(1) \land \HPevent}\Big(\mu_{\star}(t) - \bar{\mu}^1_i(t, \pi) + \bar{\mu}^1_i(t,\pi) - \mu_{i}(t)\Big).
+\end{align*}
+
+The inequality is justified because $\mu_i(t) \leq 0$ for all $t$. In the last equation, we simply introduce $\bar{\mu}^1_i(t,\pi)$, the last pulled sample of arm $i$, which is well defined after the first pull of each arm.
+According to Lemma~\ref{lem:core-full}, the first difference is bounded on the high-probability event $\HPevent$,
+\begin{equation}
+    \label{eq:fp_lemma1}
+    \sum_{t=t_k +1 }^{t_{k+1}} \mathbbm{1}\pa{t = t_i^k(1) \land \HPevent}\pa{\mu_{\star}(t) - \bar{\mu}^1_i(t, \pi)} \leq \frac{C_\pi}{\sqrt{2\alpha}} c(1,2T^{-\alpha}) = C_{\pi} \sigma \sqrt{\log{T}}.
+\end{equation}
+
+
+We will show that we can telescope the second sum. First, we notice that we can collapse the sum on $t$ using $ \mathbbm{1}\pa{t = t_i^k(1)}$. Moreover, $\HPevent$ will not be needed: hence we can drop $\mathbbm{1}\pa{\HPevent} \leq 1 $.
+\begin{equation}
+\label{eq:fp_collapse}
+ \sum_{t=t_k +1 }^{t_{k+1}} \mathbbm{1}\pa{ t = t_i^k(1) \land \HPevent}\pa{\bar{\mu}^1_i(t,\pi) - \mu_{i}(t)} \leq \bar{\mu}^1_i(t_i^k(1), \pi) - \mu_{i}(t_i^k(1)).
+\end{equation}
+
+For a given batch $k$ on which arm $i$ is pulled, the precedent reward sample has a mean $\bar{\mu}_i^1\pa{t_i^k\pa{1}, \pi}$. This sample is the last pull of the last batch $k'$ before $k$ on which arm $i$ is pulled. Hence, its mean is smaller than the mean of the first pull on this same batch $k'$ because the reward is decreasing. Hence, the sum can telescope
+\begin{align}
+\label{eq:fp_telescoping} 
+\sum_{i \in \arms} \Big(0 -& \mu_i(t_i^{k_i^1}(1))\Big) + \sum_{k=1}^{\Upsilon -1}  \sum_{i\in \arms_k^2} \sum_{t=t_k +1 }^{t_{k+1}}\mathbbm{1}\pa{ t = t_i^k(1) \land \HPevent}\pa{ \bar{\mu}^1_i(t,\pi) - \mu_{i}(t)} \nonumber\\
+& \leq \sum_{i \in \arms}\left\{ 0- \mu_i(t_i^{k_i^1}(1)) + \sum_{k=k_i^1 + 1}^{\Upsilon-1 } \mathbbm{1}\pa{h^k_{i} \geq 1  }\pa{\bar{\mu}^1_i(t_i^k(1), \pi) - \mu_{i}(t_i^k(1))} \right\} \nonumber\\
+& \leq \sum_{i \in \arms} \Big(0-\mu_i(T)\Big) \leq KV\,.  
+\end{align}
+The first inequality uses the definition of $\arms_k^2$ along with Equation~\ref{eq:fp_collapse}. The second inequality follows from the telescoping argument presented above. The third inequality uses that $\mu_i(T) \geq -V$. Gathering Equation~\ref{eq:fp_lemma1} and  ~\ref{eq:fp_telescoping}, we can bound the term $FP$ (defined in Equation~\ref{eq:fp_op}) 
+\begin{equation}
+\label{eq:fp_bound}
+FP \leq  KV + \sum_{k=1}^{\Upsilon - 1} \sum_{i\in \arms_k^2} C_\pi \sigma \sqrt{\log{T}} \leq KV + C_\pi \sigma \Upsilon K\sqrt{\log{T}} .    
+\end{equation}
+
+
+
+\paragraph{Conclusion.} From Equation~\ref{eq:event_sep}, we can bound the expected regret on the unfavorable events thanks to Equation~\ref{eq:bad_event}. On the favorable events, we can split the rounds in batches on which we isolate the first pull of each arm on each batch thanks to Equation~\ref{eq:fp_op}. Finally, we bound the regret due to these first pulls thanks to Equation~\ref{eq:fp_bound}, and for $\alpha \geq 4$,
+\begin{align*}
+\EE{R_T(\pi)} \leq &  \, \EE{\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{t=t_k +1 }^{t_{k+1}}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\pa{ t = t_i^k(h) \land \HPevent} \Big( \mu_{\star}(t) - \mu_{i}(t)\Big)} \\
+&+  C_\pi \sigma \Upsilon K \sqrt{\log{T}} + 3KV.
+\end{align*}
+
+For the efficient algorithms, we can use the same proof with $\HPtwo$ and get for $\alpha \geq 3$, 
+\begin{align*}
+\EE{R_T(\pi)} \leq &  \, \EE{\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{t=t_k +1 }^{t_{k+1}}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\pa{ t = t_i^k(h) \land \HPevent} \Big(  \mu_{\star}(t) - \mu_{i}(t)\Big)} \\
+&+  C_\pi \sigma \Upsilon K \sqrt{\log{T}} + 6KV.
+\end{align*}
+
+\end{proof}
+
+\begin{lemma}[Analysis of the second pulls in each batch under the favorable events.]\label{lem:OP}
+Let $\Delta_i^k \triangleq \mu_i(t_k+1) - \mu_i(t_{k+1})$, the decrement of arm $i$ in batch $k$. For any arm $i$ and any consecutive rounds $\left\{t_k+1, \dots , t_{k+1}\right\}$ such that $i$ is pulled $h_i^{k} \geq 1$ times, the regret due to the pulls after the first one can be bounded under the favorable events, 
+\begin{multline*}
+\sum_{t=t_{k} +1 }^{t_{k+1}} \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(t = t_i^k(h) \land \HPevent \right)\Big(  \mu_{\star}(t) - \mu_{i}(t)\Big) \\ \leq  \pa{h_i^k-1}\Delta_i^k + \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\pa{  \mu_{\star}(t_i^k(h)) - \bar{\mu}_i^{h-1}(t_i^k(h),\pi)} .
+\end{multline*}
+\end{lemma}
+\begin{proof}
+We call $\Delta_{i}(t,t')\triangleq \mu_i(t) - \mu_i(t')$ the variation of arm $i$ between times $t$ and $t'$.
+As a short notation, we refer to $\Delta_i^k \triangleq \Delta_{i}(t_k+1,t_{k+1})$ for the variation of arm $i$ in batch $k$.
+
+\begin{equation}
+\label{eq:batch_delta_var}
+    \forall h\leq h_i^k, \quad \mu_i( t_i^k(h)) \geq \mu_i(t_{k+1}) =  \mu_i(t_k +1 ) - \Delta_i^k \geq \bar{\mu}_i^{h-1}( t_i^k(h), \pi) - \Delta_i^k\,.
+\end{equation} 
+The two inequalities are justified by the rewards decay. Indeed, any pull in batch $k$ has a higher reward than the value of arm $i$ at the end of the batch $t_{k+1}$. Moreover, the value at the beginning of the batch is higher that any average of $h$ value in this batch. The middle equality follows from the definition of $\Delta_i^k$.
+
+Then, we plug Equation~\ref{eq:batch_delta_var} in the left hand side of our claim,
+\begin{align*}
+\sum_{t=t_{k} +1 }^{t_{k+1}}
+\sum_{h=2}^{h^k_{i}}\mathbbm{1}&\left(t = t_i^k(h) \land \HPevent\right)\Big(  \mu_{\star}(t) - \mu_{i}(t) \Big) \\
+& = \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\pa{  \mu_{\star}(t_i^k(h)) - \mu_{i}(t_i^k(h))} \\
+&\leq \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\pa{  \mu_{\star}(t_i^k(h)) - \bar{\mu}_i^{h-1}( t_i^k(h),\pi) + \Delta_i^k}\\
+&\leq  \pa{h_i^k-1}\Delta_i^k + \sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\pa{  \mu_{\star}(t_i^k(h)) - \bar{\mu}_i^{h-1}(t_i^k(h),\pi)} .
+\end{align*}
+The last inequality is justified by $\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\leq 1$.
+\end{proof}
+
+\subsubsection*{Piecewise stationary rotting bandits.}
+\sloppy
+Let $\left\{t_k\right\}_{\left\{k \leq \Upsilon_T\right\}}$ be the set of breakpoints with $t_0=0$ and $t_{\Upsilon_T} = T$. For all $t \in \left\{t_k\! +\!1 , \dots , t_{k\!+\!1}\right\}$, $\mu_i(t) = \mu_i^k$. We denote $i^\star_k \in \argmax_{i\in \arms} \mu_i^k$ (one of) the best arm(s) in batch $k$, and $\mu_{\star}^k \triangleq \max_{i\in \arms} \mu_i^k$, the corresponding best value. We also call $\Delta_{i,k} \triangleq \mu_{\star}^k - \mu_i^k$ the gap between arm $i$ and optimal arm in batch $k$.
+
+\begin{lemma}
+\label{lem:OP-piecewise}
+For an arm $i$ and a stationary batch $k$, we call $h_{i,\xi}^k \triangleq \max\left(h \leq h_i^k \text{ s.t. } \HPt{t_i^k(h)} \text{ holds}\right)$ the last pull of arm $i$ in batch $k$ under the favorable events (possibly 0). If $h_{i,\xi}^k \geq 1$, the regret due to the second pulls on the favorable events is bounded by,
+\[
+\sum_{t=t_{k}+1}^{t_{k+1}} \sum_{h=2}^{h_{i}^{k}} \!\mathbbm{1}\!\pa{\! t=t_{i}^{k}(h) \land \HPevent \!}\!\Big(\!\mu_{\star}(t)\!-\!\mu_{i}(t)\!\Big) \leq\pa{\!h_{i, \xi}^{k}\!-\!1 \!} \Delta_{i, k} \leq C_\pi\sigma \sqrt{\pa{\!h_{i,\xi}^k\!-\!1\!}\log{T}}.
+\]
+\end{lemma}
+\begin{proof}
+We apply Lemma~\ref{lem:OP} on each stationary batch. Hence, $\Delta_i^k =0$ and we can write,
+%
+\begin{equation*}
+\!\sum_{t=t_{k} +1 }^{t_{k+1}}\! \sum_{h=2}^{h^k_{i}} \! \mathbbm{1}\left(\!t = t_i^k(h) \land \HPevent \!\right)\Big(\! \mu_{\star}(t) - \mu_{i}(t)\!\Big) \leq   \sum_{h=2}^{h^k_{i}} \!\mathbbm{1}\left(\!\HPt{t_i^k(h)}\!\right)\pa{\!  \mu_{\star}(t_i^k(h)) - \bar{\mu}_i^{h-1}(t_i^k(h),\pi)\!}\! .
+\end{equation*}
+
+We notice that $\mu_{\star}(t_i^k(h)) = \mu_{\star}^{k}$. We call $h_{i,\xi}^k \triangleq \max\left(h \leq h_i^k\, \,\text{ s.t. } \HPt{t_i^k(h)} \text{ holds} \right)$. Hence,
+\begin{align*}
+\sum_{h=2}^{h^k_{i}}\!\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\!\pa{ \! \mu_{\star}(t_i^k(h)) \!-\! \bar{\mu}_i^{h\!-\!1}(t_i^k(h),\pi)\!}  & \!=\! \sum_{h=2}^{h^k_{i,\xi}}\!\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\!\pa{  \mu^k_{\star} \!-\! \bar{\mu}_i^{h\!-\!1}(t_i^k(h), \pi)} \\
+ &\leq \sum_{h=2}^{h^k_{i, \xi}} \mu_{\star}^{k} - \bar{\mu}_i^{h-1}(t_i^k(h), \pi)\\
+ &= \sum_{h=2}^{h^k_{i, \xi}} \mu_{\star}^{k} - \mu_i^k\\
+ & = \pa{h_{i,\xi}^k - 1 }\Delta_{i,k}\, .  
+\end{align*}
+
+The first equality follows from $\forall h > h_{i,\xi}^k, \, \mathbbm{1}\left(\HPt{t_i^k(h)}\right) =0$ by definition of $h_{i,\xi}^k$. The first inequality follows by dropping $\mathbbm{1}\left(\HPt{t_i^k(h)}\right) \leq 1$. The second equality uses that the function is stationary in batch $k$ : $\forall h \leq h_{i,\xi}^k, \bar{\mu}_i^{h-1}(t_i^k(h), \pi) = \mu_{i}^k.$ The last equality follows by definition of $\Delta_{i,k}$ (which does not depend on the summand index $h$).
+
+Then, we apply Lemma~\ref{lem:core-full} at time $t_i^k\pa{h_{i,\xi}^k}$. By definition of $h_{i,\xi}^k$, $\mathbbm{1}\!\left(\!\HPt{t_i^k(h_{i,\xi}^k)\!}\right) = 1$.
+\begin{gather*}
+ \pa{h_{i,\xi}^k - 1 }\Delta_{i,k}  \leq \frac{C_\pi}{\sqrt{2\alpha}}\pa{h_{i,\xi}^k - 1 }c(h_{i,\xi}^k\!-\!1, 2T^{-\alpha}) = C_\pi \sigma \sqrt{\pa{h_{i,\xi}^k-1}\log{T}}.\qedhere
+\end{gather*} 
+\end{proof}
+
+\begin{tBox}\restapiecewisetheorem*
+\end{tBox}
+\begin{proof}
+
+We apply Lemma~\ref{lem:OP-piecewise},
+\[\sum_{k=0}^{\Upsilon_T-1} \! \sum_{i \in \mathcal{K}_{k}} \!\sum_{t=t_{k}+1}^{t_{k+1}} \! \sum_{h=2}^{h_{i}^{k}} \!\mathbbm{1}\!\left( \!t\!=\!t_{i}^{k}(h)\!\land\!\HPevent\!\right)\Big(\mu_{\star}(t)\!-\!\mu_{i}(t)\Big) \leq  \sum_{k=0}^{\Upsilon_T-1} \!\sum_{i\in\arms_k}\!  C_\pi \sigma \sqrt{h_{i,\xi}^k\log{T}} .\]
+
+We notice that $ \sum_{k=0}^{\Upsilon_T -1}\sum_{i\in\arms_k} h_{i,\xi}^k\leq T$. Hence, thanks to Jensen's inequality, 
+\[
+\sum_{k=0}^{\Upsilon_T-1} \sum_{i\in\arms_k} C_\pi\sigma \sqrt{h_{i,\xi}^k\log{T}} \leq  C_\pi \sigma \sqrt{ \Upsilon_T K T\log{T}}.
+\]
+
+We use Lemma~\ref{lem:FP} with the last equation and conclude,
+\[
+\EE{R_T(\pi)} \leq C_\pi \sigma \sqrt{\log{T}} \pa{ \sqrt{\Upsilon_T KT} + \Upsilon_T K} + 6KV.
+\]
+\end{proof}
+\begin{tBox}
+\restapiecewisetheorempd*
+\end{tBox}
+\begin{proof}
+Let $\arms_k \triangleq \left\{ i \in \arms | \Delta_{i,k} > 0\right\}$, the set of sub-optimal arms in batch $k$.
+We apply Lemma~\ref{lem:OP-piecewise} to bound the number of wrong pull (under the favorable events) of arm $i\in \arms_k$ during batch $k$,
+\begin{align*}
+     \Delta_{i,k} \pa{h^k_{i, \xi} -1} & \leq C_\pi \sigma \sqrt{\pa{h_{i,\xi}^k-1}\log{T}} \implies h_{i,\xi}^k \leq 1 + \frac{C_\pi^2 \sigma^2\log{T}}{\Delta_{i,k}^2}\, \cdot
+\end{align*}
+
+Then, we apply Lemma~\ref{lem:OP-piecewise} again to bound the regret due to second pulls of any sub-optimal arm $i\notin \argmax_{i \in \arms} \mu_i^k$ in any batch $k$,
+\begin{align*}
+OP\pa{i,k} &\triangleq\! \sum_{t=t_{k}+1}^{t_{k+1}} \sum_{h=2}^{h_{i}^{k}} \mathbbm{1}\!\left(\! t\!=\!t_{i}^{k}(h) \land \HPevent \!\right)\left(\mu_{\star}(t)\!-\!\mu_{i}(t)\right) \\
+&\leq C_\pi \sigma \sqrt{\pa{h_{i,\xi}^k \!-\! 1}\log{T}}\\
+ &\leq \frac{C_\pi^2\sigma^2\log{T}}{\Delta_{i,k}}\cdot
+ \end{align*}
+
+We apply Lemma~\ref{lem:FP} on the set of $\Upsilon_T -1$ breakpoints and we conclude thanks to the precedent equation,
+\begin{align*}
+\EE{R_T(\pi)} & \leq \EE{\sum_{k=0}^{\Upsilon_T-1} \sum_{i\in\arms_k}OP\pa{i,k} }+ C_\pi \sigma \Upsilon_T K\sqrt{\log{T}} + 6KV  \\
+&\leq \sum_{k=0}^{\Upsilon_T-1} \sum_{i\in\arms} \frac{C_\pi^2 \sigma^2\log{T}}{\Delta_{i,k}} +  C_\pi \sigma \Upsilon_T K \sqrt{ \log{T}} + 6KV\,.
+\end{align*}
+\end{proof}
+\subsubsection*{Variation budget rotting bandits.}
+\begin{tBox}
+\restabudgettheorem* 
+\end{tBox}
+\begin{proof}
+Let $\Upsilon \in \left\{1, \dots, T\right\}$ a number of evenly spaced batches that we will specify later. We define the length of these batches $\left\{\tau_{k} \triangleq\left\lceil\frac{T}{\Upsilon}\right\rceil \text { if } k \leq T \bmod \Upsilon \text { else }\left\lfloor\frac{T}{\Upsilon}\right\rfloor\right\}_{k \leq \Upsilon}$. Note that $\sum_{k=1}^{\Upsilon} \tau_k = T$. Let $t_k = \sum_{k'=0}^k \tau_{k'}$ the last round of each batch and $t_0 = 0$. On each of these batches, we apply Lemma~\ref{lem:OP} for the set of arms which have been pulled in this batch,
+\begin{multline}
+\label{eq:op_decomposition}
+    \sum_{k=0}^{\Upsilon_T-1} \sum_{i\in\arms_k}\sum_{t=t_{k}+1}^{t_{k+1}} \sum_{h=2}^{h_{t}^{k}} \mathbbm{1}\left( t=t_{i}^{k}(h) \land \HPevent\right)\Big(\mu_{\star}(t)-\mu_{i}(t)\Big)
+\leq \sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k} \pa{h_i^k-1}\Delta_i^k\\
++ \sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\left(\HPt{t_i^k(h)}\right)\pa{  \mu_{\star}(t_i^k(h)) - \bar{\mu}_i^{h-1}(t_i^k(h), \pi)}.
+\end{multline}
+
+The first sums can be handled using Assumption~\ref{assum:variation} and the evenly spaced property of $\tau_k$,
+\begin{equation}
+\label{eq:use_evenly_spaced}
+\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms} \pa{h_i^k-1}\Delta_i^k \leq \sum_{k=0}^{\Upsilon-1} \max_{j\in \arms} \Delta_j^k\sum_{i\in\arms} \pa{h_i^k-1} = \sum_{k=0}^{\Upsilon-1} \max_{j\in \arms} \Delta_j^k \pa{\tau_k-K} \leq \frac{T}{\Upsilon}\sum_{k=0}^{\Upsilon-1} \max_{j\in \arms} \Delta_j^k.
+\end{equation}
+%
+The first inequality is justified by definition of the maximum. The second equality states that the total number of pulls in batch $k$ is $\tau_k$. The third inequality uses that $\tau_k - K \leq \ceil{\frac{T}{\Upsilon}} -K \leq \ceil{\frac{T}{\Upsilon}} -K \leq \frac{T}{\Upsilon}$. Now, we need to relate $\max_{j\in \arms} \Delta_j^k$ and $V_T$,
+\begin{equation}
+\label{eq:use_assum_variation}
+   \sum_{k=0}^{\Upsilon\!-\!1}\max_{j\in \arms} \Delta_j^k \!=\! \sum_{k=0}^{\Upsilon\!-\!1}\max_{j\in \arms} \!\sum_{t = t_k\!+\!1}^{t_{k\!+\!1}\!-\!1}\! \Delta_j\! \pa{t,t\!+\!1} \!\leq\! \sum_{k=0}^{\Upsilon\!-\!1} \sum_{t = t_k\!+\!1}^{t_{k\!+\!1}\!-\!1} \! \max_{j\in \arms} \Delta_j\!\pa{t,t\!+\!1} \!\leq\!  \sum_{t = 1}^{T}\max_{j\in \arms} \Delta_j\!\pa{t,t\!+\!1}\!\leq\! V_T .
+\end{equation}
+%
+The first inequality is justified because the maximum of a sum is smaller than the sum of the maximums. In the second inequality, we add positive terms which are the maximum of the decay among the arms at the boundary between batches. The last inequality is justified by Assumption~\ref{assum:variation}. Therefore, we can bound the first sums using Equation~\ref{eq:use_evenly_spaced} and ~\ref{eq:use_assum_variation},
+\begin{equation}
+\label{eq:bound_sum1}
+\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms} \pa{h_i^k-1}\Delta_i^k \leq \frac{V_T T }{\Upsilon}\cdot    
+\end{equation}
+
+
+The second sums can be bounded using Lemma~\ref{lem:core-full} on the high probability event $\HPt{t_i^k(h)}$ and Jensen's inequality,
+\begin{align}
+    \sum_{k=0}^{\Upsilon-1} \!\sum_{i\in\arms_k}\!\sum_{h=2}^{h^k_{i}}\!\mathbbm{1}\!\left(\!\HPt{t_i^k(h)}\!\right)\pa{\! \mu_{\star}(t_i^k(h)) \!- \!\bar{\mu}_i^{h-1}(t_i^k(h),\pi)\!} \!&\leq \sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k} \sum_{h=2}^{h^k_{i}} \frac{C_\pi c\pa{\!h\!-\!1, 2T^{-\alpha}\!}}{\sqrt{2\alpha}} \nonumber\\
+&= \sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k} \sum_{h=2}^{h^k_{i}}C_\pi\sigma \sqrt{\frac{\log{T}}{h -1}}\nonumber\\
+&\leq \sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k} 2 C_\pi \sigma \sqrt{h_i^k \log{T}}\nonumber\\
+&\leq  2 C_\pi \sigma \sqrt{\Upsilon K T\log{T}} .
+\label{eq:bound_sum2}
+\end{align}
+
+We remark that the bound in Eq.~\ref{eq:bound_sum1} is decreasing with $\Upsilon$ and the bound in Eq.~\ref{eq:bound_sum2} is increasing with $\Upsilon$. We will choose $\Upsilon$ in order to minimize the sum of these two bounds (which will be our leading term). Therefore, we set,
+\begin{equation}
+    \label{eq:set_upsilon_variation}
+    \Upsilon \triangleq \ceil{\pa{\frac{V_T^2 T}{C_\pi^2 \sigma^2 K\log{T}}}^{\nicefrac{1}{3}}}.
+\end{equation}
+
+We have that $\Upsilon\leq T$ when $V_T \leq  C_\pi \sigma T\sqrt{ K\log{T}}$. Moreover, we will use that $ \Upsilon \leq 2 \pa{\frac{V_T^2 T}{C_\pi^2 \sigma^2 K\log{T}}}^{\nicefrac{1}{3}} $ which is true when $V_T \geq \sqrt{\frac{C_\pi^2 \sigma^2 K\log{T}}{8T}}$. 
+
+Finally, we use Lemma~\ref{lem:FP} where we replace the inner sums thanks to Equations~\ref{eq:op_decomposition}, \ref{eq:bound_sum1} and~\ref{eq:bound_sum2}. Then, we plug $\Upsilon$ set in \ref{eq:set_upsilon_variation} and conclude,
+\begin{align*}
+\EE{R_T\pa{\pi}} & \leq \frac{V_T T}{\Upsilon} +  2C_\pi\sigma \sqrt{\Upsilon K T\log{T}} +  C_\pi \sigma \Upsilon  K\sqrt{\log{T}} + 6 V_T K\\
+&\leq  4\pa{C_\pi^2 \sigma^2 V_T K T^2\log{T}}^{\nicefrac{1}{3}} \!+ 2\Big(C_\pi \sigma V_T^2  K^2  T \sqrt{\log{T}}\Big)^{\nicefrac{1}{3}} \!+ 6 V_T K.
+\end{align*}
+
+When $V_T\leq  \sqrt{\frac{C_\pi^2 \sigma^2 K \log{T}}{8T}}$, the regret of any policy can be bounded , 
+\begin{align*}
+\mathbb{E}\left[R_T(\pi)\right] &\leq T V_T = V_T^{\nicefrac{1}{3}} T^{\nicefrac{2}{3}} V_T^{\nicefrac{2}{3}} T^{\nicefrac{1}{3}}\\
+&\leq V_T^{\nicefrac{1}{3}} T^{\nicefrac{2}{3}} \left(\frac{ C_\pi^2 \sigma^2 K \log{T}}{8T}\right)^{\nicefrac{1}{3}} T^{\nicefrac{1}{3}}\\ 
+&= \frac{1}{2} \pa{C_\pi^2\sigma^2 V_T K T^2 \log{T}}^{\nicefrac{1}{3}}\\
+&\leq 4 \pa{C_\pi^2 \sigma^2 V_T K T^2 \log{T}}^{\nicefrac{1}{3}}.
+\end{align*}
+
+For completion, we also consider $V_T \geq  C_\pi \sigma T\sqrt{ K\log{T}}$. Yet, notice that in that case the leading term is $\cO\pa{KV_T}$. We start back from Lemma~\ref{lem:FP},
+\begin{align*}
+\EE{R_T(\pi)} \leq &  \, \EE{\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{t=t_k +1 }^{t_{k+1}}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\pa{ t = t_i^k(h) \land \HPevent} \Big(\mu_{\star}(t) - \mu_{i}(t)\Big)} \\
+&+   C_\pi \sigma \Upsilon K\sqrt{\log{T}} + 6KV_T.
+\end{align*}
+In fact, this result can be slightly improved at no cost, 
+\begin{align*}
+\EE{R_T(\pi)} \leq &  \, \EE{\sum_{k=0}^{\Upsilon-1} \sum_{i\in\arms_k}\sum_{t=t_k +1 }^{t_{k+1}}\sum_{h=2}^{h^k_{i}}\mathbbm{1}\pa{ t = t_i^k(h) \land \HPevent} \Big(\mu_{\star}(t) - \mu_{i}(t)\Big)} \\
+&+   C_\pi \sigma \min\pa{\Upsilon K, T}\sqrt{\log{T}} + 6KV_T,
+\end{align*}
+because there are at most $\min\pa{\Upsilon K, T}$ first pulls (see the proof of Lemma~\ref{lem:FP}). Now, we choose $\Upsilon = T$. Hence, there is no second pulls and we have,
+\begin{equation*}
+\EE{R_T(\pi)} \leq   C_\pi \sigma T\sqrt{\log{T}} + 6KV_T,
+\end{equation*} 
+
+Now, we use that $C_\pi \sigma T\sqrt{\log{T}} \leq \frac{V_T}{\sqrt{K}} \leq KV_T$,
+\begin{align*}
+\EE{R_T(\pi)} &\leq   \pa{C_\pi \sigma T\sqrt{\log{T}}}^{\nicefrac{2}{3}}\! \pa{C_\pi \sigma T\sqrt{\log{T}}}^{\nicefrac{1}{3}}\! + 6KV_T \\
+& \leq  \pa{C_\pi^2 \sigma^2 V_T K T^2\log{T}}^{\nicefrac{1}{3}} \!+  6 KV_T\\
+&\leq  4\pa{C_\pi^2 \sigma^2 V_T K T^2\log{T}}^{\nicefrac{1}{3}} \!+ 2\Big(C_\pi \sigma V_T^2  K^2  T \sqrt{\log{T}}\Big)^{\nicefrac{1}{3}} \!+ 6 K V_T.
+\end{align*} 
+\end{proof}
+
