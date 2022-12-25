@@ -1,5 +1,7 @@
 \documentclass[12pt,fleqn]{book} % Default font size and left-justified equations
-\input{other_tex_files/structure}
+\usepackage[utf8]{inputenc}
+\usepackage[cyr]{aeguill}
+\usepackage[francais]{babel}\input{other_tex_files/structure}
 \usepackage{bbm}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.x
 \usepackage[htt]{hyphenat}
@@ -13,7 +15,9 @@
 \usepackage{float}
 \usepackage{wrapfig}
 \usepackage{afterpage}
+\usepackage{graphbox} % vertical center of image : add align option to includegraphics
 \usepackage{placeins}
+\usepackage{lipsum}
 \usepackage{svg}
 \newcommand{\bookboxx}[1]{\small
 \par\medskip\noindent
@@ -26,7 +30,7 @@
 
 \newcommand{\citep}{\parencite}
 \newcommand{\citet}{\textcite}
-\hypersetup{pdftitle={Thèse de Doctorat, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
+\hypersetup{pdftitle={Mémoire de TSNR, Julien SEZNEC},pdfauthor={Julien SEZNEC}}
 
 \newcommand\blfootnote[1]{%
   \begingroup
@@ -36,122 +40,17 @@
 }
 
 \begin{document}
-\newpage
-~\vfill
-\thispagestyle{empty}
-{\fontfamily{ptm}\selectfont 
+\input{0_Couverture/1ere}
+\cleardoublepage
+\input{0_Couverture/4e}
 
- \vspace{-3cm} \hspace{-1cm}\fbox{
-\begin{minipage}[c]{16cm}
-\vspace{.2cm}
-\begin{center}
-{\large\sc\bf\sffamily TH\`ESE DE DOCTORAT DE L'UNIVERSIT\'E DE LILLE} 
-\\{\bf {\sffamily École Doctorale Sciences Pour l'Ingénieur}}\\
-{\sffamily Sp{\'e}cialit{\'e} :} {\bf\sffamily Informatique}
-
-\vspace{.2cm}
-\end{center}
-\end{minipage}
-}
-
-%\vspace{1.0cm}
-%\begin{center}
-%  \includegraphics[width=0.2\columnwidth]{fig/ens.pdf}
-%  %\hspace{5cm}
-%  %\includegraphics[width=0.18\columnwidth]{fig/inria.pdf}
-%\end{center}
-%\vspace{0.5cm}
-
-\begin{center}
-{\sffamily \vspace{.4cm} Thèse de Doctorat pr\'esent\'ee par \vspace{.4cm}}
-
-{\large \bf\sffamily  Julien SEZNEC} \\
-\end{center}
-
-\vspace{.4cm}
-\begin{center}
-\hspace{-0.3cm}\hrulefill \hspace{.2cm}
-
-\vspace{.2cm}
-
-\hspace{-.5cm}{\bf \Large \sffamily{Apprentissage automatique séquentiel pour les systèmes éducatifs intelligents}}
-
-\vspace{-.1cm}
-
-\hspace{-0.3cm}\hrulefill \\ \hspace{.2cm}
-
-{\sffamily
-sous la direction de MM. Michal Valko et Alessandro Lazaric, \\ et l'encadrement de M. Jonathan Banon.
-}
-\end{center}
-
-
-
-\vspace{1.cm}
-
-{\sffamily
-
-\begin{tabular}{lllll}
-{\bf\sffamily Rapporteurs :} 
-& {M.}   & Aur\' elien & {\bf\sffamily GARIVIER} & ENS de Lyon \\
-& {M.}   & Gilles & {\bf\sffamily STOLTZ}     & Universit\'e Paris Saclay \& CNRS \\
-\end{tabular}
-
-{\sffamily\vspace{1.cm} Soutenue le {\bf\sffamily 15 décembre 2020} devant le jury
-compos{\'e} de}
-}
-\bigskip
-
-\bigskip
-
-\hspace{-1.cm}
-{\sffamily
-\begin{tabular}{llllll}
- {M.}   & Gilles & {\bf\sffamily STOLTZ}     & Univ. Paris Saclay \& CNRS & Rapporteur\\
-{M.}   & Aur\' elien & {\bf\sffamily GARIVIER} & ENS de Lyon & Rapporteur \\
-{M.}   & Steffen & {\bf\sffamily GRÜNEWÄLDER}     &  University of Lancaster & Examinateur\\
-{M.}   & Manuel & {\bf\sffamily LOPES}     &  Instituto Superior Tecnico & Examinateur\\
-{Mme}   & Mathilde & {\bf\sffamily MOUGEOT}     & Univ. Paris Saclay \& ENSIIE & Présidente du jury\\
-{M.}   & Michal & {\bf\sffamily VALKO}     &  INRIA Lille \& Deepmind & Directeur\\
-{M.}   & Alessandro & {\bf\sffamily LAZARIC}     &  INRIA Lille \& FAIR  & Co-Directeur\\
-{M.}   & Jonathan & {\bf\sffamily BANON}     &  Lelivrescolaire.fr & Encadrant\\
-\end{tabular}
-}
-\begin{center}
-\small\sffamily{Centre de Recherche en Informatique, Signal et Automatique de Lille (CRIStAL),\\
-UMR 9189 Équipe SequeL, 59650, Villeneuve d’Ascq, France}
-\end{center}
-\makebox[\textwidth][c]{
-\includegraphics[width=0.36\columnwidth]{fig/logo_lls.pdf}
-\includegraphics[width=0.288\columnwidth]{fig/logo_univ-lille.png}
-\includegraphics[width=0.264\columnwidth]{fig/logo_cristal.pdf}
-\includegraphics[width=0.288\columnwidth]{fig/logo_inria.pdf}
-}
-\input{other_tex_files/4e_couverture}
 \chapterimage{chapter_head/0_content.jpg} % Table of contents heading image
 
 
 \pagestyle{empty} % Disable headers and footers for the following pages
 
 \tableofcontents % Print the table of contents itself
-\blfootnote{Chapter header: Giorgio de Chirico, \emph{Edipo e la Sfinge}, 1968, olio su tela, cm 90x70, \copyright Fondazione Giorgio e Isa de Chirico, Roma.}
-%\listofalgorithms
-\chapterimage{chapter_head/0_figures.jpg}
-% list of items
-\begingroup
-\makeatletter
-\chapter*{List of items}
-\section*{Figures}
-\@starttoc{lof}
-\let\clearpage\relax
-\section*{Tables}
-\@starttoc{lot}
-\section*{Algorithms}
-\@starttoc{loa}
-\makeatother
-\endgroup
-\blfootnote{Chapter header: \emph{Portrait of Luca Pacioli}, traditionally attributed to Jacopo de' Barbari, 1495}
-
+\blfootnote{Image d'entête: Giorgio de Chirico, \emph{Edipo e la Sfinge}, 1968, olio su tela, cm 90x70, \copyright Fondazione Giorgio e Isa de Chirico, Roma.}
 
 
 \cleardoublepage % Forces the first chapter to start on an odd page so it is not on the right side of the book
@@ -159,30 +58,21 @@ UMR 9189 Équipe SequeL, 59650, Villeneuve d’Ascq, France}
 \pagestyle{fancy} % Enable headers and footers again
 
 \clearpage
-\input{1Literature/main}
-\input{2.1Rested/main}
-\input{2.2Restless/main}
-\input{3Bandits/main}
+\input{1_Introduction/1}
+\input{2_Cadre/2}
+\input{3_Methodologie/3}
+\input{4_Resultats/4}
+\input{5_Conclusion/5}
 \chapterimage{chapter_head/7_782phare.jpg} 
-\part{References}
-\chapter*{References}
+\chapter*{Bibliographie}
 
-\vspace{-3cm}
-\emph{– Tu n’as même pas appris le métier de tailleur ? dit-elle.\\
-– Jamais, répondit K.\\
-– Quelle est ta profession ?\\
-– Arpenteur.\\
-– Qu’est-ce là ? \\
-K. le lui expliqua, l’explication la fit bâiller. } \\ \vspace{-1.2cm}
-\begin{flushright}
-\emph{Franz Kafka,} Le Château, \emph{Dernier Chapitre}.
-\end{flushright}
 \markboth{References}{}
 \addcontentsline{toc}{chapter}{\textcolor{myBlue}{References}}
 \begin{refcontext}[sorting=nyt]
 \printbibliography[heading=bibempty]
 \end{refcontext}
 
-
-
+\clearpage \ifodd\value{page}\hbox{}\newpage\fi %page paire
+\pagestyle{empty} % Disable headers and footers for the following pages
+\input{0_Couverture/4e}
 \end{document} 

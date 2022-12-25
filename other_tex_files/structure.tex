@@ -58,7 +58,7 @@
 
 \usepackage[style=authoryear-comp,uniquelist=false,citestyle=authoryear,sorting=ynt,sortcites=true,autopunct=true,babel=hyphen,hyperref,abbreviate=false,backref=true,backend=biber,maxcitenames=2,maxbibnames=20]{biblatex}
 %\usepackage[style=authoryear-comp,citestyle=authoryear,sorting=nyt,sortcites=true,autopunct=true,babel=hyphen,hyperref,abbreviate=false,backref=true,backend=biber,maxcitenames=20]{biblatex}
-\addbibresource{other_tex_files/PhD_Thesis_Julien_Seznec.bib} % BibTeX bibliography file
+\addbibresource{other_tex_files/Bibliographie_TSNR.bib} % BibTeX bibliography file
 \defbibheading{bibempty}{}
 
 \usepackage{calc} % For simpler calculation - used for spacing the index letter headings correctly
@@ -73,31 +73,25 @@
 %\usepackage{morewrites} % fix no room for new write error with tablecontent+listofalgorithms clash
 \contentsmargin{0cm} % Removes the default margin
 
-% Part text styling
-\titlecontents{part}[0cm]
-{\addvspace{20pt}\centering\large\bfseries}
-{}
-{}
-{}
 
 % Chapter text styling
 \titlecontents{chapter}[1.25cm] % Indentation
-{\addvspace{12pt}\large\sffamily\bfseries} % Spacing and font options for chapters
+{\addvspace{6pt}\large\sffamily\bfseries} % Spacing and font options for chapters
 {\color{myBlue!60}\contentslabel[\Large\thecontentslabel]{1.25cm}\color{myBlue}} % Chapter number
 {\color{myBlue}}  
 {\color{myBlue!60}\normalsize\;\titlerule*[.5pc]{.}\;\thecontentspage} % Page number
 
 % Section text styling
-\titlecontents{section}[1.25cm] % Indentation
-{\addvspace{3pt}\sffamily\bfseries} % Spacing and font options for sections
+\titlecontents{section}[2cm] % Indentation
+{\addvspace{-5pt}\sffamily\bfseries} % Spacing and font options for sections
 {\contentslabel[\thecontentslabel]{1.25cm}} % Section number
 {}
 {\hfill\color{black}\thecontentspage} % Page number
 []
 
 % Subsection text styling
-\titlecontents{subsection}[1.25cm] % Indentation
-{\addvspace{1pt}\sffamily\small} % Spacing and font options for subsections
+\titlecontents{subsection}[3cm] % Indentation
+{\addvspace{-7pt}\sffamily\small} % Spacing and font options for subsections
 {\contentslabel[\thecontentslabel]{1.25cm}} % Subsection number
 {}
 {\ \titlerule*[.5pc]{.}\;\thecontentspage} % Page number
